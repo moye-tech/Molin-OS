@@ -1,0 +1,62 @@
+# 墨麟 Hermes OS — 治理规则配置
+# =================================
+
+# 4级审批系统 (基于 Paperclip 62K★ 设计模式)
+approval_levels:
+  L0:
+    name: 自动执行
+    budget_max: 0
+    description: 零成本操作，AI自动执行无需审批
+    examples:
+      - 生成一份内容草稿
+      - 查询趋势数据
+      - 系统健康检查
+
+  L1:
+    name: AI自审
+    budget_max: 10
+    description: AI内部检查后自动执行
+    examples:
+      - 发布一篇小红书笔记
+      - 更新SEO关键词
+      - 调整商品定价
+
+  L2:
+    name: 人工确认
+    budget_max: 100
+    description: 需人类确认后执行
+    examples:
+      - 对外商业提案
+      - 大额推广投放
+      - 客户交付物发送
+
+  L3:
+    name: 董事会审批
+    budget_max: 1000
+    description: 重大决策需全面评估
+    examples:
+      - 新增产品线
+      - 战略方向调整
+      - 超预算支出
+
+# ── 预算控制 ──
+budget:
+  monthly_cap: 1360  # ¥1,360/月
+  categories:
+    ai_services: 1000    # AI API调用
+    platform_tools: 200  # 平台工具订阅
+    content_boost: 160   # 内容推广
+  alert_threshold: 0.8   # 80%时告警
+
+# ── 审计追踪 ──
+audit:
+  enabled: true
+  log_retention_days: 90
+  log_format: jsonl
+  log_path: ~/.molin/audit/
+
+# ── 安全规则 ──
+security:
+  token_rotation_days: 30
+  no_token_in_commits: true
+  secrets_management: env_file

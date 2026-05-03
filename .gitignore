@@ -1,22 +1,65 @@
-# Secrets
+# ═════════════════════════════════════════
+# 墨麟 Hermes OS — .gitignore
+# ═════════════════════════════════════════
+
+# Secrets & Credentials — NEVER COMMIT
 .env
 *.key
 *.pem
 *secret*
 *password*
+*token*
+credentials*
+**/auth.*
 
 # Python
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+*.whl
 
-# OS
-.DS_Store
-Thumbs.db
+# Virtual Environment
+venv/
+.venv/
+env/
+.env/
+*.venv
 
 # IDE
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
 
-# Archives
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Archives (retired/archived skills)
 _archived/
+
+# Logs & Cache
+*.log
+.molin/
+logs/
+.pytest_cache/
+.mypy_cache/
+*.tar.gz
+*.zip
+!backup_*.tar.gz
+
+# Backup archives
+*_backup_*/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Local config overrides
+config/local.*

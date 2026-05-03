@@ -1,0 +1,60 @@
+# 墨麟 Hermes OS — 发布渠道配置
+# ================================
+
+platforms:
+  xiaohongshu:
+    name: 小红书
+    enabled: true
+    content_types: [图文笔记, 长文, 视频]
+    daily_limit: 3
+    best_posting_time: [12:00, 18:00, 21:00]
+    api_required: true
+
+  zhihu:
+    name: 知乎
+    enabled: true
+    content_types: [文章, 回答, 想法]
+    daily_limit: 2
+    best_posting_time: [10:00, 15:00, 20:00]
+
+  weibo:
+    name: 微博
+    enabled: true
+    content_types: [图文, 视频]
+    daily_limit: 5
+    best_posting_time: [08:00, 12:00, 18:00, 21:00]
+
+  wechat:
+    name: 微信公众号
+    enabled: true
+    content_types: [图文]
+    daily_limit: 1
+    schedule_support: true
+
+  juejin:
+    name: 掘金
+    enabled: true
+    content_types: [技术文章]
+    daily_limit: 1
+    target_audience: 开发者
+
+  x:
+    name: X/Twitter
+    enabled: true
+    content_types: [推文, 长文]
+    daily_limit: 10
+    language: [en, zh]
+
+  xianyu:
+    name: 闲鱼
+    enabled: true
+    content_types: [商品]
+    daily_listing_limit: 3
+    target_keywords: [AI服务, 商业计划书, PPT, 简历, PRD]
+
+# ── 发布策略 ──
+publishing_strategy:
+  cross_post: true  # 一键多平台
+  schedule_ahead: 7  # 提前排期天数
+  quality_check: AI自审 + 人工抽检
+  forbidden_times: [02:00-06:00]  # 避免夜间发布

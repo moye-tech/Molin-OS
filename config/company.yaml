@@ -1,0 +1,108 @@
+# 墨麟 Hermes OS — 公司配置文件
+# =================================
+
+name: 墨麟 AI
+mission: 打造AI驱动的全自动一人公司，让个体拥有企业的战斗力
+version: 2.0.0
+budget_monthly: 1360  # ¥1,360/月 AI服务预算
+
+# ── 6个部门 × 22个角色 ──
+departments:
+  ceo_office:
+    name: CEO办公室
+    headcount: 1
+    roles:
+      - CEO
+    responsibility: 战略决策、资源分配、目标管理
+
+  content_factory:
+    name: 内容工厂
+    headcount: 4
+    roles:
+      - 主编
+      - 小红书运营
+      - 视频制作
+      - SEO专家
+    responsibility: 内容生产、平台运营、SEO优化
+    kpi:
+      daily_output: 10  # 日产10篇
+      automation_rate: 0.8  # 自动化率80%
+      platforms: [小红书, 知乎, 微博, 微信公众号, 掘金, X]
+
+  business_brain:
+    name: 商业大脑
+    headcount: 4
+    roles:
+      - 商业分析师
+      - 产品经理
+      - 定价策略师
+      - 项目经理
+    responsibility: 商业分析、PRD撰写、定价策略
+
+  engineering:
+    name: 研发工坊
+    headcount: 5
+    roles:
+      - 架构师
+      - 后端开发
+      - 前端开发
+      - 测试工程师
+      - 运维工程师
+    responsibility: 系统开发、自动化管线、部署维护
+
+  growth_engine:
+    name: 增长引擎
+    headcount: 4
+    roles:
+      - 营销专家
+      - 闲鱼运营
+      - 渠道管理
+      - 数据分析师
+    responsibility: 用户增长、变现运营、数据驱动
+    revenue_target: 5000  # ¥5,000/月
+
+  intelligence:
+    name: 情报系统
+    headcount: 4
+    roles:
+      - 研究员
+      - 趋势分析
+      - 竞品监控
+      - OSINT专家
+    responsibility: 趋势发现、竞争情报、机会识别
+
+# ── 变现矩阵 ──
+monetization:
+  xianyu_store:
+    name: 闲鱼服务店铺
+    products:
+      - name: AI商业计划书定制
+        price: 800
+        category: 商业服务
+      - name: 简历优化升级
+        price: 100
+        category: 求职服务
+      - name: PRD产品需求文档
+        price: 500
+        category: 产品服务
+      - name: PPT美化设计
+        price: 200
+        category: 设计服务
+      - name: AI绘画定制
+        price: 100
+        category: 设计服务
+      - name: 小红书文案代写
+        price: 30
+        category: 内容服务
+  freelance:
+    platforms: [猪八戒, 程序员客栈, Upwork]
+    target_monthly: 3000
+
+# ── 内容管线 ──
+content_pipeline:
+  sequence:
+    - xiaohongshu_content_engine  # 内容生成
+    - ffmpeg_video_engine          # 视频制作
+    - social_push_publisher        # 多平台发布
+    - human_review                 # 人工审核 (可选)
+  quality_gate: AI自审 + 人工抽检
