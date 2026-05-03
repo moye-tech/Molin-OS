@@ -1,0 +1,8 @@
+{
+  "last_report_path": "/home/ubuntu/.hermes/logs/curator/20260503-104211",
+  "last_run_at": "2026-05-03T10:42:11.537895+00:00",
+  "last_run_duration_seconds": 142.91754,
+  "last_run_summary": "auto: no changes; llm: I've completed my analysis. Here's the full picture and the results.\n\n---\n\n## Consolidation Pass Report\n\n### Candidate Landscape\n\nOnly **one** agent-created skill exists: `skill-discovery`. All other skills in `~/.hermes/skills/` are either…",
+  "paused": false,
+  "run_count": 1
+}

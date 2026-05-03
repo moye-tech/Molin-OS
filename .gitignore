@@ -1,0 +1,22 @@
+# Secrets
+.env
+*.key
+*.pem
+*secret*
+*password*
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Archives
+_archived/
