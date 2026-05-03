@@ -13,7 +13,7 @@
   <img src="https://img.shields.io/badge/version-2.0.0-6c5ce7?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/python-3.10+-00b894?style=flat-square&logo=python" alt="Python">
   <img src="https://img.shields.io/badge/tests-21%20passed-success?style=flat-square" alt="Tests">
-  <img src="https://img.shields.io/badge/license-Proprietary-e17055?style=flat-square" alt="License">
+  <img src="https://img.shields.io/badge/license-MIT-00b894?style=flat-square" alt="License">
   <img src="https://img.shields.io/badge/status-active-brightgreen?style=flat-square" alt="Status">
 </p>
 
@@ -303,7 +303,7 @@ make test
 
 ## 许可证
 
-**Proprietary** — 本软件为闭源私有项目。未经作者书面授权，禁止复制、分发或用于商业目的。
+本项目基于 [MIT License](LICENSE) 开源。
 
 ---
 
