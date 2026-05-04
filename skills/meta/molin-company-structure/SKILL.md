@@ -194,13 +194,13 @@ MVP设计、功能规划、产品标准化、套餐定价。
 
 ---
 
-### 16. 墨育 教育 — 教育培训部
-**MoYu Education · ¥50/月 · ¥1,000/月目标**
+### 16. 墨育 教育 — 教育培训部 🆕 Skill 上线
+**MoYu Education · ¥50/月 · ¥1,000/月目标 · Skill: `molin-education`**
 
-课程设计、大纲生成、评估方案、招生方案。
-- **产品:** 课程大纲¥500·教学设计¥800·招生方案¥300
-- **核心技能:** `creative`·`agent-design-ux-researcher`·`agent-engineering-technical-writer`·`writing-plans`·`marketing-skills-copywriting`
-- **T2梯队**
+AI 教育引擎 — 课程设计、AI 个性化辅导、学习路径规划、间隔重复、互动测验。基于 DeepTutor ⭐23.2k 理念 + human-skill-tree 学习科学框架。
+- **产品:** 课程大纲¥500·教学设计¥800·AI辅导¥300/小时·学习路径规划¥500·测验生成¥200
+- **核心技能:** `molin-education`·`writing-plans`·`molin-memory`·`content-strategy`·`powerpoint`
+- **T2梯队 ⚡ 升级为 T1 梯队（可立即接单）**
 
 ---
 
@@ -307,7 +307,8 @@ T1 1-2周启动
 ├── 墨码 研发 — 接技术外包
 ├── 墨域 CRM — 公众号代运营
 ├── 墨增 增长 — 增长策略方案
-└── 墨智 AI — 第一批模板产出
+├── 墨智 AI — 第一批模板产出
+├── 墨育 教育 — `molin-education` 技能上线（DeepTutor ⭐23.2k + human-skill-tree ⭐517 AI教育引擎：课程设计/AI辅导/测验生成）
 
 T2 筹备中（本月内准备）
 ├── 墨思 研究 — 写日报样本
