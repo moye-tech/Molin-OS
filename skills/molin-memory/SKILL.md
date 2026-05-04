@@ -190,6 +190,11 @@ python3 ~/.hermes/skills/molin-memory/scripts/molin_memory.py context 墨律 \
 2. **检索不到≠没发生过** — 语义搜索依赖 embedding 质量，太短的查询可能不匹配
 3. **事件需要手动消费** — 事件总线是"发布"模式，消费端需要主动 `events` + `mark_event_processed`
 4. **初始化只需一次** — `init` 是幂等的，重复调用不会丢失数据
+5. **ChromaDB 不支持中文 collection 名** — collection name 必须匹配 `[a-zA-Z0-9._-]{3-512}`。中文字符报 `Validation error`。解决方案：用拼音/英文名（如 `molin_molv`、`molin_mozhi`），在 metadata 中存储中文名。Python 映射：`{cn: en for cn, en in SUBSIDIARY_PAIRS}`
+6. **`count()` 返回的是 collection 数不是文档数** — `collection.count()` 在 ChromaDB v1.5 返回的是 1（只有一个 collection），不是文档数量。要查看实际文档数使用 `len(collection.get()['ids'])`
+7. **upsert 相同 ID 会覆盖不报错** — 对同一 doc_id 多次 upsert 不会报错但后一次覆盖前一次。确保 ID 全局唯一：用 `skill_{skill_path}` 或 `{sub}_{content_hash}` 生成
+8. **`patch` 工具遇到引号逃逸问题** — 当 old_string/new_string 中包含双引号时，`patch` 工具会报 `Escape-drift detected`。解决方案：不要在 old_string/new_string 中使用 `\"`，改用 Python 脚本直接替换文件内容
+9. **`import-skills` 的 molin_owner 解析** — molin_owner 藏在 frontmatter 的 `metadata.hermes.molin_owner` 深层嵌套，不是在顶层。解析方法：做字符串匹配 `molin_owner` 在任何行出现，然后提取冒号后的值，再用中文前缀匹配（`"墨律（法务）"` 匹配 `"墨律"`）
 
 ---
 
