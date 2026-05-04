@@ -74,13 +74,13 @@ AI技术基础能力建设和自研产品输出。
 
 ---
 
-### 04. 墨影 IP — 内容IP孵化部
-**MoYing IP · ¥250/月 · ¥5,000/月目标**
+### 04. 墨影 IP — 内容IP孵化部 🔥 已增强
+**MoYing IP · ¥250/月 · ¥5,000/月目标 · Skill: `molin-xiaohongshu`**
 
-小红书/知乎等平台内容IP孵化与品牌合作。
-- **产品:** 笔记代运营¥2k/月·内容策划¥500·品牌合作¥1k
-- **核心技能:** `xiaohongshu-content-engine`·`social-push-publisher`·`seo-machine`·`agent-marketing-growth-hacker`·`marketing-skills-copywriting`
-- **T1梯队**
+小红书/知乎等平台内容IP孵化与品牌合作。集成 xhs_ai_publisher ⭐1.9k 的小红书AI发布引擎。
+- **产品:** 笔记代运营¥2k/月·内容策划¥500·品牌合作¥1k·AI封面生成¥200·热点笔记¥100
+- **核心技能:** `molin-xiaohongshu`·`xiaohongshu-content-engine`·`social-push-publisher`·`seo-machine`·`agent-marketing-growth-hacker`·`marketing-skills-copywriting`
+- **T1梯队 ⚡ AI发布自动化**
 
 ---
 
@@ -94,13 +94,13 @@ AI技术基础能力建设和自研产品输出。
 
 ---
 
-### 06. 墨声 客服 — 客户服务部
-**MoSheng CS · ¥50/月 · ¥1,000/月目标**
+### 06. 墨声 客服 — 客户服务部 🆕 Skill 上线
+**MoSheng CS · ¥50/月 · ¥1,000/月目标 · Skill: `molin-customer-service`**
 
-智能客服应答、投诉处理、满意度追踪、FAQ自动维护。
-- **产品:** 客服代运营¥1k/月·FAQ体系建设¥500·工单SOP¥300
-- **核心技能:** `xianyu-automation`·`agent-sales-deal-strategist`·`social-push-publisher`·`marketing-skills-copywriting`
-- **T2梯队 (筹备中)**
+AI智能客服引擎 — 利用 Hermes 自身能力实现：FAQ知识库(memory)、自动回复(template)、工单管理(todo)、满意度追踪(clarify)、闲鱼消息自动化(xianyu-automation)、多平台回复(send_message)。
+- **产品:** 客服代运营¥1k/月·FAQ体系建设¥500·工单SOP¥300·满意度报告¥200
+- **核心技能:** `molin-customer-service`·`xianyu-automation`·`social-push-publisher`·`marketing-skills-copywriting`·`molin-legal`
+- **T2梯队 ⚡ 升级为 T1 梯队（可立即接单）**
 
 ---
 
@@ -174,12 +174,12 @@ MVP设计、功能规划、产品标准化、套餐定价。
 
 ---
 
-### 14. 墨数 数据 — 数据分析部
-**MoShu Data · ¥80/月 · ¥2,000/月目标**
+### 14. 墨数 数据 — 数据分析部 🔥 已增强
+**MoShu Data · ¥80/月 · ¥2,000/月目标 · Skill: `molin-vizro`**
 
-数据分析、报表生成、归因分析、漏斗分析、可视化。
-- **产品:** 数据分析报告¥800·可视化Dashboard¥500·归因分析¥1k
-- **核心技能:** `baoyu-infographic`·`excalidraw`·`architecture-diagram`·`popular-web-designs`·`agent-product-trend-researcher`
+数据分析、可视化BI仪表盘、归因分析、漏斗分析。基于 McKinsey Vizro ⭐3.7k 低代码仪表盘框架。
+- **产品:** 数据分析报告¥800·可视化Dashboard¥500·BI仪表盘¥1k·归因分析¥1k
+- **核心技能:** `molin-vizro`·`baoyu-infographic`·`excalidraw`·`architecture-diagram`·`popular-web-designs`·`agent-product-trend-researcher`
 - **T2梯队**
 
 ---
@@ -204,13 +204,13 @@ MVP设计、功能规划、产品标准化、套餐定价。
 
 ---
 
-### 17. 墨海 出海 — 海外业务部
-**MoHai Global · ¥80/月 · ¥2,000/月目标**
+### 17. 墨海 出海 — 海外业务部 🆕 Skill 上线
+**MoHai Global · ¥80/月 · ¥2,000/月目标 · Skill: `molin-global`**
 
-多语言内容本地化、海外平台运营策略、跨境合规。
-- **产品:** 英文文案代写¥500·海外社媒运营¥2k/月·本地化翻译¥300/篇
-- **核心技能:** `social-push-publisher`·`agent-marketing-content-creator`·`marketing-skills-copywriting`·`seo-machine`·`ffmpeg-video-engine`
-- **T2梯队**
+多语言内容本地化、海外社媒运营、多平台同步发布、跨境合规。整合 6 个现有技能：翻译+发布+SEO+文案+视频+合规。
+- **产品:** 英文文案代写¥500·海外社媒运营¥2k/月·本地化翻译¥300/篇·合规检查¥200
+- **核心技能:** `molin-global`·`social-push-publisher`·`agent-marketing-content-creator`·`marketing-skills-copywriting`·`seo-machine`·`ffmpeg-video-engine`·`molin-legal`
+- **T2梯队 ⚡ 升级为 T1 梯队**
 
 ---
 
@@ -234,10 +234,10 @@ MVP设计、功能规划、产品标准化、套餐定价。
 
 ---
 
-### 20. 墨投 交易 — 量化交易部 🔥 已升级
-**MoTou Trading · ¥80/月 · ¥1,000/月目标 · Skill: `molin-trading`**
+### 20. 墨投 交易 — 量化交易部 🔥 已增强
+**MoTou Trading · ¥80/月 · ¥1,000/月目标 · Skills: `molin-trading` + `molin-trading-agents`**
 
-加密货币量化交易策略开发、回测、超参数优化、实盘管理。基于 Freqtrade ⭐34k+。
+加密货币+股票量化交易：Freqtrade ⭐34k+ 策略开发/回测/超参数优化/实盘 + TradingAgents ⭐65.9k 多Agent(研究经理/交易员/投资组合经理)金融分析。
 - **产品:** 量化策略开发¥1k·回测分析报告¥500·策略优化¥800·市场简报¥200
 - **核心技能:** `molin-trading`·`agent-finance-financial-analyst`·`research`·`data-science`
 - **T2梯队 ⚡ 升级为 T1 梯队（策略开发+回测）**
@@ -312,10 +312,11 @@ T1 1-2周启动
 T2 筹备中（本月内准备）
 ├── 墨思 研究 — 写日报样本
 ├── 墨品 产品 — PRD接单
-├── 墨数 数据 — 分析报告接单
-├── 墨海 出海 — 海外平台布局
-├── 墨工 设计 — 出demo作品
-├── 墨投 交易 — `molin-trading` 技能上线（Freqtrade ⭐34k+ 量化交易引擎，支持策略开发/回测/优化/实盘）
+├── 墨影 IP — `molin-xiaohongshu` 技能上线（xhs_ai_publisher ⭐1.9k 小红书AI发布引擎：热点采集/封面生成/定时发布）
+├── 墨声 客服 — `molin-customer-service` 技能上线（零依赖智能客服引擎：FAQ/工单/满意度/闲鱼自动化/多平台回复）
+├── 墨数 数据 — `molin-vizro` 技能上线（McKinsey Vizro ⭐3.7k BI仪表盘框架）
+├── 墨海 出海 — `molin-global` 技能上线（6合1出海管线：翻译/发布/SEO/文案/视频/合规）
+├── 墨投 交易 — `molin-trading` + `molin-trading-agents` 技能上线（Freqtrade ⭐34k+ 量化交易 + TradingAgents ⭐65.9k 多Agent金融分析）
 ├── 墨律 法务 — `molin-legal` 技能上线（13种法务分析能力，基于 ai-legal-claude ⭐1.2k，含合同审查/风险评估/NDA生成/合规审计等）
 └── 其余墨系子公司逐步激活
 ```
