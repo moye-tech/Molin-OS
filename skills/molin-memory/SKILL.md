@@ -93,7 +93,7 @@ python3 ~/.hermes/skills/molin-memory/scripts/molin_memory.py import-skills \
 python3 ~/.hermes/skills/molin-memory/scripts/molin_memory.py stats
 ```
 
-### 跨子公司事件总线
+### 事件总线（发布/订阅）
 
 ```bash
 # 墨思发现趋势 → 通知墨迹（非阻塞）
@@ -104,8 +104,37 @@ python3 ~/.hermes/skills/molin-memory/scripts/molin_memory.py event 墨思 \
 # 墨增检查未处理事件
 python3 ~/.hermes/skills/molin-memory/scripts/molin_memory.py events
 
-# 墨迹消费事件后，用 memory 标记已处理（通过 SQLite 直接更新）
+# 墨迹消费事件后，用 memory 标记已处理
 ```
+
+---
+
+## 自学习闭环（P3.2 升级）
+
+基于评估报告的四阶段路线图，完整的 evaluate→absorb→integrate→retire：
+
+```bash
+# 执行完整四阶段
+python3 ~/.hermes/skills/molin-memory/scripts/molin_learn.py full
+
+# 仅执行单个阶段
+python3 ~/.hermes/skills/molin-memory/scripts/molin_learn.py evaluate
+python3 ~/.hermes/skills/molin-memory/scripts/molin_learn.py absorb
+python3 ~/.hermes/skills/molin-memory/scripts/molin_learn.py integrate
+python3 ~/.hermes/skills/molin-memory/scripts/molin_learn.py retire
+python3 ~/.hermes/skills/molin-memory/scripts/molin_learn.py report
+```
+
+### 四阶段详解
+
+| 阶段 | 功能 | 数据源 |
+|:----:|:-----|:-------|
+| **Evaluate** | 扫描外部数据源，收集发现 | GitHub Trending、事件总线、系统统计 |
+| **Absorb** | 自动分析相关度(1-5)，提炼洞察 | 上阶段发现 |
+| **Integrate** | 生成技能更新/创建建议 | 高价值洞察 |
+| **Retire** | 每月清理90天过期知识 | 向量库访问频率 |
+
+每周五 10:00 自动执行完整闭环。输出报告存入记忆系统。
 
 ### 上下文注入
 
