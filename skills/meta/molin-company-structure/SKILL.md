@@ -144,13 +144,13 @@ AI技术基础能力建设和自研产品输出。
 
 ---
 
-### 11. 墨律 法务 — 法务合规部
-**MoLv Legal · ¥50/月 · ¥1,000/月目标**
+### 11. 墨律 法务 — 法务合规部 🔥 已升级
+**MoLv Legal · ¥50/月 · ¥1,000/月目标 · Skill: `molin-legal`**
 
-合同条款审查、隐私政策生成、版权检测、合规风险预警。
-- **产品:** 合同审查¥500·隐私协议生成¥300·版权检测报告¥200
-- **核心技能:** `github-code-review`·`agent-engineering-code-reviewer`·`writing-plans`·`research`
-- **T2梯队**
+合同审查、风险评估、NDA生成、隐私政策、合规审计、TOS生成、谈判策略、条款简化、合同对比。基于 ai-legal-claude ⭐1.2k 的13个专业技能适配。
+- **产品:** 合同审查¥500·隐私政策生成¥300·合规审计¥500·NDA生成¥200·谈判策略¥300·TOS生成¥400
+- **核心技能:** `molin-legal`·`requesting-code-review`·`writing-plans`·`research`
+- **T2梯队 ⚡ 升级为 T1 梯队（可立即接单）**
 
 ---
 
@@ -234,13 +234,13 @@ MVP设计、功能规划、产品标准化、套餐定价。
 
 ---
 
-### 20. 墨投 交易 — 量化交易部
-**MoTou Trading · ¥80/月 · ¥1,000/月目标**
+### 20. 墨投 交易 — 量化交易部 🔥 已升级
+**MoTou Trading · ¥80/月 · ¥1,000/月目标 · Skill: `molin-trading`**
 
-量化分析、投资建议、交易执行。
-- **产品:** 投资分析报告¥500·量化策略¥1k·市场简报¥200
-- **核心技能:** `agent-finance-financial-analyst`·`agent-product-trend-researcher`·`research`·`polymarket`·`data-science`
-- **T2梯队**
+加密货币量化交易策略开发、回测、超参数优化、实盘管理。基于 Freqtrade ⭐34k+。
+- **产品:** 量化策略开发¥1k·回测分析报告¥500·策略优化¥800·市场简报¥200
+- **核心技能:** `molin-trading`·`agent-finance-financial-analyst`·`research`·`data-science`
+- **T2梯队 ⚡ 升级为 T1 梯队（策略开发+回测）**
 
 ---
 
@@ -315,6 +315,7 @@ T2 筹备中（本月内准备）
 ├── 墨数 数据 — 分析报告接单
 ├── 墨海 出海 — 海外平台布局
 ├── 墨工 设计 — 出demo作品
-├── 墨投 交易 — 量化策略开发
+├── 墨投 交易 — `molin-trading` 技能上线（Freqtrade ⭐34k+ 量化交易引擎，支持策略开发/回测/优化/实盘）
+├── 墨律 法务 — `molin-legal` 技能上线（13种法务分析能力，基于 ai-legal-claude ⭐1.2k，含合同审查/风险评估/NDA生成/合规审计等）
 └── 其余墨系子公司逐步激活
 ```
