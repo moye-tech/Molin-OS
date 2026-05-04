@@ -213,6 +213,78 @@ python3 ~/.hermes/skills/molin-memory/scripts/molin_memory.py context 墨律 \
 
 ---
 
+## ChromaDB 技术约束（从实战中总结）
+
+### Collection 名只能用英文
+ChromaDB v1.5 要求 collection name 匹配 `[a-zA-Z0-9._-]{3-512}`。中文名直接报错：
+```
+Validation error: name: Expected a name containing 3-512 characters from [a-zA-Z0-9._-]
+```
+**解决方案：** 使用拼音/英文名（如 `molin_molv`、`molin_mozhi`），在 metadata 中存储中文名。Python 映射字典：
+```python
+SUBSIDIARY_PAIRS = [("墨律","molv"), ("墨智","mozhi"), ...]
+SUBSIDIARY_NAMES_MAP = {cn: en for cn, en in SUBSIDIARY_PAIRS}
+```
+
+### `count()` 不返回文档数
+`collection.count()` 返回的是 1（collection 存在性确认），不是实际文档数量。要获取真实文档数：
+```python
+len(collection.get()['ids'])  # 正确方式
+collection.count()            # ❌ 总是返回 1
+```
+
+### upsert 同 ID = 静默覆盖
+相同 doc_id 多次 upsert 后一次覆盖前一次，不报错。确保 ID 全局唯一：
+```python
+# 好的：用内容 hash
+hashlib.sha256(f"{sub}_{content}_{now}".encode()).hexdigest()[:24]
+# 差的：只用固定的 skill 名
+f"skill_{skill_name}"  # 多次运行会互相覆盖
+```
+
+---
+
+## 脚本编写注意事项
+
+### `patch` 工具的双引号逃逸
+当 old_string/new_string 中包含实际双引号字符时，Hermes 的 `patch` 工具会误报 `Escape-drift detected`。安全的替代方案：用 Python 脚本直接替换文件内容：
+```python
+content = open('file.py').read()
+content = content.replace('old text with "quotes"', 'new text')
+open('file.py', 'w').write(content)
+```
+
+### YAML frontmatter 深层嵌套的字段提取
+`molin_owner` 藏在 `metadata.hermes.molin_owner` 的深层嵌套中。最简单可靠的提取方法是字符串匹配：
+```python
+def find_owner(content):
+    for line in content.split('\n'):
+        if 'molin_owner' in line:
+            val = line.split(':', 1)[1].strip().strip('"\' ,')
+            # 中文名可能在括号中如 "墨律（法务）"
+            for cn in SUBSIDIARIES:
+                if cn in val:
+                    return cn
+            return val
+    return 'CEO'
+```
+
+### GitHub Trending 绕过限流
+`gh CLI` 需要安装，GitHub API 有限流。最快可靠的 Trending 数据获取方式：
+```python
+import urllib.request, re
+url = "https://github.com/trending?since=weekly"
+req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+with urllib.request.urlopen(req, timeout=15) as resp:
+    html = resp.read().decode("utf-8")
+    repos = re.findall(r'href="/[^/"]+/[^/"]+"', html)
+    # 过滤掉 /trending 和 /topics 等非 repo 路径
+    repos = [r.split('"')[1].strip('/') for r in set(repos) 
+             if '/trending' not in r and '/topics' not in r]
+```
+
+---
+
 ## 常见陷阱
 
 1. **不要存原始大文本** — 向量库每条限制 2000 字符。存摘要，详细结果存文件引用
