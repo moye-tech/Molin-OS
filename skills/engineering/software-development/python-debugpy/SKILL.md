@@ -1,4 +1,5 @@
 ---
+
 name: python-debugpy
 description: "Debug Python: pdb REPL + debugpy remote (DAP)."
 version: 1.0.0
@@ -8,6 +9,7 @@ metadata:
   hermes:
     tags: [debugging, python, pdb, debugpy, breakpoints, dap, post-mortem]
     related_skills: [systematic-debugging, node-inspect-debugger, debugging-hermes-tui-commands]
+    molin_owner: 墨码（软件工坊）
 ---
 
 # Python Debugger (pdb + debugpy)

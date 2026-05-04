@@ -1,4 +1,5 @@
 ---
+
 name: trading-agents
 description: Multi-perspective financial analysis using the TradingAgents framework — fundamental analysis, sentiment analysis, technical analysis, and risk assessment from 4 agent viewpoints. Use when analyzing stocks, markets, investments, or financial opportunities.
 version: 1.0.0
@@ -9,6 +10,7 @@ metadata:
   hermes:
     source: https://github.com/TauricResearch/TradingAgents
     stars: 64000
+    molin_owner: 墨算（财务）
 ---
 
 # TradingAgents — 多视角金融分析

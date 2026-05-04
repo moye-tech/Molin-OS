@@ -1,10 +1,14 @@
 ---
+
 name: pm-dummy-dataset
 description: "Generate realistic dummy datasets for testing with customizable columns, constraints, and output formats (CSV, JSON, SQL, Python script). Use when creating test data, building mock datasets, or genera"
 version: 1.0.0
 tags: [pm, product-management, execution]
 category: productivity
 source: https://github.com/phuryn/pm-skills
+metadata:
+  hermes:
+    molin_owner: 墨品（产品设计）
 ---
 
 ---

@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.0.0-6c5ce7?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/version-4.0.0-6c5ce7?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/python-3.10+-00b894?style=flat-square&logo=python" alt="Python">
   <img src="https://img.shields.io/badge/tests-21%20passed-success?style=flat-square" alt="Tests">
   <img src="https://img.shields.io/badge/license-MIT-00b894?style=flat-square" alt="License">
@@ -80,7 +80,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    墨麟 Hermes OS v2.0                    │
+│                 墨麟 Hermes OS v4.0                    │
 ├─────────────────────────────────────────────────────────┤
 │                                                         │
 │   ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌────────┐ │
@@ -94,7 +94,7 @@
 │   └──────────┘  └────────────┘  └─────────┘  └───────┘ │
 │                                                         │
 ├─────────────────────────────────────────────────────────┤
-│  知识库: 235 SKILL.md  │  治理: L0-L3  │  预算: ¥1,360/m │
+│  知识库: 266 SKILL.md  │  治理: L0-L3  │  预算: ¥2,440/m │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -108,6 +108,8 @@
 | 研发 | `skills/engineering/` | 23 | 编码、调试、架构、代码审查 |
 | 增长 | `skills/growth/` | 11 | 闲鱼、营销、渠道、发布 |
 | 情报 | `skills/intelligence/` | 10 | 趋势、OSINT、监控 |
+
+> **molin_owner 三层体系**: CEO (27 skills) / 子公司专用 (238 skills) / 共享 (1 skill) — 覆盖 19/22 家墨系子公司
 
 ---
 
@@ -192,7 +194,7 @@ make clean      # 清理构建产物
 
 | 文件 | 说明 |
 |:---|:---|
-| `config/company.yaml` | 公司结构 (6 部门 × 22 角色)、预算 ¥1,360/月、变现矩阵 |
+| `config/company.yaml` | 公司结构 (22 墨系子公司)、预算 ¥2,440/月、变现矩阵 |
 | `config/governance.yaml` | L0-L3 四级审批规则、审计日志、安全策略 |
 | `config/channels.yaml` | 7 平台发布配置 (日限额、最佳发布时间、内容类型) |
 | `.env.example` → `~/.molin/.env` | API Keys、Hermes 连接配置、告警等环境变量 |
@@ -235,7 +237,7 @@ make clean      # 清理构建产物
 │   └── channels.yaml            #   发布渠道配置
 │
 ├── molin/                       # Python 源码
-│   ├── __init__.py              #   包定义 (v2.0.0)
+│   ├── __init__.py              #   包定义 (v4.0.0)
 │   ├── cli.py                   #   CLI 入口 (16 个子命令)
 │   ├── dashboard.py             #   Web 仪表盘 (Flask)
 │   ├── core/                    #   核心层
@@ -259,13 +261,27 @@ make clean      # 清理构建产物
 │       ├── bp.py                #     商业计划书生成
 │       └── prd.py               #     PRD 文档生成
 │
-├── skills/                      # Hermes SKILL.md 知识库 (235 个)
+├── skills/                      # Hermes SKILL.md 知识库 (266 个)
 │   ├── meta/           (35)     #   决策层
 │   ├── content/        (22)     #   内容层
 │   ├── business/       (76)     #   商业层
 │   ├── engineering/    (23)     #   工程层
 │   ├── growth/         (11)     #   增长层
-│   └── intelligence/   (10)     #   情报层
+│   ├── intelligence/   (10)     #   情报层
+│   ├── apple/                   #   Apple 生态
+│   ├── autonomous-ai-agents/    #   自主AI Agent
+│   ├── data-science/            #   数据科学
+│   ├── devops/                  #   DevOps
+│   ├── diagramming/             #   图表绘制
+│   ├── domain/                  #   独立域名
+│   ├── email/                   #   邮件
+│   ├── gaming/                  #   游戏
+│   ├── github/                  #   GitHub
+│   ├── mcp/                     #   MCP 协议
+│   ├── media/                   #   媒体
+│   ├── mlops/                   #   MLOps
+│   ├── social-media/            #   社交媒体
+│   └── 更多 30+ 领域            #   54 领域全覆盖
 │
 ├── tests/                       # 测试套件
 │   └── test_core.py             #   核心模块测试 (21 用例)

@@ -1,10 +1,14 @@
 ---
+
 name: ag-agent-orchestration-improve-agent
 description: "Systematic improvement of existing agents through performance analysis, prompt engineering, and continuous iteration."
 version: 1.0.0
 tags: [antigravity, general]
 category: software-development
 source: https://github.com/sickn33/antigravity-awesome-skills
+metadata:
+  hermes:
+    molin_owner: CEO
 ---
 
 ---

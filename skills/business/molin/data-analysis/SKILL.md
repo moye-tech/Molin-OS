@@ -1,4 +1,5 @@
 ---
+
 name: 数据子公司
 description: 负责数据分析、洞察
 version: 1.0.0
@@ -13,6 +14,7 @@ metadata:
       cost_level: medium
       max_concurrent: 2
       model_preference: qwen3.6-plus
+    molin_owner: 墨数（数据）
 ---
 
 # 数据子公司

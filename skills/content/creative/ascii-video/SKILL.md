@@ -1,6 +1,10 @@
 ---
+
 name: ascii-video
 description: "ASCII video: convert video/audio to colored ASCII MP4/GIF."
+metadata:
+  hermes:
+    molin_owner: 墨迹（内容工厂）
 ---
 
 # ASCII Video Production Pipeline

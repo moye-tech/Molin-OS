@@ -1,9 +1,13 @@
 ---
+
 name: ffmpeg-video-engine
 description: GPU-free automated short video pipeline — script→images→TTS voiceover→background music→FFmpeg composition. Produces Xiaohongshu-ready vertical videos without any GPU. Uses Edge-TTS (free), Pillow, and FFmpeg.
 version: 1.0.0
 tags: [video, ffmpeg, tts, content, automation, xiaohongshu]
 category: content
+metadata:
+  hermes:
+    molin_owner: 墨迹（内容工厂）
 ---
 
 # FFmpeg Video Engine — 无 GPU 视频管线

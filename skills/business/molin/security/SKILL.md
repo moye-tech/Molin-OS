@@ -1,4 +1,5 @@
 ---
+
 name: 安全子公司
 description: 负责安全、合规、风控
 version: 1.0.0
@@ -13,6 +14,7 @@ metadata:
       cost_level: low
       max_concurrent: 2
       model_preference: glm-5
+    molin_owner: 墨盾（安全/QA）
 ---
 
 # 安全子公司

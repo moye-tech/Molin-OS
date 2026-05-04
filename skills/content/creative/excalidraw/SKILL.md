@@ -1,4 +1,5 @@
 ---
+
 name: excalidraw
 description: "Hand-drawn Excalidraw JSON diagrams (arch, flow, seq)."
 version: 1.0.0
@@ -10,6 +11,7 @@ metadata:
     tags: [Excalidraw, Diagrams, Flowcharts, Architecture, Visualization, JSON]
     related_skills: []
 
+    molin_owner: 墨工（设计）
 ---
 
 # Excalidraw Diagram Skill

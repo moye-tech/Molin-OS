@@ -1,10 +1,14 @@
 ---
+
 name: openclaw-skills-reference
 description: Reference catalog of 5,400+ OpenClaw community skills. These are OpenClaw-specific but many concepts can be adapted to Hermes Agent skills.
 version: 1.0.0
 tags: [openclaw, reference, catalog, skills]
 category: reference
 source: https://github.com/VoltAgent/awesome-openclaw-skills
+metadata:
+  hermes:
+    molin_owner: 墨思（情报研究）
 ---
 
 # OpenClaw Skills — 参考目录

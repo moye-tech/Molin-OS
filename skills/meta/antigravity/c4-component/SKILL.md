@@ -1,10 +1,14 @@
 ---
+
 name: ag-c4-component
 description: "Expert C4 Component-level documentation specialist. Synthesizes C4 Code-level documentation into Component-level architecture, defining component boun"
 version: 1.0.0
 tags: [antigravity, devops]
 category: software-development
 source: https://github.com/sickn33/antigravity-awesome-skills
+metadata:
+  hermes:
+    molin_owner: CEO
 ---
 
 ---

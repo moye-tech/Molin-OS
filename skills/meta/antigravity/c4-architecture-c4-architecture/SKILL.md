@@ -1,10 +1,14 @@
 ---
+
 name: ag-c4-architecture-c4-architecture
 description: "Generate comprehensive C4 architecture documentation for an existing repository/codebase using a bottom-up analysis approach."
 version: 1.0.0
 tags: [antigravity, documentation]
 category: software-development
 source: https://github.com/sickn33/antigravity-awesome-skills
+metadata:
+  hermes:
+    molin_owner: CEO
 ---
 
 ---

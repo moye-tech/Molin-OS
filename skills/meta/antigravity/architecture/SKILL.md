@@ -1,10 +1,14 @@
 ---
+
 name: ag-architecture
 description: "Architectural decision-making framework. Requirements analysis, trade-off evaluation, ADR documentation. Use when making architecture decisions or ana"
 version: 1.0.0
 tags: [antigravity, devops]
 category: software-development
 source: https://github.com/sickn33/antigravity-awesome-skills
+metadata:
+  hermes:
+    molin_owner: CEO
 ---
 
 ---

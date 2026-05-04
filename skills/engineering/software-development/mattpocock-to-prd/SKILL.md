@@ -1,4 +1,5 @@
 ---
+
 name: to-prd
 description: "Convert high-level ideas, feature requests, or vague requirements into a structured Product Requirements Document (PRD) with work breakdown. Use when someone has a feature idea but needs it formalized into clear, actionable specifications with scope, priorities, and implementation phases."
 version: 1.0.0
@@ -6,6 +7,7 @@ source: https://github.com/mattpocock/skills (56K stars)
 metadata:
   hermes:
     tags: [prd, product-requirements, specification, planning, work-breakdown, scoping, software-development, documentation]
+    molin_owner: 墨码（软件工坊）
 ---
 
 # To PRD — Idea to Structured Specification

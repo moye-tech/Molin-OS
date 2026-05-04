@@ -1,10 +1,14 @@
 ---
+
 name: social-push-publisher
-description: Multi-platform social media publishing workflow — post content to 小红书/知乎/微博/公众号/掘金/X using agent-browser automation. Self-evolution: auto-adapts to page changes. Safety: draft-only, no auto-publish.
+description: "Multi-platform social media publishing workflow — post content to Chinese platforms using agent-browser automation. Self-evolution: auto-adapts to page changes. Safety: draft-only, no auto-publish."
 version: 1.0.0
 tags: [social-media, publishing, xiaohongshu, automation, agent-browser]
 category: growth
 source: https://github.com/jihe520/social-push
+metadata:
+  hermes:
+    molin_owner: 墨域（私域CRM）
 ---
 
 # Social Push Publisher — 多平台发布管线

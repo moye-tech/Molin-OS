@@ -1,4 +1,5 @@
 ---
+
 name: skill-discovery
 description: "Systematically research external GitHub repos, evaluate integration value for Hermes Agent, and produce tiered adoption roadmaps."
 version: 1.0.0
@@ -6,6 +7,7 @@ metadata:
   hermes:
     tags: [skills, evaluation, research, integration, github]
     related_skills: [swarm-engine, karpathy-coding-principles, hermes-agent-skill-authoring, self-learning-loop]
+    molin_owner: CEO
 ---
 
 # Skill Discovery & Evaluation

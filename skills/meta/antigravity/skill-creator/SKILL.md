@@ -1,10 +1,14 @@
 ---
+
 name: ag-skill-creator
 description: "To create new CLI skills following Anthropic's official best practices with zero manual configuration. This skill automates brainstorming, template ap"
 version: 1.0.0
 tags: [antigravity, devops]
 category: software-development
 source: https://github.com/sickn33/antigravity-awesome-skills
+metadata:
+  hermes:
+    molin_owner: CEO
 ---
 
 ---

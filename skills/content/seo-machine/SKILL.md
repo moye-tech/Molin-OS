@@ -1,4 +1,5 @@
 ---
+
 name: seo-machine
 description: "SEO-optimized content machine: keyword research, intent detection, quality scoring, readability, internal linking, and competitive gap analysis."
 version: 1.0.0
@@ -9,6 +10,7 @@ metadata:
     tags: [seo, content, keywords, optimization, search, marketing, writing]
     related_skills: []
     category: productivity
+    molin_owner: 墨增（增长引擎）
 ---
 
 # SEO Machine

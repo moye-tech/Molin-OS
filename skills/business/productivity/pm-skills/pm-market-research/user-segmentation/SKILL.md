@@ -1,10 +1,14 @@
 ---
+
 name: pm-user-segmentation
 description: "Segment users from feedback data based on behavior, JTBD, and needs. Identifies at least 3 distinct user segments. Use when segmenting a user base, analyzing diverse user feedback, or building a segme"
 version: 1.0.0
 tags: [pm, product-management, market-research]
 category: productivity
 source: https://github.com/phuryn/pm-skills
+metadata:
+  hermes:
+    molin_owner: 墨品（产品设计）
 ---
 
 ---

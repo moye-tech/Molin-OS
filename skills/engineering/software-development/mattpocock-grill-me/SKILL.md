@@ -1,4 +1,5 @@
 ---
+
 name: grill-me
 description: "Grilling session that forces the agent to explicitly think through requirements, edge cases, tradeoffs, and design decisions BEFORE writing any code. Use when starting a new feature, tackling a complex task, or when you need the agent to deeply understand what to build before building it. Prevents premature implementation."
 version: 1.0.0
@@ -6,6 +7,7 @@ source: https://github.com/mattpocock/skills (56K stars)
 metadata:
   hermes:
     tags: [planning, requirements, alignment, thinking, design, pre-code, software-development]
+    molin_owner: 墨码（软件工坊）
 ---
 
 # Grill Me — Pre-Code Alignment Session

@@ -1,4 +1,5 @@
 ---
+
 name: xiaohongshu-content-engine
 description: "Use when creating Xiaohongshu (RED) content — posts, captions, or content strategies. Produces platform-optimized, high-engagement content with algorithm-aware headlines, structured body copy, CTAs, and JSON output ready for scheduling and A/B testing. Covers audience psychology, banned-word detection, and publishing-time optimization."
 version: 1.0.0
@@ -7,7 +8,12 @@ license: MIT
 metadata:
   hermes:
     tags: [xiaohongshu, red, content-marketing, social-media, copywriting, chinese-platform, creator-economy]
-    related_skills: []
+    related_skills: [social-push-publisher, xiaohongshu-cli]
+    xiaohongshu_cli:
+      source: https://github.com/moye-tech/xiaohongshu-cli
+      value: 小红书逆向CLI，支持搜索/浏览/互动等操作
+      note: 内容创作用本skill，实际操作用xiaohongshu-cli或social-push-publisher
+    molin_owner: 墨影（IP孵化）
 ---
 
 # Xiaohongshu Content Engine

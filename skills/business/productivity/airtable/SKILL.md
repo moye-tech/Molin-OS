@@ -1,4 +1,5 @@
 ---
+
 name: airtable
 description: Airtable REST API via curl. Records CRUD, filters, upserts.
 version: 1.1.0
@@ -11,6 +12,7 @@ metadata:
   hermes:
     tags: [Airtable, Productivity, Database, API]
     homepage: https://airtable.com/developers/web/api/introduction
+    molin_owner: 墨迹（内容工厂）
 ---
 
 # Airtable — Bases, Tables & Records

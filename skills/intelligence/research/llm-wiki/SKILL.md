@@ -1,4 +1,5 @@
 ---
+
 name: llm-wiki
 description: "Karpathy's LLM Wiki: build/query interlinked markdown KB."
 version: 2.1.0
@@ -9,6 +10,7 @@ metadata:
     tags: [wiki, knowledge-base, research, notes, markdown, rag-alternative]
     category: research
     related_skills: [obsidian, arxiv]
+    molin_owner: 墨思（情报研究）
 ---
 
 # Karpathy's LLM Wiki

@@ -1,4 +1,5 @@
 ---
+
 name: IP子公司
 description: 负责内容创作、IP孵化
 version: 1.0.0
@@ -13,6 +14,7 @@ metadata:
       cost_level: medium
       max_concurrent: 2
       model_preference: claude-opus
+    molin_owner: 墨影（IP孵化）
 ---
 
 # IP子公司

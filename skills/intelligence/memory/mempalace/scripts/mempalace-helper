@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# MemPalace Helper Shell Wrapper
+# Usage: mempalace-helper <action> [args...]
+# See mempalace_helper.py --help for details
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+HELPER_PY="$SCRIPT_DIR/mempalace_helper.py"
+HERMES_VENV="$HOME/.hermes/hermes-agent/venv"
+
+# Try to use Hermes venv Python if available
+if [ -x "$HERMES_VENV/bin/python3" ]; then
+    PYTHON="$HERMES_VENV/bin/python3"
+elif [ -x "$HERMES_VENV/bin/python" ]; then
+    PYTHON="$HERMES_VENV/bin/python"
+else
+    PYTHON="python3"
+fi
+
+exec "$PYTHON" "$HELPER_PY" "$@"

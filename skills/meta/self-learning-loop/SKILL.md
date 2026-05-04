@@ -1,4 +1,5 @@
 ---
+
 name: self-learning-loop
 description: Auto-reflect on completed tasks, extract lessons learned, and automatically update or create skills. The system gets smarter with every use — inspired by Ruflo's self-learning memory architecture.
 version: 1.0.0
@@ -8,7 +9,15 @@ related_skills: [skill-discovery, agentic-engineering, swarm-orchestration]
 metadata:
   hermes:
     inspired_by: https://github.com/ruvnet/ruflo
-    concepts: [self-learning, experience-crystallization, auto-skill-creation, reflection-loops]
+    upstream_fork: https://github.com/moye-tech/ruflo
+    stars: 38000
+    concepts: [self-learning, experience-crystallization, auto-skill-creation, reflection-loops, q-learning-routing, self-optimizing-orchestration]
+    ruflo_integrated:
+      - Q-Learning Router: 学习最优任务分配策略，每次决策后自动调优
+      - EWC++ (Elastic Weight Consolidation): 学新知识不忘旧经验
+      - ReasoningBank: 模式库，重复使用的模式自动沉淀
+      - Self-Optimizing Loop: 每次编排后自动评估并调整策略
+    molin_owner: CEO
 ---
 
 # Self-Learning Loop — 自学习回路
@@ -170,7 +179,20 @@ During a 24-repo batch evaluation session (尹建业, 2026-05-03), the self-lear
 
 This is the loop functioning correctly — the system gets measurably better at its job with each session.
 
-## Real Example: Molin/Xianyu Monetization Session
+## Real Example: Claude Code Source Analysis → Tool Development Pattern
+
+During the Claude Code decompiled codebase analysis (2026-05-04):
+
+1. **Problem**: The Claude Code repo had 61 tools with complex feature-gating patterns that weren't immediately obvious from just listing files
+2. **Discoveries**:
+   - Three-layer feature flag system (Bun build-time MACRO → env-var USER_TYPE → GrowthBook remote A/B)
+   - SQLite-backed task system with 6 distinct tools (not just 1)
+   - LSP integration gated behind `ENABLE_LSP_TOOL` env var
+3. **Crystallized into skills**:
+   - `hermes-tool-development` — captured the SQLite test isolation pattern, tool registration methods, and feature-gating approaches
+   - Updated memory with Claude Code analysis findings
+
+**Lesson for the loop**: When analyzing an external codebase, look for patterns (registration, testing, gating) that can be extracted as reusable skills for your own codebase. Don't just note "cool feature X" — note *how* they built it so you can replicate the approach.
 
 Same session, the loop caught three more patterns:
 

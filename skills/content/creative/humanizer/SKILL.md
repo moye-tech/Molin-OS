@@ -1,4 +1,5 @@
 ---
+
 name: humanizer
 description: "Humanize text: strip AI-isms and add real voice."
 version: 2.5.1
@@ -10,6 +11,7 @@ metadata:
     category: creative
     homepage: https://github.com/blader/humanizer
     related_skills: [songwriting-and-ai-music]
+    molin_owner: 墨迹（内容工厂）
 ---
 
 # Humanizer: Remove AI Writing Patterns

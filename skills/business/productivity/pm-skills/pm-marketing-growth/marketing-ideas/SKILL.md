@@ -1,10 +1,14 @@
 ---
+
 name: pm-marketing-ideas
 description: "Generate 5 creative, cost-effective marketing ideas with channels, messaging, and engagement rationale. Use when brainstorming marketing campaigns, planning product promotion, or looking for creative "
 version: 1.0.0
 tags: [pm, product-management, marketing-growth]
 category: productivity
 source: https://github.com/phuryn/pm-skills
+metadata:
+  hermes:
+    molin_owner: 墨品（产品设计）
 ---
 
 ---

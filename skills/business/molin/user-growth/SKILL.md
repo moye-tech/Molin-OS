@@ -1,4 +1,5 @@
 ---
+
 name: 增长子公司
 description: 负责用户增长、营销
 version: 1.0.0
@@ -13,6 +14,7 @@ metadata:
       cost_level: high
       max_concurrent: 3
       model_preference: claude-sonnet
+    molin_owner: 墨增（增长引擎）
 ---
 
 # 增长子公司

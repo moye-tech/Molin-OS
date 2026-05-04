@@ -1,4 +1,5 @@
 ---
+
 name: AI子公司
 description: 负责提示工程、AI优化
 version: 1.0.0
@@ -13,6 +14,7 @@ metadata:
       cost_level: low
       max_concurrent: 2
       model_preference: glm-5
+    molin_owner: 墨智（AI研发）
 ---
 
 # AI子公司

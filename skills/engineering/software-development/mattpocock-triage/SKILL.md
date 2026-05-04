@@ -1,4 +1,5 @@
 ---
+
 name: triage
 description: "Issue and bug management: categorize, prioritize, and assign issues with clear severity levels and action plans. Use when faced with a queue of bug reports, feature requests, or support tickets that need systematic evaluation and routing."
 version: 1.0.0
@@ -6,6 +7,7 @@ source: https://github.com/mattpocock/skills (56K stars)
 metadata:
   hermes:
     tags: [triage, bug-management, issue-tracking, prioritization, categorization, software-development, project-management]
+    molin_owner: 墨码（软件工坊）
 ---
 
 # Triage — Issue Categorization and Prioritization

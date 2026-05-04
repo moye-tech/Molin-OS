@@ -1,4 +1,5 @@
 ---
+
 name: touchdesigner-mcp
 description: "Control a running TouchDesigner instance via twozero MCP — create operators, set parameters, wire connections, execute Python, build real-time visuals. 36 native tools."
 version: 1.1.0
@@ -9,6 +10,7 @@ metadata:
     tags: [TouchDesigner, MCP, twozero, creative-coding, real-time-visuals, generative-art, audio-reactive, VJ, installation, GLSL]
     related_skills: [native-mcp, ascii-video, manim-video, hermes-video]
 
+    molin_owner: 墨工（设计）
 ---
 
 # TouchDesigner Integration (twozero MCP)

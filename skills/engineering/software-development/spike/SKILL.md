@@ -1,4 +1,5 @@
 ---
+
 name: spike
 description: "Throwaway experiments to validate an idea before build."
 version: 1.0.0
@@ -8,6 +9,7 @@ metadata:
   hermes:
     tags: [spike, prototype, experiment, feasibility, throwaway, exploration, research, planning, mvp, proof-of-concept]
     related_skills: [sketch, writing-plans, subagent-driven-development, plan]
+    molin_owner: 墨码（软件工坊）
 ---
 
 # Spike

@@ -1,4 +1,5 @@
 ---
+
 name: marketing-skills-copywriting
 description: AI copywriting framework — headline formulas, persuasion patterns, emotional triggers, platform-specific optimization. From coreyhaines31/marketingskills (26K stars). Use when writing sales copy for Xianyu listings, marketing content, or ad copy.
 version: 1.0.0
@@ -6,6 +7,9 @@ tags: [marketing, copywriting, persuasion, sales, content]
 category: growth
 source: https://github.com/coreyhaines31/marketingskills
 stars: 26000
+metadata:
+  hermes:
+    molin_owner: 墨增（增长引擎）
 ---
 
 # Marketing — Copywriting (文案优化)

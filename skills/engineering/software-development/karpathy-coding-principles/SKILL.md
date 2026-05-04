@@ -1,4 +1,5 @@
 ---
+
 name: karpathy-coding-principles
 description: "Apply Andrej Karpathy's four LLM coding principles: think before coding, simplicity first, surgical changes, goal-driven execution. Load when the user asks for coding tasks, refactoring, or bug fixing."
 version: 1.0.0
@@ -8,6 +9,9 @@ metadata:
   hermes:
     tags: [coding-principles, simplicity, surgical-editing, goal-driven, karpathy, quality]
     related_skills: [test-driven-development, systematic-debugging, writing-plans, plan, requesting-code-review]
+    upstream_fork: https://github.com/moye-tech/andrej-karpathy-skills
+    upstream_parent_stars: 108000
+    molin_owner: 墨码（软件工坊）
 ---
 
 # Karpathy Coding Principles

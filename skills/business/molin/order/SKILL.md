@@ -1,4 +1,5 @@
 ---
+
 name: 订单子公司
 description: 负责定价、订单、交易处理
 version: 1.0.0
@@ -13,6 +14,7 @@ metadata:
       cost_level: high
       max_concurrent: 3
       model_preference: claude-sonnet
+    molin_owner: 墨单（订单交付）
 ---
 
 # 订单子公司

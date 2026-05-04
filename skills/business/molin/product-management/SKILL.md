@@ -1,4 +1,5 @@
 ---
+
 name: 产品子公司
 description: 负责产品规划、设计
 version: 1.0.0
@@ -13,6 +14,7 @@ metadata:
       cost_level: medium
       max_concurrent: 2
       model_preference: qwen3.6-plus
+    molin_owner: 墨品（产品设计）
 ---
 
 # 产品子公司

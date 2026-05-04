@@ -1,4 +1,5 @@
 ---
+
 name: mirofish-trends
 description: Swarm intelligence trend prediction — simulate thousands of agents with independent behaviors to forecast content trends, market movements, and technology adoption curves. Use when predicting what will trend next.
 version: 1.0.0
@@ -9,6 +10,7 @@ metadata:
   hermes:
     source: https://github.com/666ghj/MiroFish
     stars: 59000
+    molin_owner: 墨思（情报研究）
 ---
 
 # MiroFish Trends — 蜂群趋势预测

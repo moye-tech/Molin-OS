@@ -1,4 +1,5 @@
 ---
+
 name: last30days
 description: AI agent-led search engine scored by real user engagement. Searches Reddit, Hacker News, Polymarket, GitHub, YouTube, TikTok, X across the last 30 days — ranked by upvotes/likes/real money, not editors.
 version: 1.0.0
@@ -9,6 +10,7 @@ metadata:
   hermes:
     homepage: https://github.com/mvanhorn/last30days-skill
     install_note: Zero-config for Reddit/HN/Polymarket/GitHub. Run setup wizard for X/YouTube/TikTok.
+    molin_owner: 墨思（情报研究）
 ---
 
 # Last30Days — Social Engagement Search Engine

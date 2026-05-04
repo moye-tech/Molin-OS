@@ -1,4 +1,5 @@
 ---
+
 name: ideation
 title: Creative Ideation — Constraint-Driven Project Generation
 description: "Generate project ideas via creative constraints."
@@ -10,6 +11,7 @@ metadata:
     tags: [Creative, Ideation, Projects, Brainstorming, Inspiration]
     category: creative
     requires_toolsets: []
+    molin_owner: 墨迹（内容工厂）
 ---
 
 # Creative Ideation

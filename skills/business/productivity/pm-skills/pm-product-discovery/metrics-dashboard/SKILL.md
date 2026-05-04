@@ -1,10 +1,14 @@
 ---
+
 name: pm-metrics-dashboard
 description: "Define and design a product metrics dashboard with key metrics, data sources, visualization types, and alert thresholds. Use when creating a metrics dashboard, defining KPIs, setting up product analyt"
 version: 1.0.0
 tags: [pm, product-management, product-discovery]
 category: productivity
 source: https://github.com/phuryn/pm-skills
+metadata:
+  hermes:
+    molin_owner: 墨品（产品设计）
 ---
 
 ---

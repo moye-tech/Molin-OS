@@ -1,4 +1,5 @@
 ---
+
 name: marketing-skills-cro
 description: Conversion Rate Optimization framework — landing page analysis, A/B test design, funnel optimization, copy testing. From coreyhaines31/marketingskills (26K stars). Use when optimizing conversions on Xianyu listings, landing pages, or sales funnels.
 version: 1.0.0
@@ -6,6 +7,9 @@ tags: [marketing, cro, conversion, optimization, sales, funnel]
 category: growth
 source: https://github.com/coreyhaines31/marketingskills
 stars: 26000
+metadata:
+  hermes:
+    molin_owner: 墨商销售（闲鱼实业）
 ---
 
 # Marketing — CRO (转化率优化)

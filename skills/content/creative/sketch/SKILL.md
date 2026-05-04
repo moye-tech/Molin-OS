@@ -1,4 +1,5 @@
 ---
+
 name: sketch
 description: "Throwaway HTML mockups: 2-3 design variants to compare."
 version: 1.0.0
@@ -8,6 +9,7 @@ metadata:
   hermes:
     tags: [sketch, mockup, design, ui, prototype, html, variants, exploration, wireframe, comparison]
     related_skills: [spike, claude-design, popular-web-designs, excalidraw]
+    molin_owner: 墨迹（内容工厂）
 ---
 
 # Sketch

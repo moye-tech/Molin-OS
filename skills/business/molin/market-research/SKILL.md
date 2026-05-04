@@ -1,4 +1,5 @@
 ---
+
 name: 研究子公司
 description: 负责市场研究、竞品分析
 version: 1.0.0
@@ -13,6 +14,7 @@ metadata:
       cost_level: medium
       max_concurrent: 2
       model_preference: claude-opus
+    molin_owner: 墨思（情报研究）
 ---
 
 # 研究子公司

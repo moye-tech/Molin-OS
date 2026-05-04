@@ -1,10 +1,14 @@
 ---
+
 name: pm-identify-assumptions-existing
 description: "Identify risky assumptions for a feature idea in an existing product across Value, Usability, Viability, and Feasibility. Uses multi-perspective devil's advocate thinking. Use when stress-testing a fe"
 version: 1.0.0
 tags: [pm, product-management, product-discovery]
 category: productivity
 source: https://github.com/phuryn/pm-skills
+metadata:
+  hermes:
+    molin_owner: 墨品（产品设计）
 ---
 
 ---

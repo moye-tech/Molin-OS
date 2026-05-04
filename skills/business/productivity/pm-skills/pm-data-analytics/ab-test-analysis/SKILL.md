@@ -1,10 +1,14 @@
 ---
+
 name: pm-ab-test-analysis
 description: "Analyze A/B test results with statistical significance, sample size validation, confidence intervals, and ship/extend/stop recommendations. Use when evaluating experiment results, checking if a test r"
 version: 1.0.0
 tags: [pm, product-management, data-analytics]
 category: productivity
 source: https://github.com/phuryn/pm-skills
+metadata:
+  hermes:
+    molin_owner: 墨品（产品设计）
 ---
 
 ---

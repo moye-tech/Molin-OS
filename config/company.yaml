@@ -3,73 +3,232 @@
 
 name: 墨麟 AI
 mission: 打造AI驱动的全自动一人公司，让个体拥有企业的战斗力
-version: 2.0.0
-budget_monthly: 1360  # ¥1,360/月 AI服务预算
+version: 4.0.0
+budget_monthly: 2440  # ¥2,440/月 AI服务预算 (22子公司)
 
-# ── 6个部门 × 22个角色 ──
+# ── 22家墨系子公司 ──
 departments:
-  ceo_office:
-    name: CEO办公室
+  mozhi_ai:
+    name: 墨智（AI研发）
+    headcount: 3
+    roles:
+      - AI研究员
+      - 模型训练师
+      - Prompt工程师
+    responsibility: AI模型研发、LLM微调、Agent框架开发
+    revenue_target: 4000
+    budget: 300
+
+  moma_software:
+    name: 墨码（软件工坊）
+    headcount: 3
+    roles:
+      - 全栈工程师
+      - 前端开发
+      - 后端开发
+    responsibility: 软件定制开发、技术方案设计、代码审查
+    revenue_target: 4000
+    budget: 200
+
+  mosheng_bd:
+    name: 墨商BD（商务拓展）
+    headcount: 2
+    roles:
+      - 商务经理
+      - 渠道专员
+    responsibility: 商务合作拓展、渠道建设、客户关系管理
+    revenue_target: 3000
+    budget: 150
+
+  moying_ip:
+    name: 墨影（IP孵化）
+    headcount: 2
+    roles:
+      - IP运营
+      - 内容策划
+    responsibility: IP孵化、品牌建设、版权运营
+    revenue_target: 3000
+    budget: 150
+
+  mozeng_growth:
+    name: 墨增（增长引擎）
+    headcount: 2
+    roles:
+      - 增长黑客
+      - 投放优化师
+    responsibility: 用户增长、投放优化、A/B测试
+    revenue_target: 3000
+    budget: 150
+
+  mosheng_cs:
+    name: 墨声（客服）
+    headcount: 2
+    roles:
+      - 客服主管
+      - 智能客服专员
+    responsibility: 客户服务、工单管理、满意度管理
+    revenue_target: 1500
+    budget: 80
+
+  moyu_crm:
+    name: 墨域（私域CRM）
+    headcount: 2
+    roles:
+      - 私域运营
+      - CRM专员
+    responsibility: 私域流量运营、客户分层、社群管理
+    revenue_target: 2500
+    budget: 120
+
+  modan_order:
+    name: 墨单（订单交付）
+    headcount: 2
+    roles:
+      - 订单管理
+      - 交付专员
+    responsibility: 订单处理、交付跟踪、履约管理
+    revenue_target: 2000
+    budget: 80
+
+  mosuan_finance:
+    name: 墨算（财务）
     headcount: 1
     roles:
-      - CEO
-    responsibility: 战略决策、资源分配、目标管理
+      - 财务专员
+    responsibility: 财务核算、预算管理、成本控制
+    revenue_target: 500
+    budget: 50
 
-  content_factory:
-    name: 内容工厂
-    headcount: 4
+  mosi_intel:
+    name: 墨思（情报研究）
+    headcount: 2
     roles:
-      - 主编
-      - 小红书运营
-      - 视频制作
-      - SEO专家
-    responsibility: 内容生产、平台运营、SEO优化
-    kpi:
-      daily_output: 10  # 日产10篇
-      automation_rate: 0.8  # 自动化率80%
-      platforms: [小红书, 知乎, 微博, 微信公众号, 掘金, X]
-
-  business_brain:
-    name: 商业大脑
-    headcount: 4
-    roles:
-      - 商业分析师
-      - 产品经理
-      - 定价策略师
-      - 项目经理
-    responsibility: 商业分析、PRD撰写、定价策略
-
-  engineering:
-    name: 研发工坊
-    headcount: 5
-    roles:
-      - 架构师
-      - 后端开发
-      - 前端开发
-      - 测试工程师
-      - 运维工程师
-    responsibility: 系统开发、自动化管线、部署维护
-
-  growth_engine:
-    name: 增长引擎
-    headcount: 4
-    roles:
-      - 营销专家
-      - 闲鱼运营
-      - 渠道管理
-      - 数据分析师
-    responsibility: 用户增长、变现运营、数据驱动
-    revenue_target: 5000  # ¥5,000/月
-
-  intelligence:
-    name: 情报系统
-    headcount: 4
-    roles:
+      - 情报分析师
       - 研究员
-      - 趋势分析
-      - 竞品监控
-      - OSINT专家
-    responsibility: 趋势发现、竞争情报、机会识别
+    responsibility: 行业研究、竞品分析、趋势研判
+    revenue_target: 2000
+    budget: 100
+
+  molv_legal:
+    name: 墨律（法务）
+    headcount: 1
+    roles:
+      - 法务专员
+    responsibility: 合同审核、知识产权、合规管理
+    revenue_target: 1000
+    budget: 50
+
+  modun_qa:
+    name: 墨盾（安全/QA）
+    headcount: 2
+    roles:
+      - 安全工程师
+      - QA测试
+    responsibility: 安全审计、质量保障、渗透测试
+    revenue_target: 1500
+    budget: 100
+
+  mopin_design:
+    name: 墨品（产品设计）
+    headcount: 2
+    roles:
+      - 产品经理
+      - 交互设计师
+    responsibility: 产品规划、原型设计、体验优化
+    revenue_target: 3000
+    budget: 150
+
+  moshu_data:
+    name: 墨数（数据）
+    headcount: 2
+    roles:
+      - 数据分析师
+      - 数据工程师
+    responsibility: 数据分析、数据建模、BI报表
+    revenue_target: 3000
+    budget: 120
+
+  movei_ops:
+    name: 墨维（运维）
+    headcount: 1
+    roles:
+      - 运维工程师
+    responsibility: 系统运维、部署自动化、监控告警
+    revenue_target: 2000
+    budget: 80
+
+  moyu_edu:
+    name: 墨育（教育）
+    headcount: 2
+    roles:
+      - 课程设计师
+      - 教学运营
+    responsibility: 在线课程开发、知识付费、培训
+    revenue_target: 3000
+    budget: 120
+
+  mohai_global:
+    name: 墨海（出海）
+    headcount: 2
+    roles:
+      - 出海运营
+      - 本地化专员
+    responsibility: 海外市场拓展、本地化运营、跨境业务
+    revenue_target: 3000
+    budget: 150
+
+  monao_knowledge:
+    name: 墨脑（知识管理）
+    headcount: 1
+    roles:
+      - 知识管理专员
+    responsibility: 知识库构建、文档管理、信息萃取
+    revenue_target: 1000
+    budget: 50
+
+  moji_content:
+    name: 墨迹（内容工厂）
+    headcount: 3
+    roles:
+      - 内容主编
+      - 文案策划
+      - 视频编辑
+    responsibility: 内容生产、多平台分发、素材库管理
+    revenue_target: 4000
+    budget: 200
+
+  motou_trading:
+    name: 墨投（量化交易）
+    headcount: 1
+    roles:
+      - 量化交易员
+    responsibility: 量化策略开发、回测分析、交易执行
+    revenue_target: 2000
+    budget: 100
+
+  mosheng_sales:
+    name: 墨商销售（闲鱼实业）
+    headcount: 2
+    roles:
+      - 闲鱼运营
+      - 销售专员
+    responsibility: 闲鱼店铺运营、实物销售、二手交易
+    revenue_target: 3500
+    budget: 120
+
+  mogong_design:
+    name: 墨工（设计）
+    headcount: 2
+    roles:
+      - 视觉设计师
+      - UI设计师
+    responsibility: 视觉设计、品牌设计、UI/UX设计
+    revenue_target: 2500
+    budget: 120
+
+# ── 月度目标合计 ──
+# 营收目标: ¥48,000/月
+# 预算合计: ¥2,440/月
 
 # ── 变现矩阵 ──
 monetization:

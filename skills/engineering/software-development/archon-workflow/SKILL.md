@@ -1,4 +1,5 @@
 ---
+
 name: archon-workflow
 description: "Deterministic AI coding workflow engine: YAML-defined repeatable workflows, isolated git worktrees, human approval gates, loop-with-until, composable bash+AI nodes."
 version: 1.0.0
@@ -9,6 +10,7 @@ metadata:
     tags: [workflow, deterministic, ai-coding, git, yaml, automation, ci-cd]
     related_skills: [subagent-driven-development, writing-plans, requesting-code-review, test-driven-development]
     category: software-development
+    molin_owner: 墨码（软件工坊）
 ---
 
 # Archon Workflow

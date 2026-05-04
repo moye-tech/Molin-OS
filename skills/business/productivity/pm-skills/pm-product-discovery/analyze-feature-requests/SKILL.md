@@ -1,10 +1,14 @@
 ---
+
 name: pm-analyze-feature-requests
 description: "Analyze and prioritize a list of feature requests by theme, strategic alignment, impact, effort, and risk. Use when reviewing customer feature requests, triaging a backlog, or making prioritization de"
 version: 1.0.0
 tags: [pm, product-management, product-discovery]
 category: productivity
 source: https://github.com/phuryn/pm-skills
+metadata:
+  hermes:
+    molin_owner: 墨品（产品设计）
 ---
 
 ---

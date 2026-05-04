@@ -1,4 +1,5 @@
 ---
+
 name: world-monitor
 description: Real-time global intelligence monitoring — track news, geopolitical events, tech trends, and industry shifts across multiple sources. Use when you need to stay informed about what's happening in the world that affects your business.
 version: 1.0.0
@@ -9,6 +10,7 @@ metadata:
   hermes:
     source: https://github.com/koala73/worldmonitor
     stars: 53000
+    molin_owner: 墨思（情报研究）
 ---
 
 # World Monitor — 全球情报监控

@@ -1,4 +1,5 @@
 ---
+
 name: improve-codebase-architecture
 description: "Systematic code quality and architecture improvement: identify structural issues, propose targeted refactors, and create an incremental improvement plan. Use when reviewing existing code for maintainability, reducing technical debt, or preparing for a feature that requires architectural changes."
 version: 1.0.0
@@ -6,6 +7,7 @@ source: https://github.com/mattpocock/skills (56K stars)
 metadata:
   hermes:
     tags: [refactoring, architecture, code-quality, technical-debt, maintainability, software-development, code-review]
+    molin_owner: 墨码（软件工坊）
 ---
 
 # Improve Codebase Architecture

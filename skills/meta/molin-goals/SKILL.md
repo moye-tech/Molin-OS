@@ -1,8 +1,12 @@
 ---
+
 name: molin-goals
 description: 墨麟一人公司目标系统 — 使命→季度目标→月度OKR→每周任务。每个任务可追溯到顶层目标。
 version: 1.0.0
 category: meta
+metadata:
+  hermes:
+    molin_owner: CEO
 ---
 
 # 墨麟目标系统

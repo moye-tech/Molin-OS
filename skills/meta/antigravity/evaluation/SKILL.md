@@ -1,10 +1,14 @@
 ---
+
 name: ag-evaluation
 description: "Build evaluation frameworks for agent systems. Use when testing agent performance systematically, validating context engineering choices, or measuring"
 version: 1.0.0
 tags: [antigravity, testing]
 category: software-development
 source: https://github.com/sickn33/antigravity-awesome-skills
+metadata:
+  hermes:
+    molin_owner: CEO
 ---
 
 ---

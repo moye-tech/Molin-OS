@@ -1,10 +1,14 @@
 ---
+
 name: pm-north-star-metric
 description: "Define a North Star Metric and 3-5 supporting input metrics that form a metrics constellation. Classify the business game (Attention, Transaction, Productivity) and validate against 7 criteria for an "
 version: 1.0.0
 tags: [pm, product-management, marketing-growth]
 category: productivity
 source: https://github.com/phuryn/pm-skills
+metadata:
+  hermes:
+    molin_owner: 墨品（产品设计）
 ---
 
 ---

@@ -1,6 +1,10 @@
 ---
+
 name: obsidian
 description: Read, search, and create notes in the Obsidian vault.
+metadata:
+  hermes:
+    molin_owner: 墨脑（知识管理）
 ---
 
 # Obsidian Vault

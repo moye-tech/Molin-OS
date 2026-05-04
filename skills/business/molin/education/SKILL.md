@@ -1,4 +1,5 @@
 ---
+
 name: 教育子公司
 description: 负责教育、培训、知识付费业务
 version: 1.0.0
@@ -13,6 +14,7 @@ metadata:
       cost_level: low
       max_concurrent: 2
       model_preference: qwen3.6-plus
+    molin_owner: 墨育（教育）
 ---
 
 # 教育子公司

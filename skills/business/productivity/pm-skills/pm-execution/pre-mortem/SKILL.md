@@ -1,10 +1,14 @@
 ---
+
 name: pm-pre-mortem
 description: "Run a pre-mortem risk analysis on a PRD or launch plan. Categorizes risks as Tigers (real problems), Paper Tigers (overblown concerns), and Elephants (unspoken worries), then classifies as launch-bloc"
 version: 1.0.0
 tags: [pm, product-management, execution]
 category: productivity
 source: https://github.com/phuryn/pm-skills
+metadata:
+  hermes:
+    molin_owner: 墨品（产品设计）
 ---
 
 ---

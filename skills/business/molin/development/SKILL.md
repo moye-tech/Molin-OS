@@ -1,4 +1,5 @@
 ---
+
 name: 开发子公司
 description: 负责代码开发、技术实现
 version: 1.0.0
@@ -13,6 +14,7 @@ metadata:
       cost_level: low
       max_concurrent: 3
       model_preference: deepseek-v3.2
+    molin_owner: 墨码（软件工坊）
 ---
 
 # 开发子公司

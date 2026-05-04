@@ -1,4 +1,5 @@
 ---
+
 name: popular-web-designs
 description: 54 real design systems (Stripe, Linear, Vercel) as HTML/CSS.
 version: 1.0.0
@@ -15,6 +16,9 @@ triggers:
   - landing page
   - dashboard design
   - website styled like
+metadata:
+  hermes:
+    molin_owner: 墨工（设计）
 ---
 
 # Popular Web Designs

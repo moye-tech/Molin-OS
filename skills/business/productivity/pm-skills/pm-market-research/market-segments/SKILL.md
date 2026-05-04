@@ -1,10 +1,14 @@
 ---
+
 name: pm-market-segments
 description: "Identify 3-5 potential customer segments with demographics, JTBD, and product fit analysis. Use when exploring market segments, identifying target audiences, evaluating new markets, or learning how to"
 version: 1.0.0
 tags: [pm, product-management, market-research]
 category: productivity
 source: https://github.com/phuryn/pm-skills
+metadata:
+  hermes:
+    molin_owner: 墨品（产品设计）
 ---
 
 ---

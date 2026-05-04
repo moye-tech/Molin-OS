@@ -1,11 +1,13 @@
 ---
+
 name: dogfood
-description: "Exploratory QA of web apps: find bugs, evidence, reports."
+description: Systematic exploratory QA testing of web applications — find bugs, capture evidence, and generate structured reports
 version: 1.0.0
 metadata:
   hermes:
     tags: [qa, testing, browser, web, dogfood]
     related_skills: []
+    molin_owner: CEO
 ---
 
 # Dogfood: Systematic Web Application QA Testing
