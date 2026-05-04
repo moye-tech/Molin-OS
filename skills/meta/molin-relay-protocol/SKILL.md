@@ -1,0 +1,175 @@
+---
+name: molin-relay-protocol
+description: 子公司间接力协议 — 定义标准化的数据接力格式，让 Hermes 知道每个接力点在什么时候读什么、写什么。
+version: 1.0.0
+author: Hermes Agent
+category: meta
+metadata:
+  hermes:
+    tags: [relay, protocol, pipeline, handoff, molin]
+    related_skills: [molin-daily-briefing, molin-ceo-persona]
+    molin_owner: CEO
+---
+
+# 子公司接力协议
+
+## 概述
+
+Hermes OS 的 8 个 cron 作业通过接力格式传递数据。没有标准格式时，Hermes 只能猜「墨思接力数据」在哪。
+
+本协议定义了所有接力点的**存储位置、数据格式、读取方式**。
+
+## 接力存储
+
+所有接力数据统一存放在：`~/.molin/relay/`
+
+```
+~/.molin/relay/
+├── intelligence_morning_YYYY-MM-DD.json   # 墨思情报银行 (08:00)
+├── content_flywheel_YYYY-MM-DD.json       # 墨迹内容工厂 (09:00)
+├── growth_flywheel_YYYY-MM-DD.json        # 墨增增长引擎 (10:00)
+├── briefing_YYYY-MM-DD.json               # CEO 每日简报 (09:00, 读取所有上游)
+└── governance_YYYY-MM-DD.json             # 墨盾治理合规 (10:00)
+```
+
+如果 `~/.molin/relay/` 目录不存在，回落读取 `~/.hermes/cron/output/` 中最近相关的 `.md` 文件。
+
+## 通用数据结构
+
+每个接力文件是 JSON，格式：
+
+```json
+{
+  "origin": "墨思 | 墨迹 | 墨增 | CEO | 墨盾",
+  "timestamp": "YYYY-MM-DDTHH:mm:ss+08:00",
+  "summary": "一句话总结（20字以内）",
+  "detail": "详细描述（支持 markdown 格式）",
+  "data": {
+    "key_metrics": { ... },
+    "decisions_made": ["...", "..."],
+    "next_actions": ["...", "..."]
+  },
+  "downstream_skills": ["skill-name-1", "skill-name-2"],
+  "errors": []
+}
+```
+
+## 各接力点详细规范
+
+### 1. 墨思情报接力 (08:00)
+
+```
+文件: intelligence_morning_YYYY-MM-DD.json
+写入方: 墨思情报 cron job
+读取方: 墨迹内容工厂 (09:00), CEO简报 (09:00)
+```
+
+```json
+{
+  "origin": "墨思",
+  "timestamp": "...",
+  "summary": "今日趋势: AI coding 热度+12%",
+  "detail": "详见情报明细...",
+  "data": {
+    "hot_topics": ["AI coding tools", "...
+3D generation"],
+    "trending_projects": [{"name": "...", "stars": 15000}],
+    "keyword_suggestions": ["AI 办公", "编程助手"]
+  },
+  "downstream_skills": ["content-strategy", "claude-seo"],
+  "errors": []
+}
+```
+
+### 2. 墨迹内容接力 (09:00)
+
+```
+文件: content_flywheel_YYYY-MM-DD.json
+写入方: 墨迹内容工厂 cron job
+读取方: 墨增增长引擎 (10:00), CEO简报 (09:00)
+```
+
+```json
+{
+  "origin": "墨迹",
+  "timestamp": "...",
+  "summary": "完成3篇小红书+1篇知乎",
+  "detail": "...",
+  "data": {
+    "pieces_created": 4,
+    "platforms": ["小红书", "知乎"],
+    "content_titles": ["...", "..."],
+    "scheduled_posts": [{"platform": "小红书", "time": "14:00"}]
+  },
+  "downstream_skills": ["social-push-publisher", "analytics-tracking"],
+  "errors": []
+}
+```
+
+### 3. 墨增增长接力 (10:00)
+
+```
+文件: growth_flywheel_YYYY-MM-DD.json
+写入方: 墨增增长引擎 cron job
+读取方: CEO简报 (09:00 — 注意这是 T+1 接力)
+```
+
+```json
+{
+  "origin": "墨增",
+  "timestamp": "...",
+  "summary": "SEO关键词优化+闲鱼商品更新",
+  "detail": "...",
+  "data": {
+    "seo_optimizations": [{"keyword": "...", "action": "update title"}],
+    "xianyu_updates": [{"item": "...", "status": "updated"}],
+    "ab_test_results": null,
+    "recommendations": ["关注 XX 关键词"]
+  },
+  "downstream_skills": ["analytics-tracking", "page-cro"],
+  "errors": []
+}
+```
+
+### 4. CEO简报接力 (09:00)
+
+```
+文件: briefing_YYYY-MM-DD.json
+写入方: CEO简报 cron job
+读取方: 无下游（写给用户看的）
+```
+
+CEO简报直接输出给人看，接力文件仅用于审计和重复运行检测。
+
+## 读取接力数据的标准操作
+
+在 cron job 中需要获取上游接力数据时，按以下优先级查找：
+
+```python
+import os, json, glob
+from datetime import date
+
+today = date.today().isoformat()
+relay_dir = os.path.expanduser("~/.molin/relay")
+fallback_dir = os.path.expanduser("~/.hermes/cron/output")
+
+def get_relay(prefix, date_str=None):
+    """获取指定前缀的接力数据"""
+    date_str = date_str or today
+    path = os.path.join(relay_dir, f"{prefix}_{date_str}.json")
+    if os.path.exists(path):
+        with open(path) as f:
+            return json.load(f)
+    # Fallback: 从 cron output 找最近的相关文件
+    outputs = sorted(glob.glob(os.path.join(fallback_dir, "*.md")), 
+                     key=os.path.getmtime, reverse=True)
+    # 返回最近5个文件路径
+    return {"fallback": True, "files": outputs[:5]}
+```
+
+## 接力失败处理
+
+如果上游接力数据不存在（文件未找到），cron job 应该：
+1. 记录到 errors: `"upstream_relay_not_found"`
+2. 从其他可用数据源获取替代信息（如技能树、memory）
+3. 继续执行，不要因缺失接力数据而停止

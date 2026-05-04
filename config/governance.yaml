@@ -40,8 +40,25 @@ approval_levels:
       - 超预算支出
 
 # ── 预算控制 ──
+# ⚠️ 预算口径说明（两个不同维度，不要混淆）
+#
+# 1. 此处 monthly_cap = ¥1,360 → AI API + 工具 + 内容推广的「运营预算」
+#    分类: ai_services(1000) + platform_tools(200) + content_boost(160) = 1360
+#
+# 2. company.yaml 口径不同：22家子公司的「目标收入预算」
+#    子公司预算总计 ¥2,440/月（各子公司运营成本），目标收入 ¥48,000/月
+#
+# 对比:
+#   governance monthly_cap = ¥1,360 → 花出去的钱（AI API调用 + 工具订阅 + 推广费）
+#   company budget_monthly = ¥2,440 → 各子公司的预算分配（运营成本）
+#   company revenue_target = ¥48,000 → 收入目标（不是预算）
+#
+# Hermes 在触发预算告警时：
+# - 检查 AI API 消耗 → 用 governance monthly_cap (1360)
+# - 检查子公司预算分配 → 用 company budget_monthly (2440)
+# - 查看进度 → 用 company revenue_target (48000)
 budget:
-  monthly_cap: 1360  # ¥1,360/月
+  monthly_cap: 1360  # ¥1,360/月 运营预算（AI API + 工具 + 推广）
   categories:
     ai_services: 1000    # AI API调用
     platform_tools: 200  # 平台工具订阅
