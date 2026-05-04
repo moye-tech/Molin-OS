@@ -1,0 +1,72 @@
+# 墨麟 Hermes OS — 定时作业配置
+#
+# 这些作业通过 Hermes Agent 的 cronjob 工具管理，非系统 crontab。
+# 每次克隆部署后，通过 `molin cron init` 重新创建。
+#
+# 格式说明:
+#   schedule: cron 表达式或人类可读间隔
+#   skills: 作业运行时加载的技能列表
+#   deliver: 结果投递目标 (origin=当前对话)
+#   repeat: forever=一直循环, 数字=执行次数
+
+jobs:
+  - name: "自学习每周循环"
+    id: "e4682a49699d"
+    schedule: "0 10 * * 5"          # 每周五 10:00
+    skills:
+      - skill-discovery
+      - self-learning-loop
+      - karpathy-autoresearch
+    deliver: origin
+    repeat: forever
+    description: "扫描 GitHub Trending/HN/Product Hunt → 提炼洞察→创建/更新技能→汇报给CEO"
+    next_run: 2026-05-08T10:00:00+08:00
+
+  - name: "墨迹内容工厂每日闭环"
+    id: "36d28ca9139f"
+    schedule: "0 9 * * *"           # 每日 09:00
+    skills:
+      - xiaohongshu-content-engine
+      - ffmpeg-video-engine
+      - seo-machine
+      - agent-marketing-content-creator
+      - humanizer
+    deliver: origin
+    repeat: forever
+    description: "获取热点→评估方向→生产小红书/知乎内容→输出报告"
+    next_run: 2026-05-05T09:00:00+08:00
+
+  # ── 以下为计划中的作业 ──
+
+  - name: "墨思情报银行"
+    schedule: "0 8 * * *"           # 每日 08:00
+    skills:
+      - blogwatcher
+      - last30days
+      - world-monitor
+      - mirofish-trends
+    deliver: origin
+    repeat: forever
+    description: "每日扫描趋势→LLM提炼洞察→存入memory→下次对话可检索"
+    status: planned
+
+  - name: "墨商销售闲鱼自动化"
+    schedule: "*/30 9-21 * * *"     # 09:00-21:00 每30分钟
+    skills:
+      - xianyu-automation
+      - marketing-skills-copywriting
+      - agent-sales-deal-strategist
+    deliver: origin
+    repeat: forever
+    description: "检测闲鱼新消息→识别交易信号→自动回复→L2上报高价值询盘"
+    status: planned
+
+  - name: "CEO每日简报"
+    schedule: "0 9 * * *"           # 每日 09:00
+    skills:
+      - molin-ceo-persona
+      - molin-goals
+    deliver: telegram:-1001234567890
+    repeat: forever
+    description: "汇总昨日产出/今日待办/系统状态→推送到飞书/Telegram"
+    status: planned

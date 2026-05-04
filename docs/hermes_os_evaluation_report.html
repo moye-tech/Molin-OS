@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>墨麟 Hermes OS — 架构评估与升级报告</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&family=JetBrains+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --ink: #1a1814;
+    --ink-mid: #3d3b35;
+    --ink-muted: #7a776d;
+    --ink-faint: #b8b5ae;
+    --paper: #faf8f4;
+    --paper-warm: #f4f1ea;
+    --paper-card: #ffffff;
+    --accent: #c8521a;
+    --accent-light: #f5e8df;
+    --accent-mid: #e8885a;
+    --gold: #b8860b;
+    --gold-light: #fdf3d6;
+    --teal: #1a6b5c;
+    --teal-light: #dff2ed;
+    --blue: #1a4a7a;
+    --blue-light: #deeaf7;
+    --red: #8b1a1a;
+    --red-light: #f7dede;
+    --border: rgba(26,24,20,0.10);
+    --border-strong: rgba(26,24,20,0.20);
+    --shadow: 0 1px 3px rgba(26,24,20,0.08), 0 4px 12px rgba(26,24,20,0.04);
+    --shadow-card: 0 2px 8px rgba(26,24,20,0.06), 0 8px 24px rgba(26,24,20,0.04);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { font-size: 16px; scroll-behavior: smooth; }
+
+  body {
+    font-family: 'IBM Plex Sans', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.75;
+    font-weight: 400;
+  }
+
+  /* ─── Layout ─── */
+  .page-wrapper { max-width: 960px; margin: 0 auto; padding: 0 2rem 6rem; }
+
+  /* ─── Header ─── */
+  .site-header {
+    border-bottom: 1px solid var(--border-strong);
+    padding: 2.5rem 0 2rem;
+    margin-bottom: 3rem;
+    position: relative;
+  }
+  .header-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--accent); color: #fff;
+    font-size: 11px; font-weight: 500; letter-spacing: .06em;
+    text-transform: uppercase; padding: 3px 10px; border-radius: 2px;
+    margin-bottom: 1rem;
+  }
+  .site-header h1 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 2.4rem; font-weight: 600; line-height: 1.25;
+    color: var(--ink); letter-spacing: -.01em;
+    margin-bottom: .5rem;
+  }
+  .site-header .subtitle {
+    font-size: .95rem; color: var(--ink-muted);
+    display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;
+  }
+  .site-header .subtitle span { display: flex; align-items: center; gap: 5px; }
+  .meta-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); display: inline-block; }
+
+  /* ─── TOC ─── */
+  .toc {
+    background: var(--paper-card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    padding: 1.5rem 2rem;
+    margin-bottom: 3rem;
+    box-shadow: var(--shadow);
+  }
+  .toc h3 { font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-muted); margin-bottom: 1rem; font-weight: 500; }
+  .toc ol { padding-left: 1.2rem; }
+  .toc li { margin-bottom: .3rem; }
+  .toc a { color: var(--accent); text-decoration: none; font-size: .9rem; }
+  .toc a:hover { text-decoration: underline; }
+
+  /* ─── Section Headers ─── */
+  .section-header {
+    display: flex; align-items: baseline; gap: 1rem;
+    margin-bottom: 1.75rem; margin-top: 4rem;
+    padding-bottom: .75rem; border-bottom: 1px solid var(--border);
+  }
+  .section-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .8rem; color: var(--accent); font-weight: 500;
+    padding: 2px 8px; background: var(--accent-light); border-radius: 3px;
+    white-space: nowrap;
+  }
+  .section-header h2 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 1.5rem; font-weight: 600; color: var(--ink);
+  }
+
+  /* ─── Cards ─── */
+  .card {
+    background: var(--paper-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem 1.75rem;
+    margin-bottom: 1.25rem;
+    box-shadow: var(--shadow-card);
+  }
+  .card h3 {
+    font-size: 1rem; font-weight: 500; margin-bottom: .6rem;
+    display: flex; align-items: center; gap: .5rem;
+  }
+  .card h4 {
+    font-size: .9rem; font-weight: 500; color: var(--ink-mid);
+    margin: 1rem 0 .4rem;
+  }
+  .card p, .card li { font-size: .9rem; color: var(--ink-mid); line-height: 1.7; }
+  .card ul, .card ol { padding-left: 1.3rem; }
+  .card li { margin-bottom: .3rem; }
+
+  .card.danger { border-color: #e8a8a8; background: #fff9f9; }
+  .card.warning { border-color: #f0d090; background: #fffdf0; }
+  .card.success { border-color: #a8d8c8; background: #f0fbf7; }
+  .card.info { border-color: #a8c8e8; background: #f0f7ff; }
+  .card.highlight { border-color: var(--accent-mid); background: var(--accent-light); }
+
+  /* ─── Tags/Badges ─── */
+  .tag {
+    display: inline-flex; align-items: center;
+    font-size: 11px; font-weight: 500; padding: 2px 8px;
+    border-radius: 3px; letter-spacing: .03em;
+  }
+  .tag.critical { background: var(--red-light); color: var(--red); }
+  .tag.high { background: #fff0e0; color: #8b4500; }
+  .tag.medium { background: var(--gold-light); color: var(--gold); }
+  .tag.low { background: var(--teal-light); color: var(--teal); }
+  .tag.code { background: #f0f0f8; color: #4a4888; font-family: 'JetBrains Mono', monospace; }
+  .tag.phase { background: var(--blue-light); color: var(--blue); }
+
+  /* ─── Score Meter ─── */
+  .score-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem; margin-bottom: 2rem;
+  }
+  .score-card {
+    background: var(--paper-card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 1.25rem;
+    text-align: center; box-shadow: var(--shadow);
+  }
+  .score-card .label { font-size: .75rem; color: var(--ink-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .5rem; }
+  .score-card .value { font-size: 2rem; font-weight: 600; line-height: 1; }
+  .score-card .bar { height: 4px; border-radius: 2px; background: var(--paper-warm); margin-top: .75rem; }
+  .score-card .bar-fill { height: 100%; border-radius: 2px; }
+  .score-card.s-good .value { color: var(--teal); }
+  .score-card.s-good .bar-fill { background: var(--teal); }
+  .score-card.s-warn .value { color: var(--gold); }
+  .score-card.s-warn .bar-fill { background: var(--gold); }
+  .score-card.s-bad .value { color: var(--accent); }
+  .score-card.s-bad .bar-fill { background: var(--accent); }
+
+  /* ─── Architecture Diagram ─── */
+  .arch-diagram {
+    background: var(--paper-card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 2rem;
+    margin-bottom: 1.5rem; box-shadow: var(--shadow-card);
+    overflow-x: auto;
+  }
+
+  /* ─── Code blocks ─── */
+  pre {
+    background: #1e1c18;
+    color: #d4d0c6;
+    border-radius: 6px; padding: 1.25rem 1.5rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .8rem; line-height: 1.7;
+    overflow-x: auto; margin: 1rem 0;
+  }
+  pre .comment { color: #7a776d; }
+  pre .keyword { color: #c8a44a; }
+  pre .string { color: #8bc07a; }
+  pre .fn { color: #79abe8; }
+  pre .class-name { color: #d4a0c0; }
+  pre .num { color: #e0a060; }
+  pre .type { color: #88c0b8; }
+  pre .dec { color: var(--accent-mid); }
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .82em; background: #f0f0f8;
+    padding: 1px 5px; border-radius: 3px; color: #4a4888;
+  }
+
+  /* ─── Phase Roadmap ─── */
+  .roadmap { margin: 1.5rem 0; }
+  .phase-block {
+    display: grid; grid-template-columns: 120px 1fr;
+    gap: 1.5rem; margin-bottom: 2rem;
+    padding-bottom: 2rem; border-bottom: 1px solid var(--border);
+  }
+  .phase-block:last-child { border-bottom: none; }
+  .phase-label {
+    text-align: center; padding: 1rem .5rem;
+    background: var(--paper-card); border: 1px solid var(--border);
+    border-radius: 8px; height: fit-content;
+    box-shadow: var(--shadow);
+  }
+  .phase-label .num {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 1.8rem; font-weight: 600; display: block; line-height: 1;
+  }
+  .phase-label .name { font-size: .75rem; color: var(--ink-muted); margin-top: .3rem; display: block; }
+  .phase-label .time { font-size: .7rem; color: var(--accent); margin-top: .3rem; display: block; font-weight: 500; }
+  .phase-p1 .num { color: var(--accent); } .phase-p1 { border-color: #e8a878; }
+  .phase-p2 .num { color: var(--gold); } .phase-p2 { border-color: #d4b040; }
+  .phase-p3 .num { color: var(--teal); } .phase-p3 { border-color: #80c0b0; }
+  .phase-p4 .num { color: var(--blue); } .phase-p4 { border-color: #80a8d0; }
+
+  .phase-content h3 {
+    font-size: 1rem; font-weight: 500; margin-bottom: .75rem;
+    padding-bottom: .5rem; border-bottom: 1px solid var(--border);
+  }
+  .phase-content .item {
+    display: flex; align-items: flex-start; gap: .75rem;
+    padding: .6rem 0; border-bottom: 1px solid var(--border);
+  }
+  .phase-content .item:last-child { border-bottom: none; }
+  .item-icon { font-size: 1rem; width: 20px; flex-shrink: 0; margin-top: .1rem; }
+  .item-body { flex: 1; }
+  .item-body strong { display: block; font-size: .9rem; font-weight: 500; color: var(--ink); }
+  .item-body span { font-size: .82rem; color: var(--ink-muted); }
+
+  /* ─── Two col ─── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; }
+  @media (max-width: 640px) { .two-col { grid-template-columns: 1fr; } }
+
+  /* ─── Issue Table ─── */
+  .issue-table { width: 100%; border-collapse: collapse; font-size: .87rem; margin: 1rem 0; }
+  .issue-table th {
+    text-align: left; font-size: .75rem; font-weight: 500;
+    text-transform: uppercase; letter-spacing: .06em;
+    color: var(--ink-muted); padding: .6rem 1rem;
+    background: var(--paper-warm); border-bottom: 1px solid var(--border-strong);
+  }
+  .issue-table td {
+    padding: .75rem 1rem; border-bottom: 1px solid var(--border);
+    vertical-align: top; color: var(--ink-mid);
+  }
+  .issue-table tr:last-child td { border-bottom: none; }
+  .issue-table tr:hover td { background: var(--paper-warm); }
+  .issue-table .file { font-family: 'JetBrains Mono', monospace; font-size: .78rem; color: #4a4888; }
+
+  /* ─── Prose ─── */
+  p { margin-bottom: 1rem; color: var(--ink-mid); line-height: 1.8; }
+  h3.sub { font-size: 1.05rem; font-weight: 500; margin: 1.5rem 0 .5rem; color: var(--ink); border-left: 3px solid var(--accent); padding-left: .75rem; }
+  strong { color: var(--ink); font-weight: 500; }
+
+  /* ─── Inline highlight ─── */
+  .hl-box {
+    background: var(--paper-card); border: 1px solid var(--border);
+    border-radius: 6px; padding: .85rem 1.1rem; margin: .75rem 0;
+    display: flex; align-items: flex-start; gap: .75rem;
+    font-size: .88rem; color: var(--ink-mid);
+  }
+  .hl-box.warn { border-color: #f0d090; background: #fffdf0; }
+  .hl-box.ok { border-color: #a8d8c8; background: #f0fbf7; }
+  .hl-box.critical { border-color: #e8a8a8; background: #fff6f6; }
+  .hl-box .icon { font-size: 1rem; width: 20px; flex-shrink: 0; margin-top: .05rem; }
+  .hl-box strong { color: var(--ink); }
+
+  /* ─── Subsidiary grid ─── */
+  .sub-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: .75rem; margin: 1rem 0;
+  }
+  .sub-card {
+    background: var(--paper-card); border: 1px solid var(--border);
+    border-radius: 6px; padding: .85rem 1rem;
+    font-size: .82rem;
+  }
+  .sub-card .name { font-weight: 500; color: var(--ink); margin-bottom: .2rem; }
+  .sub-card .desc { color: var(--ink-muted); font-size: .78rem; }
+  .sub-card .status { display: flex; align-items: center; gap: .4rem; margin-top: .5rem; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .dot.stub { background: #e8a878; }
+  .dot.partial { background: var(--gold); }
+  .dot.implemented { background: var(--teal); }
+  .dot.missing { background: var(--accent); }
+
+  /* ─── Print ─── */
+  @media print {
+    body { background: white; }
+    .arch-diagram { page-break-inside: avoid; }
+    .phase-block { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="page-wrapper">
+
+<!-- ─── HEADER ─── -->
+<header class="site-header">
+  <div class="header-badge">架构评估报告 · 2026</div>
+  <h1>墨麟 Hermes OS<br>系统诊断与升级蓝图</h1>
+  <div class="subtitle">
+    <span><span class="meta-dot"></span> 代码版本 4.0.0</span>
+    <span><span class="meta-dot"></span> 22 子公司架构</span>
+    <span><span class="meta-dot"></span> 267 技能规划 / 16 已实装</span>
+    <span><span class="meta-dot"></span> 分析日期 2026-05-04</span>
+  </div>
+</header>
+
+<!-- ─── TOC ─── -->
+<nav class="toc">
+  <h3>目录</h3>
+  <ol>
+    <li><a href="#overview">执行摘要 — 总体印象与打分</a></li>
+    <li><a href="#arch">现有架构全景解析</a></li>
+    <li><a href="#strengths">亮点与已建立优势</a></li>
+    <li><a href="#issues">关键缺陷与风险诊断</a></li>
+    <li><a href="#subsidiary">子公司垂直化：现状 vs. 理想态</a></li>
+    <li><a href="#roadmap">四阶段升级路线图（含代码样例）</a></li>
+    <li><a href="#memory">记忆与状态管理升级</a></li>
+    <li><a href="#swarm">蜂群协作协议升级</a></li>
+    <li><a href="#learning">自进化引擎真正落地</a></li>
+    <li><a href="#governance">治理 & 人机协作深化</a></li>
+    <li><a href="#infra">基础设施加固</a></li>
+    <li><a href="#conclusion">结语：从工具到组织的跃迁</a></li>
+  </ol>
+</nav>
+
+<!-- ─── SECTION 1 ─── -->
+<section id="overview">
+  <div class="section-header">
+    <span class="section-num">01</span>
+    <h2>执行摘要 — 总体印象与打分</h2>
+  </div>
+
+  <p>Hermes OS 是一个设计意图非常清晰的「一人公司操作系统」——用 AI Agent 替代多部门职能，并通过统一 CLI 入口调度一切。读完所有代码和配置后，整体评估是：<strong>架构方向正确，蓝图完整，但当前实现停留在脚手架阶段</strong>，核心能力（记忆、协作、自学习、真实执行）均为占位符，距离「让机器自主运转公司」还差两到三个实质性迭代。</p>
+
+  <div class="score-grid">
+    <div class="score-card s-good">
+      <div class="label">架构设计</div>
+      <div class="value">78</div>
+      <div class="bar"><div class="bar-fill" style="width:78%"></div></div>
+    </div>
+    <div class="score-card s-warn">
+      <div class="label">代码实现</div>
+      <div class="value">42</div>
+      <div class="bar"><div class="bar-fill" style="width:42%"></div></div>
+    </div>
+    <div class="score-card s-bad">
+      <div class="label">自主执行能力</div>
+      <div class="value">25</div>
+      <div class="bar"><div class="bar-fill" style="width:25%"></div></div>
+    </div>
+    <div class="score-card s-warn">
+      <div class="label">子公司垂直化</div>
+      <div class="value">35</div>
+      <div class="bar"><div class="bar-fill" style="width:35%"></div></div>
+    </div>
+    <div class="score-card s-good">
+      <div class="label">治理规则设计</div>
+      <div class="value">72</div>
+      <div class="bar"><div class="bar-fill" style="width:72%"></div></div>
+    </div>
+    <div class="score-card s-bad">
+      <div class="label">自学习真实落地</div>
+      <div class="value">15</div>
+      <div class="bar"><div class="bar-fill" style="width:15%"></div></div>
+    </div>
+  </div>
+
+  <div class="hl-box critical">
+    <span class="icon">⚠</span>
+    <div><strong>核心矛盾：</strong>README 声称 267 个 Skills 映射到 22 家子公司，但 ZIP 包内仅存在 16 个 SKILL.md。CEO Agent、Swarm Engine、SelfLearningLoop 均是返回硬编码字典的方法，没有任何实际 LLM 调用或工具执行。目前系统可以「运行」，但只是在打印预设的字符串，并非在「执行」任务。</div>
+  </div>
+
+  <div class="hl-box ok">
+    <span class="icon">✓</span>
+    <div><strong>真正的优势：</strong>公司配置（YAML）、治理级别（L0–L3）、发布渠道矩阵、CLI 入口设计——这些<em>概念层</em>的设计相当成熟，拿去直接做 SaaS 产品的 PRD 都成立。这是架构师级别的思考，需要保住。</div>
+  </div>
+</section>
+
+<!-- ─── SECTION 2 ─── -->
+<section id="arch">
+  <div class="section-header">
+    <span class="section-num">02</span>
+    <h2>现有架构全景解析</h2>
+  </div>
+
+  <div class="arch-diagram">
+    <svg width="100%" viewBox="0 0 860 480" role="img">
+      <title>墨麟 Hermes OS 现有架构图</title>
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+      </defs>
+
+      <!-- YOU layer -->
+      <rect x="360" y="16" width="140" height="40" rx="20" fill="#1a1814" stroke="none"/>
+      <text x="430" y="41" text-anchor="middle" dominant-baseline="central" fill="#faf8f4" font-size="13" font-weight="500" font-family="IBM Plex Sans, sans-serif">你（用户）</text>
+      <line x1="430" y1="56" x2="430" y2="88" stroke="#b8b5ae" stroke-width="1" marker-end="url(#arr)"/>
+
+      <!-- CLI -->
+      <rect x="330" y="88" width="200" height="44" rx="8" fill="#fff" stroke="#d4c8b8" stroke-width="1"/>
+      <text x="430" y="106" text-anchor="middle" dominant-baseline="central" fill="#1a1814" font-size="12" font-weight="500" font-family="IBM Plex Sans, sans-serif">CLI (molin cli.py)</text>
+      <text x="430" y="121" text-anchor="middle" dominant-baseline="central" fill="#7a776d" font-size="10" font-family="IBM Plex Sans, sans-serif">16 个子命令入口</text>
+
+      <!-- Core Engine -->
+      <line x1="430" y1="132" x2="430" y2="160" stroke="#b8b5ae" stroke-width="1" marker-end="url(#arr)"/>
+      <rect x="290" y="160" width="280" height="52" rx="8" fill="#fff8f0" stroke="#e8a878" stroke-width="1.5"/>
+      <text x="430" y="180" text-anchor="middle" dominant-baseline="central" fill="#8b4500" font-size="12" font-weight="500" font-family="IBM Plex Sans, sans-serif">MolinEngine (core/engine.py)</text>
+      <text x="430" y="198" text-anchor="middle" dominant-baseline="central" fill="#a06030" font-size="10" font-family="IBM Plex Sans, sans-serif">加载 YAML 配置 · 健康检查 · 心跳</text>
+
+      <!-- Three agents -->
+      <line x1="330" y1="212" x2="200" y2="260" stroke="#b8b5ae" stroke-width="1" marker-end="url(#arr)"/>
+      <line x1="430" y1="212" x2="430" y2="260" stroke="#b8b5ae" stroke-width="1" marker-end="url(#arr)"/>
+      <line x1="530" y1="212" x2="660" y2="260" stroke="#b8b5ae" stroke-width="1" marker-end="url(#arr)"/>
+
+      <!-- CEO -->
+      <rect x="100" y="260" width="200" height="52" rx="8" fill="#fff" stroke="#d4c8b8" stroke-width="1"/>
+      <text x="200" y="280" text-anchor="middle" dominant-baseline="central" fill="#1a1814" font-size="12" font-weight="500" font-family="IBM Plex Sans, sans-serif">CEOAgent</text>
+      <text x="200" y="298" text-anchor="middle" dominant-baseline="central" fill="#7a776d" font-size="10" font-family="IBM Plex Sans, sans-serif">硬编码 OKR · 无 LLM 调用 ⚠</text>
+
+      <!-- Swarm -->
+      <rect x="330" y="260" width="200" height="52" rx="8" fill="#fff" stroke="#d4c8b8" stroke-width="1"/>
+      <text x="430" y="280" text-anchor="middle" dominant-baseline="central" fill="#1a1814" font-size="12" font-weight="500" font-family="IBM Plex Sans, sans-serif">SwarmEngine</text>
+      <text x="430" y="298" text-anchor="middle" dominant-baseline="central" fill="#7a776d" font-size="10" font-family="IBM Plex Sans, sans-serif">角色分配字典 · 无并行执行 ⚠</text>
+
+      <!-- Learner -->
+      <rect x="560" y="260" width="200" height="52" rx="8" fill="#fff" stroke="#d4c8b8" stroke-width="1"/>
+      <text x="660" y="280" text-anchor="middle" dominant-baseline="central" fill="#1a1814" font-size="12" font-weight="500" font-family="IBM Plex Sans, sans-serif">SelfLearningLoop</text>
+      <text x="660" y="298" text-anchor="middle" dominant-baseline="central" fill="#7a776d" font-size="10" font-family="IBM Plex Sans, sans-serif">四阶段框架 · 全部占位 ⚠</text>
+
+      <!-- Modules row -->
+      <line x1="200" y1="312" x2="160" y2="360" stroke="#d4c8b8" stroke-width="0.8" marker-end="url(#arr)"/>
+      <line x1="430" y1="312" x2="430" y2="360" stroke="#d4c8b8" stroke-width="0.8" marker-end="url(#arr)"/>
+      <line x1="660" y1="312" x2="700" y2="360" stroke="#d4c8b8" stroke-width="0.8" marker-end="url(#arr)"/>
+
+      <rect x="40" y="360" width="160" height="40" rx="6" fill="#f0f7ff" stroke="#a8c8e8" stroke-width="1"/>
+      <text x="120" y="384" text-anchor="middle" dominant-baseline="central" fill="#1a4a7a" font-size="11" font-family="IBM Plex Sans, sans-serif">content/ · publish/</text>
+
+      <rect x="330" y="360" width="200" height="40" rx="6" fill="#f0fbf7" stroke="#a8d8c8" stroke-width="1"/>
+      <text x="430" y="384" text-anchor="middle" dominant-baseline="central" fill="#1a6b5c" font-size="11" font-family="IBM Plex Sans, sans-serif">intelligence/ · business/</text>
+
+      <rect x="620" y="360" width="200" height="40" rx="6" fill="#fffdf0" stroke="#f0d090" stroke-width="1"/>
+      <text x="720" y="384" text-anchor="middle" dominant-baseline="central" fill="#8b6500" font-size="11" font-family="IBM Plex Sans, sans-serif">core/scheduler/ · dashboard</text>
+
+      <!-- Config files -->
+      <rect x="40" y="428" width="780" height="36" rx="6" fill="#faf8f4" stroke="#d4c8b8" stroke-width="1" stroke-dasharray="4 3"/>
+      <text x="430" y="449" text-anchor="middle" dominant-baseline="central" fill="#7a776d" font-size="11" font-family="IBM Plex Sans, sans-serif">config/ (company.yaml · governance.yaml · channels.yaml) · skills/ (16 SKILL.md 已存在)</text>
+    </svg>
+  </div>
+
+  <p>整个调用链很清晰：你 → CLI → Engine → Agent → 模块 → 配置。问题在于<strong>中间每一层都缺乏真实的执行器</strong>。Engine 不会调用 LLM，Swarm 不会并行，Learner 不会实际扫描 GitHub——当前版本更像是一个「API 框架 + 配置文件」的原型，而非运行中的 Agent 系统。</p>
+
+  <h3 class="sub">模块现状速览</h3>
+  <table class="issue-table">
+    <thead><tr><th>模块</th><th>文件</th><th>当前状态</th><th>严重度</th></tr></thead>
+    <tbody>
+      <tr><td>CEO Agent</td><td class="file">agents/ceo.py</td><td>OKR 硬编码，<code>run_strategy()</code> 返回静态字典，无 LLM 调用</td><td><span class="tag critical">致命</span></td></tr>
+      <tr><td>Swarm Engine</td><td class="file">agents/swarm.py</td><td>角色分配字典正确，但 <code>assign_task()</code> 只追加列表，无并行调用</td><td><span class="tag critical">致命</span></td></tr>
+      <tr><td>Self-Learning</td><td class="file">agents/learner.py</td><td>四阶段框架存在，全部方法返回空列表/占位字符串</td><td><span class="tag critical">致命</span></td></tr>
+      <tr><td>Trends Intel</td><td class="file">intelligence/trends.py</td><td>5 个数据源 URL 配置正确，但 <code>run()</code> 返回硬编码趋势词</td><td><span class="tag high">高</span></td></tr>
+      <tr><td>Dashboard</td><td class="file">dashboard.py</td><td>Flask 框架存在，无实际数据接入</td><td><span class="tag medium">中</span></td></tr>
+      <tr><td>Content Modules</td><td class="file">content/*.py</td><td>函数签名完整，缺少 Prompt 模板和 LLM 调用</td><td><span class="tag high">高</span></td></tr>
+      <tr><td>Governance</td><td class="file">core/governance.py</td><td>治理逻辑未实现，审批流停留在 YAML 定义层</td><td><span class="tag high">高</span></td></tr>
+      <tr><td>Scheduler</td><td class="file">core/scheduler.py</td><td>cron 结构设计好，任务执行体为占位</td><td><span class="tag medium">中</span></td></tr>
+      <tr><td>Skills Hub</td><td class="file">skills/</td><td>README 称 267 个，ZIP 内实际 16 个 SKILL.md</td><td><span class="tag high">高</span></td></tr>
+      <tr><td>Config / YAML</td><td class="file">config/*.yaml</td><td>22 子公司、L0-L3 治理、发布渠道——设计完整 ✓</td><td><span class="tag low">良好</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ─── SECTION 3 ─── -->
+<section id="strengths">
+  <div class="section-header">
+    <span class="section-num">03</span>
+    <h2>亮点与已建立优势</h2>
+  </div>
+
+  <div class="two-col">
+    <div class="card success">
+      <h3>✓ 组织设计范式</h3>
+      <p>22 子公司的命名体系（墨智、墨码、墨商 BD…）、职责边界、月度营收目标、预算分配——这套框架的逻辑完整，可以直接用于真实 SaaS 多租户 Agent 的命名空间划分。公司配置 YAML 是整个系统最成熟的部分。</p>
+    </div>
+    <div class="card success">
+      <h3>✓ 四级治理框架</h3>
+      <p>L0 自动 → L1 AI 自审 → L2 人工确认 → L3 董事会——这个分级与 Anthropic 研究的「人机协作决策树」高度吻合。预算阈值设置（¥0/¥10/¥100/¥1000）也非常务实。</p>
+    </div>
+    <div class="card success">
+      <h3>✓ 发布渠道矩阵</h3>
+      <p>channels.yaml 配置了小红书/知乎/微博/微信/掘金/X/闲鱼 7 个平台的 daily limit、最佳发布时间、内容类型，且有夜间屏蔽规则。这是有实际运营经验的设计。</p>
+    </div>
+    <div class="card success">
+      <h3>✓ CLI 命令体系</h3>
+      <p><code>molin ceo strategy</code>、<code>molin swarm run</code>、<code>molin learn</code>——16 个命令覆盖完整业务循环，且命令语义清晰，便于后续实现。CLI 设计可直接对外 demo。</p>
+    </div>
+    <div class="card success">
+      <h3>✓ 自学习四阶段框架</h3>
+      <p>evaluate → absorb → integrate → retire 的生命周期管理框架，概念上优于大多数开源 Agent 项目。只要填充实现，这个框架可以成为系统真正的差异化能力。</p>
+    </div>
+    <div class="card success">
+      <h3>✓ 变现矩阵意识</h3>
+      <p>闲鱼店铺商品定价、freelance 平台列表、内容管线到发布的完整闭环意识——系统从一开始就以「商业变现」而非「技术演示」为目标，这是产品方向上的正确选择。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ─── SECTION 4 ─── -->
+<section id="issues">
+  <div class="section-header">
+    <span class="section-num">04</span>
+    <h2>关键缺陷与风险诊断</h2>
+  </div>
+
+  <div class="card danger">
+    <h3>⊗ 缺陷 #1：无持久记忆 — 每次对话都是失忆 Agent</h3>
+    <p>当前系统没有任何跨会话的状态存储。CEOAgent 的 <code>decisions_log = []</code> 在进程结束后消失。SwarmEngine 的 <code>active_tasks = []</code> 同样如此。这意味着：你今天发出的内容、签成的订单、做出的决策——系统下次启动后一无所知。</p>
+    <div class="hl-box critical">
+      <span class="icon">⚠</span>
+      <div><strong>根本影响：</strong>没有记忆，子公司无法「学习」，CEO 无法「复盘」，自学习循环无法「积累」。这是优先级最高的修复点。</div>
+    </div>
+  </div>
+
+  <div class="card danger">
+    <h3>⊗ 缺陷 #2：子公司之间零通信 — 孤岛架构</h3>
+    <p>22 家子公司全部定义在 YAML 中，但代码里它们没有消息总线、没有事件发布/订阅、没有跨部门调用协议。墨增（增长）无法通知墨迹（内容）「这个话题正在爆」；墨声（客服）无法把用户反馈传递给墨品（产品设计）。每家子公司是一座孤岛。</p>
+    <h4>缺失的通信层：</h4>
+    <ul>
+      <li>事件总线（pub/sub）：跨子公司异步消息</li>
+      <li>共享状态存储（Redis/SQLite）：实时数据读写</li>
+      <li>ACL 隔离：每家子公司只能访问自己权限内的数据</li>
+      <li>任务委派协议：CEO 能真正把任务下发给指定子公司</li>
+    </ul>
+  </div>
+
+  <div class="card danger">
+    <h3>⊗ 缺陷 #3：自学习是空壳 — 四阶段全是 <code>return []</code></h3>
+    <pre><span class="comment"># 当前 learner.py 的实际代码</span>
+<span class="keyword">def</span> <span class="fn">_evaluate</span>(self) -> dict:
+    <span class="keyword">return</span> {
+        <span class="string">"sources_scanned"</span>: [<span class="string">"GitHub Trending"</span>, ...],
+        <span class="string">"new_discoveries"</span>: [],      <span class="comment"># ← 永远空</span>
+        <span class="string">"performance_review"</span>: <span class="string">"系统运行正常"</span>  <span class="comment"># ← 硬编码</span>
+    }
+
+<span class="keyword">def</span> <span class="fn">_absorb</span>(self, evaluation: dict) -> dict:
+    <span class="keyword">return</span> {<span class="string">"insights_extracted"</span>: [], <span class="string">"skills_updated"</span>: []}  <span class="comment"># ← 永远空</span></pre>
+    <p>四个阶段都是返回空列表的方法。系统从不实际访问 GitHub API、不分析 HN、不更新任何 SKILL.md。这是「名称上的自学习」，不是「能力上的自学习」。</p>
+  </div>
+
+  <div class="two-col">
+    <div class="card warning">
+      <h3>⚡ 缺陷 #4：CEO 战略硬编码</h3>
+      <p>Q2_OKR 是 Python 类变量，<code>_six_way_analysis()</code> 返回固定字符串，<code>_generate_decisions()</code> 永远返回同三个决策。CEO 不会根据真实数据调整判断，也无法接收子公司汇报。</p>
+    </div>
+    <div class="card warning">
+      <h3>⚡ 缺陷 #5：蜂群无并行</h3>
+      <p>SwarmEngine 的 <code>assign_task()</code> 只是把角色名称追加到列表，没有 asyncio、没有 threading、没有真正的多 Agent 并发。所有「并行执行」都是单线程顺序调用的幻觉。</p>
+    </div>
+    <div class="card warning">
+      <h3>⚡ 缺陷 #6：治理未强制执行</h3>
+      <p>governance.yaml 定义了 L0-L3，但 <code>core/governance.py</code> 没有在任何操作发生前真正检查预算阈值、记录审计日志、或阻止超限操作。规则存在于文档层面，不存在于代码层面。</p>
+    </div>
+    <div class="card warning">
+      <h3>⚡ 缺陷 #7：技能库实装率极低</h3>
+      <p>README 标注 267 个 Skills，ZIP 内只有 16 个 SKILL.md。其余 251 个技能是规划中的，未落地。子公司的专业能力大部分「名义存在」。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ─── SECTION 5 ─── -->
+<section id="subsidiary">
+  <div class="section-header">
+    <span class="section-num">05</span>
+    <h2>子公司垂直化：现状 vs. 理想态</h2>
+  </div>
+
+  <p>你提到希望子公司越来越垂直——这是正确方向。垂直化的核心是：<strong>每家子公司有独立的专属 Prompt 体系、专属工具集、专属知识库（SKILL.md + RAG 向量库）、专属输出规范</strong>。以下是当前 22 家子公司的实装状态诊断：</p>
+
+  <div class="sub-grid">
+    <div class="sub-card">
+      <div class="name">01 墨智（AI研发）</div>
+      <div class="desc">agent-engineering-skills SKILL.md 已存在</div>
+      <div class="status"><span class="dot partial"></span><span style="font-size:.75rem;color:#8b6500">部分实装</span></div>
+    </div>
+    <div class="sub-card">
+      <div class="name">02 墨码（软件工坊）</div>
+      <div class="desc">claude-code、codex 等 SKILL.md 存在</div>
+      <div class="status"><span class="dot partial"></span><span style="font-size:.75rem;color:#8b6500">部分实装</span></div>
+    </div>
+    <div class="sub-card">
+      <div class="name">03 墨商BD（商务拓展）</div>
+      <div class="desc">chief-of-staff SKILL.md 存在，BP/PRD 模块</div>
+      <div class="status"><span class="dot partial"></span><span style="font-size:.75rem;color:#8b6500">部分实装</span></div>
+    </div>
+    <div class="sub-card">
+      <div class="name">04 墨影（IP孵化）</div>
+      <div class="desc">小红书模块存在，无专属 SKILL.md</div>
+      <div class="status"><span class="dot stub"></span><span style="font-size:.75rem;color:#8b4500">仅占位</span></div>
+    </div>
+    <div class="sub-card">
+      <div class="name">05 墨增（增长引擎）</div>
+      <div class="desc">无专属模块，无 SKILL.md</div>
+      <div class="status"><span class="dot missing"></span><span style="font-size:.75rem;color:#8b1a1a">未实装</span></div>
+    </div>
+    <div class="sub-card">
+      <div class="name">06 墨声（客服）</div>
+      <div class="desc">无专属模块，无 SKILL.md</div>
+      <div class="status"><span class="dot missing"></span><span style="font-size:.75rem;color:#8b1a1a">未实装</span></div>
+    </div>
+    <div class="sub-card">
+      <div class="name">07 墨域（私域CRM）</div>
+      <div class="desc">无专属模块，无 SKILL.md</div>
+      <div class="status"><span class="dot missing"></span><span style="font-size:.75rem;color:#8b1a1a">未实装</span></div>
+    </div>
+    <div class="sub-card">
+      <div class="name">08 墨单（订单交付）</div>
+      <div class="desc">xianyu.py 存在，无完整流程</div>
+      <div class="status"><span class="dot stub"></span><span style="font-size:.75rem;color:#8b4500">仅占位</span></div>
+    </div>
+    <div class="sub-card">
+      <div class="name">09 墨算（财务）</div>
+      <div class="desc">finance-analyst SKILL.md 存在</div>
+      <div class="status"><span class="dot partial"></span><span style="font-size:.75rem;color:#8b6500">部分实装</span></div>
+    </div>
+    <div class="sub-card">
+      <div class="name">10 墨思（情报研究）</div>
+      <div class="desc">trends.py + OSINT 存在，数据源硬编码</div>
+      <div class="status"><span class="dot stub"></span><span style="font-size:.75rem;color:#8b4500">仅占位</span></div>
+    </div>
+    <div class="sub-card">
+      <div class="name">11 墨律（法务）</div>
+      <div class="desc">无专属模块，无 SKILL.md</div>
+      <div class="status"><span class="dot missing"></span><span style="font-size:.75rem;color:#8b1a1a">未实装</span></div>
+    </div>
+    <div class="sub-card">
+      <div class="name">12 墨盾（安全/QA）</div>
+      <div class="desc">ai-taste-quality SKILL.md 部分对应</div>
+      <div class="status"><span class="dot stub"></span><span style="font-size:.75rem;color:#8b4500">仅占位</span></div>
+    </div>
+    <div class="sub-card">
+      <div class="name">13 墨品（产品设计）</div>
+      <div class="desc">product-manager、feedback SKILL.md 存在</div>
+      <div class="status"><span class="dot partial"></span><span style="font-size:.75rem;color:#8b6500">部分实装</span></div>
+    </div>
+    <div class="sub-card">
+      <div class="name">14 墨数（数据）</div>
+      <div class="desc">无专属模块，无 SKILL.md</div>
+      <div class="status"><span class="dot missing"></span><span style="font-size:.75rem;color:#8b1a1a">未实装</span></div>
+    </div>
+    <div class="sub-card">
+      <div class="name">15 墨维（运维）</div>
+      <div class="desc">scheduler.py 部分，无 SKILL.md</div>
+      <div class="status"><span class="dot stub"></span><span style="font-size:.75rem;color:#8b4500">仅占位</span></div>
+    </div>
+    <div class="sub-card">
+      <div class="name">16 墨育（教育）</div>
+      <div class="desc">你的逻辑思维教育主业，无专属模块</div>
+      <div class="status"><span class="dot missing"></span><span style="font-size:.75rem;color:#8b1a1a">未实装（优先！）</span></div>
+    </div>
+    <div class="sub-card">
+      <div class="name">17 墨海（出海）</div>
+      <div class="desc">无专属模块，无 SKILL.md</div>
+      <div class="status"><span class="dot missing"></span><span style="font-size:.75rem;color:#8b1a1a">未实装</span></div>
+    </div>
+    <div class="sub-card">
+      <div class="name">18 墨脑（知识管理）</div>
+      <div class="desc">skills/.hub 存在，无 RAG 集成</div>
+      <div class="status"><span class="dot stub"></span><span style="font-size:.75rem;color:#8b4500">仅占位</span></div>
+    </div>
+    <div class="sub-card">
+      <div class="name">19 墨迹（内容工厂）</div>
+      <div class="desc">content/ 模块存在，无 LLM 调用</div>
+      <div class="status"><span class="dot stub"></span><span style="font-size:.75rem;color:#8b4500">仅占位</span></div>
+    </div>
+    <div class="sub-card">
+      <div class="name">20 墨投（量化交易）</div>
+      <div class="desc">无专属模块，无 SKILL.md</div>
+      <div class="status"><span class="dot missing"></span><span style="font-size:.75rem;color:#8b1a1a">未实装</span></div>
+    </div>
+    <div class="sub-card">
+      <div class="name">21 墨商销售（闲鱼）</div>
+      <div class="desc">xianyu.py 部分存在</div>
+      <div class="status"><span class="dot stub"></span><span style="font-size:.75rem;color:#8b4500">仅占位</span></div>
+    </div>
+    <div class="sub-card">
+      <div class="name">22 墨工（设计）</div>
+      <div class="desc">无专属模块，无 SKILL.md</div>
+      <div class="status"><span class="dot missing"></span><span style="font-size:.75rem;color:#8b1a1a">未实装</span></div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:.75rem;font-size:.8rem;color:var(--ink-muted)">
+    <span><span class="dot implemented" style="display:inline-block;margin-right:.3rem"></span>完整实装 (0)</span>
+    <span><span class="dot partial" style="display:inline-block;margin-right:.3rem"></span>部分实装 (5)</span>
+    <span><span class="dot stub" style="display:inline-block;margin-right:.3rem"></span>仅占位/框架 (9)</span>
+    <span><span class="dot missing" style="display:inline-block;margin-right:.3rem"></span>未实装 (8)</span>
+  </div>
+
+  <h3 class="sub" style="margin-top:2rem">每家子公司「垂直化成熟态」需要什么</h3>
+  <div class="card info">
+    <p>一家真正垂直的 Agent 子公司需要以下六层配置——目前每家平均完成 1–2 层：</p>
+    <ol style="padding-left:1.3rem;margin-top:.5rem">
+      <li style="margin-bottom:.5rem"><strong>专属系统 Prompt（角色定义）</strong>：你是谁、你的边界是什么、遇到什么你要上报</li>
+      <li style="margin-bottom:.5rem"><strong>专属工具集（Tools）</strong>：该子公司能调用哪些 API、MCP Server、本地脚本</li>
+      <li style="margin-bottom:.5rem"><strong>专属知识库（SKILL.md + 向量检索）</strong>：领域知识沉淀，RAG 增强</li>
+      <li style="margin-bottom:.5rem"><strong>专属 SOP 库</strong>：标准操作流程，可被其他子公司调用</li>
+      <li style="margin-bottom:.5rem"><strong>专属输出规范（OUTPUT_SPEC）</strong>：每次任务的输出格式、质量标准</li>
+      <li style="margin-bottom:.5rem"><strong>专属监控指标</strong>：该子公司的 KPI，可回传给 CEO Dashboard</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ─── SECTION 6 ─── -->
+<section id="roadmap">
+  <div class="section-header">
+    <span class="section-num">06</span>
+    <h2>四阶段升级路线图（含代码样例）</h2>
+  </div>
+
+  <p>基于以上诊断，建议按以下四个阶段推进。每个阶段有明确的「完成标准」，只有满足标准才进入下一阶段。</p>
+
+  <div class="roadmap">
+
+    <!-- PHASE 1 -->
+    <div class="phase-block">
+      <div class="phase-label phase-p1">
+        <span class="num">P1</span>
+        <span class="name">基础建通</span>
+        <span class="time">第 1–2 周</span>
+      </div>
+      <div class="phase-content">
+        <h3>让系统「真的跑起来」— 接入 LLM，建立状态持久化</h3>
+        <div class="item">
+          <span class="item-icon">▸</span>
+          <div class="item-body">
+            <strong>1.1 接入真实 LLM（Qwen/Claude API）</strong>
+            <span>在 core/engine.py 注入 LLM Client，所有 Agent 方法改为真实调用，不再返回硬编码字典。推荐使用 DashScope 的 qwen-max 作为 CEO，qwen-plus 作为子公司 Worker。</span>
+          </div>
+        </div>
+        <div class="item">
+          <span class="item-icon">▸</span>
+          <div class="item-body">
+            <strong>1.2 建立 SQLite 状态库</strong>
+            <span>在 <code>~/.molin/state.db</code> 建三张表：decisions（历史决策）、tasks（任务记录）、knowledge（吸收的洞察）。所有 Agent 读写走 StateManager。</span>
+          </div>
+        </div>
+        <div class="item">
+          <span class="item-icon">▸</span>
+          <div class="item-body">
+            <strong>1.3 治理强制执行</strong>
+            <span>在 MolinEngine 加入 <code>check_approval(action, cost)</code> 装饰器，所有触发 L2/L3 的操作必须经过确认再执行，并写入审计日志。</span>
+          </div>
+        </div>
+        <pre><span class="comment"># core/state.py — 新增持久化层</span>
+<span class="keyword">import</span> sqlite3
+<span class="keyword">from</span> pathlib <span class="keyword">import</span> Path
+<span class="keyword">from</span> datetime <span class="keyword">import</span> datetime
+
+<span class="keyword">class</span> <span class="class-name">StateManager</span>:
+    <span class="keyword">def</span> <span class="fn">__init__</span>(self):
+        self.db_path = Path.home() / <span class="string">".molin"</span> / <span class="string">"state.db"</span>
+        self.db_path.parent.mkdir(exist_ok=<span class="keyword">True</span>)
+        self._init_db()
+
+    <span class="keyword">def</span> <span class="fn">_init_db</span>(self):
+        <span class="keyword">with</span> sqlite3.connect(self.db_path) <span class="keyword">as</span> conn:
+            conn.execute(<span class="string">"""
+                CREATE TABLE IF NOT EXISTS decisions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT,
+                    department TEXT,
+                    decision TEXT,
+                    cost REAL,
+                    level TEXT,
+                    outcome TEXT
+                )"""</span>)
+            conn.execute(<span class="string">"""
+                CREATE TABLE IF NOT EXISTS knowledge (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    source TEXT,
+                    insight TEXT,
+                    tags TEXT,
+                    created_at TEXT,
+                    relevance_score REAL
+                )"""</span>)
+
+    <span class="keyword">def</span> <span class="fn">log_decision</span>(self, department: str, decision: str, cost: float, level: str):
+        <span class="keyword">with</span> sqlite3.connect(self.db_path) <span class="keyword">as</span> conn:
+            conn.execute(
+                <span class="string">"INSERT INTO decisions VALUES (NULL,?,?,?,?,?,NULL)"</span>,
+                (datetime.now().isoformat(), department, decision, cost, level)
+            )
+
+    <span class="keyword">def</span> <span class="fn">get_recent_decisions</span>(self, days: int = <span class="num">7</span>) -> list:
+        <span class="keyword">with</span> sqlite3.connect(self.db_path) <span class="keyword">as</span> conn:
+            cursor = conn.execute(
+                <span class="string">"SELECT * FROM decisions WHERE timestamp > datetime('now', ?) ORDER BY timestamp DESC"</span>,
+                (f<span class="string">"-{days} days"</span>,)
+            )
+            <span class="keyword">return</span> cursor.fetchall()</pre>
+      </div>
+    </div>
+
+    <!-- PHASE 2 -->
+    <div class="phase-block">
+      <div class="phase-label phase-p2">
+        <span class="num">P2</span>
+        <span class="name">子公司垂直化</span>
+        <span class="time">第 3–5 周</span>
+      </div>
+      <div class="phase-content">
+        <h3>为每家子公司注入「专业大脑」— 优先攻坚你最核心的 5 家</h3>
+        <div class="item">
+          <span class="item-icon">▸</span>
+          <div class="item-body">
+            <strong>2.1 子公司 Agent 基类</strong>
+            <span>抽出 SubsidiaryAgent 基类，每家子公司继承后只需定义：system_prompt、tools、knowledge_sources、output_spec。不再手写重复的 LLM 调用逻辑。</span>
+          </div>
+        </div>
+        <div class="item">
+          <span class="item-icon">▸</span>
+          <div class="item-body">
+            <strong>2.2 优先完成 5 家核心子公司</strong>
+            <span>按业务重要性排序：墨迹（内容工厂）→ 墨商销售（闲鱼）→ 墨育（教育/你主业）→ 墨思（情报研究）→ 墨增（增长引擎）。每家完成六层配置。</span>
+          </div>
+        </div>
+        <div class="item">
+          <span class="item-icon">▸</span>
+          <div class="item-body">
+            <strong>2.3 子公司间事件总线</strong>
+            <span>用 SQLite 的 notifications 表或轻量 Redis Pub/Sub 实现跨子公司消息。格式：<code>{"from": "mozeng", "to": "moji", "event": "trend_detected", "payload": {...}}</code></span>
+          </div>
+        </div>
+        <pre><span class="comment"># agents/subsidiary_base.py — 子公司基类</span>
+<span class="keyword">from</span> abc <span class="keyword">import</span> ABC, abstractmethod
+<span class="keyword">from</span> openai <span class="keyword">import</span> OpenAI  <span class="comment"># or DashScope</span>
+
+<span class="keyword">class</span> <span class="class-name">SubsidiaryAgent</span>(ABC):
+    <span class="keyword">def</span> <span class="fn">__init__</span>(self, llm_client: OpenAI, state: <span class="type">StateManager</span>):
+        self.llm = llm_client
+        self.state = state
+        self.name = self.get_name()
+        self.model = self.get_model()  <span class="comment"># 各子公司可用不同模型</span>
+
+    @property
+    @abstractmethod
+    <span class="keyword">def</span> <span class="fn">system_prompt</span>(self) -> str: ...
+
+    @property
+    @abstractmethod
+    <span class="keyword">def</span> <span class="fn">tools</span>(self) -> list: ...
+
+    <span class="keyword">def</span> <span class="fn">run</span>(self, task: str, context: dict = {}) -> dict:
+        <span class="string">"""标准执行入口 — 所有子公司共用"""</span>
+        messages = [
+            {<span class="string">"role"</span>: <span class="string">"system"</span>, <span class="string">"content"</span>: self.system_prompt},
+            {<span class="string">"role"</span>: <span class="string">"user"</span>, <span class="string">"content"</span>: self._build_prompt(task, context)}
+        ]
+        response = self.llm.chat.completions.create(
+            model=self.model,
+            messages=messages,
+            tools=self.tools or <span class="keyword">None</span>,
+        )
+        result = self._parse_response(response)
+        self.state.log_decision(self.name, task, <span class="num">0</span>, <span class="string">"L0"</span>)
+        self.emit_event(<span class="string">"task_completed"</span>, {<span class="string">"task"</span>: task, <span class="string">"result_summary"</span>: result.get(<span class="string">"summary"</span>)})
+        <span class="keyword">return</span> result
+
+    <span class="keyword">def</span> <span class="fn">emit_event</span>(self, event_type: str, payload: dict):
+        <span class="string">"""发送跨子公司事件"""</span>
+        self.state.publish_event(self.name, event_type, payload)
+
+
+<span class="comment"># agents/subsidiaries/moji_content.py — 墨迹内容工厂（示例）</span>
+<span class="keyword">class</span> <span class="class-name">MojiContentAgent</span>(SubsidiaryAgent):
+    <span class="keyword">def</span> <span class="fn">get_name</span>(self): <span class="keyword">return</span> <span class="string">"墨迹（内容工厂）"</span>
+    <span class="keyword">def</span> <span class="fn">get_model</span>(self): <span class="keyword">return</span> <span class="string">"qwen-plus"</span>
+
+    @property
+    <span class="keyword">def</span> <span class="fn">system_prompt</span>(self):
+        <span class="keyword">return</span> <span class="string">"""你是墨迹内容工厂的主编 AI。
+职责：生产小红书/知乎/公众号内容，日产目标 10 条。
+工作原则：
+- 每篇内容必须有明确的「钩子」（第一句话抓住读者）
+- 使用 AIDA 框架：注意→兴趣→欲望→行动
+- 内容必须与墨增发现的当日热点趋势结合
+- 输出格式严格遵循 OUTPUT_SPEC.md
+你只做内容，不做策略决策。策略由 CEO 决定。"""</span>
+
+    @property
+    <span class="keyword">def</span> <span class="fn">tools</span>(self):
+        <span class="keyword">return</span> [
+            {<span class="string">"type"</span>: <span class="string">"function"</span>, <span class="string">"function"</span>: {
+                <span class="string">"name"</span>: <span class="string">"get_trending_topics"</span>,
+                <span class="string">"description"</span>: <span class="string">"从墨思获取当日热点话题列表"</span>,
+                <span class="string">"parameters"</span>: {<span class="string">"type"</span>: <span class="string">"object"</span>, <span class="string">"properties"</span>: {
+                    <span class="string">"category"</span>: {<span class="string">"type"</span>: <span class="string">"string"</span>}
+                }}
+            }}
+        ]</pre>
+      </div>
+    </div>
+
+    <!-- PHASE 3 -->
+    <div class="phase-block">
+      <div class="phase-label phase-p3">
+        <span class="num">P3</span>
+        <span class="name">记忆与进化</span>
+        <span class="time">第 6–8 周</span>
+      </div>
+      <div class="phase-content">
+        <h3>让系统真正「学习和记忆」— 向量库 + 自进化引擎</h3>
+        <div class="item">
+          <span class="item-icon">▸</span>
+          <div class="item-body">
+            <strong>3.1 接入 Qdrant 向量记忆</strong>
+            <span>每家子公司有独立的向量集合（ACL 隔离），成功的任务输出自动向量化存储。下次执行类似任务时，RAG 检索历史经验注入 context。</span>
+          </div>
+        </div>
+        <div class="item">
+          <span class="item-icon">▸</span>
+          <div class="item-body">
+            <strong>3.2 真实的自学习循环</strong>
+            <span>_evaluate 阶段真实调用 GitHub API 和 HN API。_absorb 阶段用 LLM 提炼洞察并存入向量库。_integrate 阶段自动更新对应子公司的 SKILL.md。_retire 阶段标记过期知识。</span>
+          </div>
+        </div>
+        <div class="item">
+          <span class="item-icon">▸</span>
+          <div class="item-body">
+            <strong>3.3 CEO 动态 OKR 系统</strong>
+            <span>OKR 存入 SQLite，CEO 每周基于子公司汇报（真实数据，非硬编码）重新生成和调整 OKR。引入 OKR 版本历史，可追溯决策演变。</span>
+          </div>
+        </div>
+        <div class="item">
+          <span class="item-icon">▸</span>
+          <div class="item-body">
+            <strong>3.4 系统自修复能力</strong>
+            <span>墨盾（QA）Agent 定期检查各子公司输出质量，发现问题自动生成修复任务，优先级低于当前任务则入队，高则打断并升级至 CEO。</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASE 4 -->
+    <div class="phase-block">
+      <div class="phase-label phase-p4">
+        <span class="num">P4</span>
+        <span class="name">生态级扩张</span>
+        <span class="time">第 9–12 周</span>
+      </div>
+      <div class="phase-content">
+        <h3>从「工具」到「组织」— 完成剩余 17 家子公司，开放生态</h3>
+        <div class="item">
+          <span class="item-icon">▸</span>
+          <div class="item-body">
+            <strong>4.1 批量子公司脚手架生成器</strong>
+            <span><code>molin new-subsidiary --name 墨XX --domain 领域</code> 命令自动生成标准化目录、基础 SKILL.md、系统 Prompt 模板、OUTPUT_SPEC。新业务接入时间从数天缩短到数小时。</span>
+          </div>
+        </div>
+        <div class="item">
+          <span class="item-icon">▸</span>
+          <div class="item-body">
+            <strong>4.2 MCP Server 化</strong>
+            <span>将高频子公司能力（内容生成、情报监控、闲鱼发布）暴露为 MCP Server，可从 Feishu、Claude Desktop、其他 MCP 客户端直接调用，打破 CLI 边界。</span>
+          </div>
+        </div>
+        <div class="item">
+          <span class="item-icon">▸</span>
+          <div class="item-body">
+            <strong>4.3 跨业务「飞轮」自动化</strong>
+            <span>墨思发现趋势 → 自动通知墨迹生产内容 → 墨增测试投放 → 墨域沉淀用户 → 墨单跟进订单 → 墨算记录收益 → CEO 复盘调整。全链条 trigger-based 自动执行。</span>
+          </div>
+        </div>
+        <div class="item">
+          <span class="item-icon">▸</span>
+          <div class="item-body">
+            <strong>4.4 Grafana 运营大盘</strong>
+            <span>将 SQLite 数据接入 Grafana（或自建 Flask Dashboard），实时显示各子公司 KPI、系统健康、预算消耗、内容发布量、学习循环次数。一屏掌控全公司。</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ─── SECTION 7 ─── -->
+<section id="memory">
+  <div class="section-header">
+    <span class="section-num">07</span>
+    <h2>记忆与状态管理升级</h2>
+  </div>
+
+  <p>一个没有记忆的 Agent 系统，无论跑多少次都只是在原地踏步。<strong>记忆是子公司越来越垂直的物质基础</strong>——没有记忆，领域知识无处积累。推荐三层记忆架构：</p>
+
+  <div class="card info">
+    <h3>三层记忆架构</h3>
+    <h4>Layer 1 — 工作记忆（对话上下文）</h4>
+    <p>每次任务执行时动态组装：系统 Prompt + 相关历史决策（SQLite 查询）+ RAG 检索结果（Qdrant） + 当前任务描述。控制在 8K–16K tokens 内，保持低延迟。</p>
+    <h4>Layer 2 — 长期记忆（SQLite + Qdrant）</h4>
+    <p>SQLite 存结构化数据：决策历史、任务记录、KPI 数据。Qdrant 存语义数据：成功案例向量、SKILL.md 向量、客户反馈向量。子公司各有独立 collection，ACL 隔离。</p>
+    <h4>Layer 3 — 组织记忆（SKILL.md 自动更新）</h4>
+    <p>自学习循环在 integrate 阶段自动更新 SKILL.md，将实际经验转化为可检索的组织知识。这是真正的「知识积累」，而非记日记。</p>
+  </div>
+
+  <pre><span class="comment"># core/memory.py — 三层记忆管理器</span>
+<span class="keyword">from</span> qdrant_client <span class="keyword">import</span> QdrantClient
+<span class="keyword">from</span> qdrant_client.models <span class="keyword">import</span> Distance, VectorParams, PointStruct
+
+<span class="keyword">class</span> <span class="class-name">MemoryManager</span>:
+    <span class="keyword">def</span> <span class="fn">__init__</span>(self, state: <span class="type">StateManager</span>):
+        self.state = state
+        self.qdrant = QdrantClient(<span class="string">":memory:"</span>)  <span class="comment"># 本地部署改为 host="localhost"</span>
+        self._init_collections()
+
+    <span class="keyword">def</span> <span class="fn">_init_collections</span>(self):
+        <span class="keyword">for</span> dept <span class="keyword">in</span> DEPARTMENTS:
+            self.qdrant.recreate_collection(
+                collection_name=f<span class="string">"molin_{dept}"</span>,
+                vectors_config=VectorParams(size=<span class="num">1536</span>, distance=Distance.COSINE),
+            )
+
+    <span class="keyword">def</span> <span class="fn">remember</span>(self, dept: str, content: str, metadata: dict, embedding: list):
+        <span class="string">"""将经验存入向量库"""</span>
+        self.qdrant.upsert(
+            collection_name=f<span class="string">"molin_{dept}"</span>,
+            points=[PointStruct(
+                id=self.state.next_id(),
+                vector=embedding,
+                payload={<span class="string">"content"</span>: content, <span class="string">"dept"</span>: dept, **metadata}
+            )]
+        )
+
+    <span class="keyword">def</span> <span class="fn">recall</span>(self, dept: str, query_embedding: list, top_k: int = <span class="num">5</span>) -> list:
+        <span class="string">"""检索相关历史经验"""</span>
+        results = self.qdrant.search(
+            collection_name=f<span class="string">"molin_{dept}"</span>,
+            query_vector=query_embedding,
+            limit=top_k,
+        )
+        <span class="keyword">return</span> [r.payload <span class="keyword">for</span> r <span class="keyword">in</span> results]
+
+    <span class="keyword">def</span> <span class="fn">build_context</span>(self, dept: str, task: str, query_embedding: list) -> str:
+        <span class="string">"""为 Agent 组装带记忆的上下文"""</span>
+        memories = self.recall(dept, query_embedding)
+        context = <span class="string">"## 相关历史经验\n"</span>
+        <span class="keyword">for</span> m <span class="keyword">in</span> memories:
+            context += f<span class="string">"- {m['content'][:200]}...\n"</span>
+        <span class="keyword">return</span> context</pre>
+</section>
+
+<!-- ─── SECTION 8 ─── -->
+<section id="swarm">
+  <div class="section-header">
+    <span class="section-num">08</span>
+    <h2>蜂群协作协议升级</h2>
+  </div>
+
+  <p>当前 SwarmEngine 的最大问题是：「分配」等于「打印角色名称」，没有任何执行发生。真正的蜂群需要：</p>
+
+  <div class="two-col">
+    <div class="card">
+      <h3>需要实现的核心能力</h3>
+      <ul>
+        <li>asyncio 真并行：多子公司同时执行独立子任务</li>
+        <li>任务依赖图（DAG）：有前后依赖的任务按序执行</li>
+        <li>结果聚合：收集所有子任务输出，合成最终结果</li>
+        <li>部分失败处理：单个子公司失败不影响整体任务</li>
+        <li>进度广播：CEO Dashboard 实时看到各 Agent 状态</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>推荐的任务消息格式</h3>
+      <pre style="margin:0;font-size:.75rem">{
+  <span class="string">"task_id"</span>: <span class="string">"t_2026_001"</span>,
+  <span class="string">"type"</span>: <span class="string">"content_pipeline"</span>,
+  <span class="string">"subtasks"</span>: [
+    {<span class="string">"dept"</span>: <span class="string">"mosi"</span>, <span class="string">"action"</span>: <span class="string">"get_trends"</span>},
+    {<span class="string">"dept"</span>: <span class="string">"moji"</span>, <span class="string">"action"</span>: <span class="string">"write_content"</span>,
+     <span class="string">"depends_on"</span>: [<span class="string">"mosi"</span>]},
+    {<span class="string">"dept"</span>: <span class="string">"mogong"</span>, <span class="string">"action"</span>: <span class="string">"design_cover"</span>,
+     <span class="string">"depends_on"</span>: [<span class="string">"mosi"</span>]}
+  ],
+  <span class="string">"governance_level"</span>: <span class="string">"L1"</span>
+}</pre>
+    </div>
+  </div>
+
+  <pre><span class="comment"># agents/swarm.py — 真正的并行执行</span>
+<span class="keyword">import</span> asyncio
+<span class="keyword">from</span> typing <span class="keyword">import</span> Dict, List
+
+<span class="keyword">class</span> <span class="class-name">SwarmEngine</span>:
+    <span class="keyword">def</span> <span class="fn">__init__</span>(self, subsidiaries: Dict[str, <span class="type">SubsidiaryAgent</span>], state: <span class="type">StateManager</span>):
+        self.subsidiaries = subsidiaries
+        self.state = state
+
+    <span class="keyword">async def</span> <span class="fn">run_task</span>(self, task_spec: dict) -> dict:
+        <span class="string">"""执行含依赖关系的多 Agent 任务"""</span>
+        results = {}
+        subtasks = task_spec[<span class="string">"subtasks"</span>]
+
+        <span class="comment"># 按依赖关系分批</span>
+        batches = self._topological_sort(subtasks)
+
+        <span class="keyword">for</span> batch <span class="keyword">in</span> batches:
+            <span class="comment"># 同批次并行执行</span>
+            aws = []
+            <span class="keyword">for</span> subtask <span class="keyword">in</span> batch:
+                agent = self.subsidiaries[subtask[<span class="string">"dept"</span>]]
+                context = {k: results[k] <span class="keyword">for</span> k <span class="keyword">in</span> subtask.get(<span class="string">"depends_on"</span>, [])}
+                aws.append(agent.run(subtask[<span class="string">"action"</span>], context))
+
+            batch_results = <span class="keyword">await</span> asyncio.gather(*aws, return_exceptions=<span class="keyword">True</span>)
+
+            <span class="keyword">for</span> subtask, result <span class="keyword">in</span> zip(batch, batch_results):
+                dept = subtask[<span class="string">"dept"</span>]
+                <span class="keyword">if</span> isinstance(result, Exception):
+                    results[dept] = {<span class="string">"error"</span>: str(result), <span class="string">"status"</span>: <span class="string">"failed"</span>}
+                <span class="keyword">else</span>:
+                    results[dept] = result
+
+        <span class="keyword">return</span> {<span class="string">"task_id"</span>: task_spec[<span class="string">"task_id"</span>], <span class="string">"results"</span>: results}
+
+    <span class="keyword">def</span> <span class="fn">_topological_sort</span>(self, subtasks: list) -> List[list]:
+        <span class="string">"""按依赖关系分批，无依赖的任务可并行"""</span>
+        <span class="comment"># ... 拓扑排序实现</span>
+        <span class="keyword">pass</span></pre>
+</section>
+
+<!-- ─── SECTION 9 ─── -->
+<section id="learning">
+  <div class="section-header">
+    <span class="section-num">09</span>
+    <h2>自进化引擎真正落地</h2>
+  </div>
+
+  <p>这是整个系统最有潜力、也最需要认真对待的部分。「机器人可以自己修复系统」——这个目标需要自进化引擎真正工作。以下是四个阶段的具体实现方案：</p>
+
+  <div class="card">
+    <h3>阶段 1：Evaluate — 真实数据采集</h3>
+    <pre><span class="keyword">async def</span> <span class="fn">_evaluate</span>(self) -> dict:
+    <span class="string">"""真实扫描多个数据源，收集新发现"""</span>
+    tasks = [
+        self._scan_github_trending(),     <span class="comment"># GitHub API</span>
+        self._scan_hackernews(),           <span class="comment"># HN Algolia API</span>
+        self._scan_product_hunt(),         <span class="comment"># PH API</span>
+        self._analyze_own_performance(),   <span class="comment"># SQLite 内部数据</span>
+        self._check_competitor_updates(),  <span class="comment"># OSINT</span>
+    ]
+    results = <span class="keyword">await</span> asyncio.gather(*tasks, return_exceptions=<span class="keyword">True</span>)
+    discoveries = [r <span class="keyword">for</span> r <span class="keyword">in</span> results <span class="keyword">if</span> <span class="keyword">not</span> isinstance(r, Exception)]
+    <span class="keyword">return</span> {<span class="string">"discoveries"</span>: discoveries, <span class="string">"scanned_at"</span>: datetime.now().isoformat()}</pre>
+  </div>
+
+  <div class="card">
+    <h3>阶段 2：Absorb — LLM 提炼洞察，存入向量库</h3>
+    <pre><span class="keyword">async def</span> <span class="fn">_absorb</span>(self, discoveries: list) -> dict:
+    <span class="string">"""用 LLM 分析发现，提炼可操作洞察"""</span>
+    insights = []
+    <span class="keyword">for</span> discovery <span class="keyword">in</span> discoveries:
+        prompt = f<span class="string">"""分析以下外部信息，判断对我们业务的影响：
+信息：{discovery}
+请输出 JSON：
+{{"relevance": 1-5, "impact_area": "子公司名称", "insight": "洞察", "action": "建议行动"}}"""</span>
+        response = <span class="keyword">await</span> self.llm.analyze(prompt)
+        insight = json.loads(response)
+        <span class="keyword">if</span> insight[<span class="string">"relevance"</span>] >= <span class="num">3</span>:
+            <span class="comment"># 存入向量库，供对应子公司召回</span>
+            embedding = <span class="keyword">await</span> self.embed(insight[<span class="string">"insight"</span>])
+            self.memory.remember(insight[<span class="string">"impact_area"</span>], insight[<span class="string">"insight"</span>], insight, embedding)
+            insights.append(insight)
+    <span class="keyword">return</span> {<span class="string">"insights_count"</span>: len(insights), <span class="string">"insights"</span>: insights}</pre>
+  </div>
+
+  <div class="card">
+    <h3>阶段 3：Integrate — 自动更新 SKILL.md</h3>
+    <pre><span class="keyword">async def</span> <span class="fn">_integrate</span>(self, insights: list) -> dict:
+    <span class="string">"""将洞察整合进对应子公司的 SKILL.md"""</span>
+    updates = []
+    <span class="keyword">for</span> insight <span class="keyword">in</span> insights:
+        dept = insight[<span class="string">"impact_area"</span>]
+        skill_path = Path(<span class="string">f"skills/{dept}/SKILL.md"</span>)
+        <span class="keyword">if</span> skill_path.exists():
+            current_content = skill_path.read_text()
+            updated = <span class="keyword">await</span> self.llm.update_skill(current_content, insight)
+            <span class="comment"># 写入前先做 diff 审查（L1 自审）</span>
+            <span class="keyword">if</span> self.governance.approve(<span class="string">"skill_update"</span>, cost=<span class="num">0</span>, level=<span class="string">"L1"</span>):
+                skill_path.write_text(updated)
+                updates.append({<span class="string">"dept"</span>: dept, <span class="string">"updated"</span>: <span class="keyword">True</span>})
+    <span class="keyword">return</span> {<span class="string">"updates"</span>: updates}</pre>
+  </div>
+
+  <div class="card">
+    <h3>阶段 4：Retire — 清理过时能力</h3>
+    <p>每月评估 SKILL.md 的使用频率（从向量库查询统计），超过 90 天未被召回的知识标记为「待淘汰」，生成审查报告提交给你（L2 人工确认）。你批准后归档而非删除，保留历史可查。</p>
+  </div>
+</section>
+
+<!-- ─── SECTION 10 ─── -->
+<section id="governance">
+  <div class="section-header">
+    <span class="section-num">10</span>
+    <h2>治理 &amp; 人机协作深化</h2>
+  </div>
+
+  <p>你想要的「和机器人对话，它可以自己修复和改造」——这个能力的前提是：系统知道什么时候需要问你，什么时候可以自己决定。当前 L0-L3 框架非常好，需要在代码层真正强制执行。</p>
+
+  <div class="card">
+    <h3>治理装饰器 — 所有操作强制过关</h3>
+    <pre><span class="comment"># core/governance.py — 执行层治理</span>
+<span class="keyword">from</span> functools <span class="keyword">import</span> wraps
+
+<span class="keyword">def</span> <span class="fn">governed</span>(action_name: str, estimated_cost: float = <span class="num">0</span>):
+    <span class="string">"""治理装饰器 — 所有 Agent 操作必须经过这里"""</span>
+    <span class="keyword">def</span> <span class="fn">decorator</span>(func):
+        @wraps(func)
+        <span class="keyword">async def</span> <span class="fn">wrapper</span>(*args, **kwargs):
+            level = Governance.classify(action_name, estimated_cost)
+
+            <span class="keyword">if</span> level == <span class="string">"L0"</span>:
+                <span class="comment"># 零成本自动执行</span>
+                result = <span class="keyword">await</span> func(*args, **kwargs)
+                Governance.audit(action_name, <span class="string">"auto"</span>, result)
+                <span class="keyword">return</span> result
+
+            <span class="keyword">elif</span> level == <span class="string">"L1"</span>:
+                <span class="comment"># AI 自审：让 CEO 快速检查</span>
+                approved = <span class="keyword">await</span> Governance.ai_review(action_name, kwargs)
+                <span class="keyword">if</span> approved:
+                    result = <span class="keyword">await</span> func(*args, **kwargs)
+                    Governance.audit(action_name, <span class="string">"ai_approved"</span>, result)
+                    <span class="keyword">return</span> result
+                <span class="keyword">else</span>:
+                    <span class="keyword">raise</span> GovernanceRejectError(f<span class="string">"AI 自审拒绝：{action_name}"</span>)
+
+            <span class="keyword">elif</span> level == <span class="string">"L2"</span>:
+                <span class="comment"># 人工确认：发 Feishu 消息给你</span>
+                approved = <span class="keyword">await</span> Governance.request_human_approval(
+                    action_name, kwargs, estimated_cost
+                )
+                <span class="keyword">if</span> approved:
+                    result = <span class="keyword">await</span> func(*args, **kwargs)
+                    Governance.audit(action_name, <span class="string">"human_approved"</span>, result)
+                    <span class="keyword">return</span> result
+                <span class="keyword">else</span>:
+                    <span class="keyword">raise</span> GovernanceRejectError(f<span class="string">"人工拒绝：{action_name}"</span>)
+
+        <span class="keyword">return</span> wrapper
+    <span class="keyword">return</span> decorator
+
+<span class="comment"># 使用示例</span>
+<span class="keyword">class</span> <span class="class-name">XianyuAgent</span>(SubsidiaryAgent):
+    @governed(<span class="string">"publish_product"</span>, estimated_cost=<span class="num">0</span>)  <span class="comment"># L0：自动</span>
+    <span class="keyword">async def</span> <span class="fn">list_product</span>(self, product: dict): ...
+
+    @governed(<span class="string">"run_promotion"</span>, estimated_cost=<span class="num">50</span>)  <span class="comment"># L2：人工确认</span>
+    <span class="keyword">async def</span> <span class="fn">boost_listing</span>(self, listing_id: str): ...</pre>
+  </div>
+
+  <h3 class="sub">Feishu 人机协作升级</h3>
+  <div class="card info">
+    <p>建议将 Feishu 作为你与系统交互的主要界面，实现以下三类推送：</p>
+    <ul>
+      <li><strong>每日简报卡片（09:00 自动）：</strong>昨日营收/内容产出/任务完成 + 今日 TOP3 优先任务</li>
+      <li><strong>L2 审批请求卡片（实时）：</strong>操作摘要 + 预估成本 + [批准] / [拒绝] / [修改后重发] 三个按钮</li>
+      <li><strong>异常告警卡片（即时）：</strong>子公司失败、预算超限、自学习发现重大机会</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ─── SECTION 11 ─── -->
+<section id="infra">
+  <div class="section-header">
+    <span class="section-num">11</span>
+    <h2>基础设施加固</h2>
+  </div>
+
+  <div class="two-col">
+    <div class="card warning">
+      <h3>M1 Air 8GB 资源约束下的最优配置</h3>
+      <p>针对你的硬件现实（M1 Air 8GB 内存），推荐以下资源分配策略：</p>
+      <ul>
+        <li>LLM API 调用：全部走云端（DashScope/Anthropic），不本地部署模型</li>
+        <li>Qdrant：用 <code>QdrantClient(":memory:")</code> 模式，或单独 Qdrant Cloud 免费 tier</li>
+        <li>SQLite：零额外内存开销，优先于 PostgreSQL/MySQL</li>
+        <li>Flask Dashboard：按需启动（<code>molin serve</code>），不常驻</li>
+        <li>Scheduler：用 APScheduler 内嵌进程，不用 cron 守护进程</li>
+      </ul>
+    </div>
+    <div class="card warning">
+      <h3>API 密钥安全（当前已有风险）</h3>
+      <p>已注意到 .env.example 包含示例密钥格式，需要确认：</p>
+      <ul>
+        <li>所有密钥通过环境变量加载，绝不硬编码进源码</li>
+        <li>每 30 天轮换（governance.yaml 已定义，代码未执行）</li>
+        <li>添加 pre-commit hook：<code>detect-secrets</code> 扫描，防止误提交</li>
+        <li>生产环境考虑 Vault 或 macOS Keychain 集成</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>推荐的技术栈选型（基于 M1 Air 约束）</h3>
+    <table style="width:100%;border-collapse:collapse;font-size:.85rem;margin-top:.5rem">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border)">
+          <th style="text-align:left;padding:.5rem;color:var(--ink-muted);font-weight:500;font-size:.8rem">层次</th>
+          <th style="text-align:left;padding:.5rem;color:var(--ink-muted);font-weight:500;font-size:.8rem">推荐选型</th>
+          <th style="text-align:left;padding:.5rem;color:var(--ink-muted);font-weight:500;font-size:.8rem">理由</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:.5rem;color:var(--ink-mid)">LLM 主力</td>
+          <td style="padding:.5rem"><code>qwen-max</code> / <code>claude-sonnet</code></td>
+          <td style="padding:.5rem;color:var(--ink-muted);font-size:.8rem">CEO 决策用 max，子公司用 plus/turbo</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:.5rem;color:var(--ink-mid)">向量库</td>
+          <td style="padding:.5rem"><code>Qdrant Cloud (free)</code></td>
+          <td style="padding:.5rem;color:var(--ink-muted);font-size:.8rem">免本地内存，1GB 免费够用</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:.5rem;color:var(--ink-mid)">结构化存储</td>
+          <td style="padding:.5rem"><code>SQLite</code></td>
+          <td style="padding:.5rem;color:var(--ink-muted);font-size:.8rem">零配置，文件即数据库</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:.5rem;color:var(--ink-mid)">异步框架</td>
+          <td style="padding:.5rem"><code>asyncio + httpx</code></td>
+          <td style="padding:.5rem;color:var(--ink-muted);font-size:.8rem">已在 requirements 中，并发 LLM 调用</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:.5rem;color:var(--ink-mid)">调度器</td>
+          <td style="padding:.5rem"><code>APScheduler</code></td>
+          <td style="padding:.5rem;color:var(--ink-muted);font-size:.8rem">替换 schedule 库，支持 cron + interval</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:.5rem;color:var(--ink-mid)">监控大盘</td>
+          <td style="padding:.5rem"><code>Flask + Chart.js</code></td>
+          <td style="padding:.5rem;color:var(--ink-muted);font-size:.8rem">已有 Flask，轻量足够</td>
+        </tr>
+        <tr>
+          <td style="padding:.5rem;color:var(--ink-mid)">MCP 集成</td>
+          <td style="padding:.5rem"><code>mcp-python-sdk</code></td>
+          <td style="padding:.5rem;color:var(--ink-muted);font-size:.8rem">将核心能力暴露给 Claude Desktop</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ─── SECTION 12 ─── -->
+<section id="conclusion">
+  <div class="section-header">
+    <span class="section-num">12</span>
+    <h2>结语：从工具到组织的跃迁</h2>
+  </div>
+
+  <div class="card highlight">
+    <h3>你在建设的东西，比你描述的更大</h3>
+    <p>「和机器人对话，它能自己修复和改造系统」——这不是一个工具的描述，这是一个<strong>自主组织</strong>的描述。当前的 Hermes OS 是这个组织的骨架，缺少的是肌肉（真实 LLM 执行）、血液（跨子公司消息流）、和神经系统（持久记忆 + 自学习）。</p>
+    <p>好消息是：<strong>骨架设计得相当好</strong>。公司架构、治理框架、CLI 体系——这些是最难设计的部分，已经成型。剩下的工作是「填充」，而不是「重建」。</p>
+  </div>
+
+  <h3 class="sub">三个最优先的行动</h3>
+  <div class="card">
+    <div class="item" style="padding:.75rem 0;border-bottom:1px solid var(--border)">
+      <span class="item-icon" style="font-size:1.3rem;color:var(--accent);font-weight:600">1</span>
+      <div class="item-body">
+        <strong>本周完成：把一个子公司完整跑通</strong>
+        <span>建议选墨迹（内容工厂）——它是你最核心的变现路径。接入真实 LLM，加入 SQLite 状态持久化，完成一次端到端的「生成小红书内容 → 存储结果 → 下次任务能回忆」的完整循环。这一个跑通，就证明架构可行。</span>
+      </div>
+    </div>
+    <div class="item" style="padding:.75rem 0;border-bottom:1px solid var(--border)">
+      <span class="item-icon" style="font-size:1.3rem;color:var(--gold);font-weight:600">2</span>
+      <div class="item-body">
+        <strong>本月完成：建立真正的跨子公司消息流</strong>
+        <span>用 SQLite 的 events 表实现简单的发布/订阅。让墨思（情报）发现趋势后，自动触发墨迹（内容）写作任务。这一步建立，子公司才从孤岛变成生态。</span>
+      </div>
+    </div>
+    <div class="item" style="padding:.75rem 0">
+      <span class="item-icon" style="font-size:1.3rem;color:var(--teal);font-weight:600">3</span>
+      <div class="item-body">
+        <strong>未来三月：让自学习循环真正工作</strong>
+        <span>每周五晚上自动跑一次学习循环：扫描 GitHub/HN，提炼洞察，更新 3–5 个 SKILL.md，并向你汇报「本周学到了什么」。这是系统真正开始「进化」的标志，也是你对外展示这套系统时最有说服力的演示。</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="hl-box ok" style="margin-top:2rem">
+    <span class="icon">✓</span>
+    <div>蓝图层面，Hermes OS 是一个非常有远见的系统设计。每个子公司越来越垂直的方向完全正确——垂直化深度 = 系统竞争力。按照四阶段路线图推进，这套系统有潜力成为你真正意义上的「数字分身」，而不只是一个自动化脚本集合。</div>
+  </div>
+
+  <div style="text-align:center;margin-top:3rem;padding:2rem 0;border-top:1px solid var(--border);color:var(--ink-faint);font-size:.8rem">
+    <div style="font-family:'JetBrains Mono',monospace;margin-bottom:.5rem">墨麟 Hermes OS 架构评估报告 · 生成于 2026-05-04</div>
+    <div>基于源代码全量分析 · 所有建议基于实际代码诊断</div>
+  </div>
+
+</section>
+
+</div>
+</body>
+</html>
