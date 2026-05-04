@@ -1,0 +1,15 @@
+{
+  "origin": "墨迹",
+  "timestamp": "2026-05-04T09:00:00+08:00",
+  "summary": "初始化——内容工厂待启动",
+  "detail": "今日内容尚未生成。cron暂停中。",
+  "data": {
+    "pieces_created": 0,
+    "platforms": [],
+    "content_titles": []
+  },
+  "downstream_skills": [
+    "social-push-publisher"
+  ],
+  "errors": []
+}

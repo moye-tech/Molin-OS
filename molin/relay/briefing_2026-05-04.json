@@ -1,0 +1,13 @@
+{
+  "origin": "CEO",
+  "timestamp": "2026-05-04T09:00:00+08:00",
+  "summary": "初始化——简报系统就绪",
+  "detail": "CEO每日简报技能已创建，等待首次执行。",
+  "data": {
+    "system_health": "green",
+    "active_crons": 2,
+    "total_skills": 298
+  },
+  "downstream_skills": [],
+  "errors": []
+}
