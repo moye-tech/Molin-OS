@@ -10,6 +10,7 @@
 #   repeat: forever=一直循环, 数字=执行次数
 
 jobs:
+  # ── 08:00 情报层 ──
   - name: "墨思情报银行每日扫描"
     id: "ff8d58571b1a"
     schedule: "0 8 * * *"           # 每日 08:00
@@ -21,10 +22,11 @@ jobs:
       - arxiv
     deliver: origin
     repeat: forever
-    description: "扫描外部情报→LLM提炼→高价值存入memory→输出日报"
+    description: "扫描外部情报→LLM提炼→高价值存入memory→输出日报（飞轮第一棒）"
     next_run: 2026-05-05T08:00:00+08:00
 
-  - name: "墨迹内容工厂每日闭环"
+  # ── 09:00 内容层 + CEO简报（并行）──
+  - name: "墨迹内容工厂飞轮闭环"
     id: "36d28ca9139f"
     schedule: "0 9 * * *"           # 每日 09:00
     skills:
@@ -35,7 +37,7 @@ jobs:
       - humanizer
     deliver: origin
     repeat: forever
-    description: "获取热点→评估→生产内容→存入memory→输出日报"
+    description: "获取墨思情报→评估→生产内容→memory存储接力数据→输出日报（飞轮第二棒）"
     next_run: 2026-05-05T09:00:00+08:00
 
   - name: "CEO每日简报"
@@ -49,6 +51,46 @@ jobs:
     description: "汇总昨日产出/今日待办/系统状态→推送到CEO"
     next_run: 2026-05-05T09:00:00+08:00
 
+  # ── 10:00 增长层 + 治理层（并行）──
+  - name: "墨增增长引擎接力"
+    id: "56cf70cf7865"
+    schedule: "0 10 * * *"          # 每日 10:00
+    skills:
+      - claude-seo
+      - seo-audit
+      - analytics-tracking
+      - content-strategy
+      - page-cro
+      - marketing-skills-cro
+      - marketing-skills-copywriting
+      - agent-marketing-growth-hacker
+    deliver: origin
+    repeat: forever
+    description: "获取墨迹接力数据→评估投放策略→SEO优化→输出增长方案（飞轮第三棒）"
+    next_run: 2026-05-05T10:00:00+08:00
+
+  - name: "每日治理合规检查"
+    id: "2569ff28d2ae"
+    schedule: "0 10 * * *"          # 每日 10:00
+    skills:
+      - molin-governance
+    deliver: origin
+    repeat: forever
+    description: "检查所有操作是否符合L0-L3→审计日志→L2待审批项上报"
+    next_run: 2026-05-05T10:00:00+08:00
+
+  # ── 12:00 数据汇总层 ──
+  - name: "系统状态快照每日汇总"
+    id: "1ebce945f706"
+    schedule: "0 12 * * *"          # 每日 12:00
+    skills:
+      - molin-company-structure
+    deliver: origin
+    repeat: forever
+    description: "收集所有子公司24小时产出→结构化统计→运营快照"
+    next_run: 2026-05-05T12:00:00+08:00
+
+  # ── 15/45分 销售层（高频率）──
   - name: "墨商销售闲鱼消息检测"
     id: "e318dfc348d2"
     schedule: "15,45 9-21 * * *"   # 09:00-21:00 每30分钟
@@ -58,9 +100,10 @@ jobs:
       - agent-sales-deal-strategist
     deliver: origin
     repeat: forever
-    description: "检测闲鱼新消息→识别交易信号→自动回复→L2上报"
+    description: "检测闲鱼新消息→按L0/L1/L2分级处理→L2上报→日报含治理审计"
     next_run: 2026-05-04T15:15:00+08:00
 
+  # ── 每周五 进化层 ──
   - name: "自学习每周循环"
     id: "e4682a49699d"
     schedule: "0 10 * * 5"          # 每周五 10:00
@@ -70,5 +113,5 @@ jobs:
       - karpathy-autoresearch
     deliver: origin
     repeat: forever
-    description: "扫描GitHub/HN/PH→提炼洞察→创建/更新技能→汇报"
+    description: "扫描GitHub/HN/PH→提炼洞察→自动创建/更新SKILL.md→清理过时→进化报告"
     next_run: 2026-05-08T10:00:00+08:00
