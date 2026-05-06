@@ -1,0 +1,141 @@
+# =============================================================================
+# 墨域OS — 系统覆盖配置文件
+# MoYu OS — System Override Configuration (moyer-override)
+# =============================================================================
+# 本文件由系统自动读取，覆盖默认配置。
+# 包含：模型路由配置、向量数据库选择、日志级别
+
+# ── 模型路由表 (6-Level Model Routing) ──
+# 参考蓝图v1.0：按任务复杂度智能匹配，目标降低60-70% API成本
+# IntentRouter 先评估任务复杂度得分(0-100)，
+# Manager质量门控检测到输出不合格时自动升级一级重试，最高到qwen-max。
+# 财务子公司持续监控各级用量，超阈值自动降级。
+
+[model_routing]
+default_provider = "deepseek"
+fallback_provider = "openrouter"
+
+# 路由策略：cost_optimized | quality_first | balanced
+strategy = "cost_optimized"
+
+# 复杂度分数映射：score 0-100
+# 0-20  → tier_6 (最低成本)
+# 21-40 → tier_5
+# 41-55 → tier_4
+# 56-70 → tier_3
+# 71-85 → tier_2
+# 86-100 → tier_1 (最高质量)
+
+[[model_routing.tiers]]
+level = 1
+name = "CEO决策"
+score_range = [86, 100]
+model = "qwen-max"
+provider = "openrouter"
+task_type = "意图路由/战略分析"
+cost_per_1k_tokens = 0.12
+currency = "¥"
+expected_usage_pct = 10
+
+[[model_routing.tiers]]
+level = 2
+name = "VP管理"
+score_range = [71, 85]
+model = "qwen-plus"
+provider = "openrouter"
+task_type = "任务分配/质量评审"
+cost_per_1k_tokens = 0.04
+currency = "¥"
+expected_usage_pct = 15
+
+[[model_routing.tiers]]
+level = 3
+name = "长文档处理"
+score_range = [56, 70]
+model = "qwen-long"
+provider = "openrouter"
+task_type = "合同/报告/长内容"
+cost_per_1k_tokens = 0.06
+currency = "¥"
+expected_usage_pct = 15
+
+[[model_routing.tiers]]
+level = 4
+name = "常规执行"
+score_range = [41, 55]
+model = "qwen-turbo"
+provider = "openrouter"
+task_type = "常规子公司任务"
+cost_per_1k_tokens = 0.012
+currency = "¥"
+expected_usage_pct = 40
+
+[[model_routing.tiers]]
+level = 5
+name = "视觉处理"
+score_range = [21, 40]
+model = "qwen-vl"
+provider = "openrouter"
+task_type = "图片分析/设计评审"
+cost_per_1k_tokens = 0.02
+currency = "¥"
+expected_usage_pct = 10
+
+[[model_routing.tiers]]
+level = 6
+name = "向量嵌入"
+score_range = [0, 20]
+model = "text-embedding-v3"
+provider = "openrouter"
+task_type = "Qdrant记忆写入/向量化"
+cost_per_1k_tokens = 0.001
+currency = "¥"
+expected_usage_pct = 10
+
+# ── 模型路由降级规则 ──
+[model_routing.downgrade_rules]
+enabled = true
+auto_retry_upgrade = true  # 输出不合格时自动升级一级重试
+max_retry_upgrade_levels = 2
+cost_alert_threshold_pct = 80  # 用量超80%时自动降级
+downgrade_on_over_budget = true
+downgrade_target_level = 4  # 降级到常规执行级别
+
+# ── 向量数据库选择 ──
+# 可选: "qdrant" | "chromadb"
+# Qdrant: 生产级向量数据库，支持ACL命名空间隔离、语义检索
+# ChromaDB: 轻量级本地向量库，适合开发/单机部署
+
+[vector_database]
+engine = "qdrant"  # 生产推荐：qdrant；开发测试：chromadb
+
+[vector_database.qdrant]
+host = "localhost"
+port = 6333
+grpc_port = 6334
+prefer_grpc = false
+timeout_seconds = 30
+memory_mode = false  # false=持久化模式, true=:memory:模式
+collection_prefix = "moyu_"
+acl_enabled = true
+# 子公司命名空间隔离：各子公司独立collection
+# CEO层拥有全局读权限，各子公司只读自己的记忆
+
+[vector_database.chromadb]
+# ChromaDB 本地模式（备用/开发）
+persist_directory = "~/.molin/vectors/"
+collection_name_pattern = "{prefix}_{subsidiary_key}"
+# 注意：ChromaDB v1.5 要求 collection name 匹配 [a-zA-Z0-9._-]{3-63}
+# 不支持中文 collection 名，需用拼音/英文名
+
+# ── 日志级别 ──
+[logging]
+level = "INFO"  # 可选: DEBUG, INFO, WARNING, ERROR, CRITICAL
+format = "{timestamp} [{level}] {module}: {message}"
+timestamp_format = "%Y-%m-%d %H:%M:%S"
+output = ["console", "file"]
+file_path = "~/.molin/logs/moyer.log"
+max_file_size_mb = 100
+backup_count = 7
+enable_audit_log = true
+audit_log_path = "~/.molin/audit/"

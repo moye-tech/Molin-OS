@@ -1,0 +1,6 @@
+requests
+loguru
+websockets>=13.0
+pillow>=10.0
+schedule>=1.0
+dashscope>=1.20

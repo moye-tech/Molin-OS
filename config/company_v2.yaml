@@ -1,0 +1,200 @@
+# 墨麟 Hermes OS — 公司配置文件 v2
+# =================================
+# 20家子公司架构（蓝图v1.0推荐）
+# 保留 revenue_target 和 budget 字段
+# 向后兼容：原始 company.yaml 保留 22 家子公司配置
+
+name: 墨麟 AI
+mission: 打造AI驱动的全自动一人公司，让个体拥有企业的战斗力
+version: v2.0
+budget_monthly: 1360  # ¥1,360/月 运营预算 (20子公司)
+
+# ── 20家墨系子公司 ──
+departments:
+
+  # ── VP营销 (Marketing) ──
+  mobi_wenchuang:
+    name: 墨笔文创
+    vp: VP营销
+    responsibility: 品牌内容创作与文创产品开发
+    revenue_target: 4000
+    budget: 200
+
+  moyun_ip:
+    name: 墨韵IP
+    vp: VP营销
+    responsibility: IP孵化与管理运营
+    revenue_target: 3000
+    budget: 150
+
+  motu_design:
+    name: 墨图设计
+    vp: VP营销
+    responsibility: 产品视觉与UI/UX设计
+    revenue_target: 3000
+    budget: 150
+
+  mobo_shortvideo:
+    name: 墨播短视频
+    vp: VP营销
+    responsibility: 短视频内容制作与增长引擎
+    revenue_target: 3000
+    budget: 120
+
+  mosheng_audio:
+    name: 墨声配音
+    vp: VP营销
+    responsibility: AI配音与音频内容制作
+    revenue_target: 2000
+    budget: 100
+
+  # ── VP运营 (Operations) ──
+  moyu_private:
+    name: 墨域私域
+    vp: VP运营
+    responsibility: 私域运营与CRM管理
+    revenue_target: 2500
+    budget: 120
+
+  mosheng_cs:
+    name: 墨声客服
+    vp: VP运营
+    responsibility: 智能客服系统运营
+    revenue_target: 1500
+    budget: 80
+
+  molian_ec:
+    name: 墨链电商
+    vp: VP运营
+    responsibility: 电商平台运营与交易链路管理
+    revenue_target: 3000
+    budget: 120
+
+  moxue_edu:
+    name: 墨学教育
+    vp: VP运营
+    responsibility: 在线教育与培训业务
+    revenue_target: 3000
+    budget: 120
+
+  # ── VP技术 (Technology) ──
+  moma_dev:
+    name: 墨码开发
+    vp: VP技术
+    responsibility: 核心软件开发与编程工具链
+    revenue_target: 4000
+    budget: 200
+
+  movei_ops:
+    name: 墨维运维
+    vp: VP技术
+    responsibility: 基础设施运维与平台稳定性
+    revenue_target: 2000
+    budget: 80
+
+  moan_security:
+    name: 墨安安全
+    vp: VP技术
+    responsibility: 信息安全与合规安全
+    revenue_target: 1500
+    budget: 80
+
+  momeng_autodream:
+    name: 墨梦AutoDream
+    vp: VP技术
+    responsibility: AutoDream自动化智能体平台
+    revenue_target: 2000
+    budget: 100
+
+  # ── VP财务 (Finance) ──
+  mosuan_finance:
+    name: 墨算财务
+    vp: VP财务
+    responsibility: 财务核算与交易管理
+    revenue_target: 1000
+    budget: 50
+
+  # ── VP战略 (Strategy) ──
+  mosheng_bd:
+    name: 墨商BD
+    vp: VP战略
+    responsibility: 商务拓展与战略合作
+    revenue_target: 3000
+    budget: 150
+
+  mohai_global:
+    name: 墨海出海
+    vp: VP战略
+    responsibility: 海外市场拓展与全球化运营
+    revenue_target: 3000
+    budget: 150
+
+  moyan_competitive:
+    name: 墨研竞情
+    vp: VP战略
+    responsibility: 行业研究与竞争情报分析
+    revenue_target: 2000
+    budget: 100
+
+  # ── 共同子公司 (Shared Services) ──
+  molv_legal:
+    name: 墨律法务
+    vp: 共同
+    responsibility: 集团法务与合规管理
+    revenue_target: 1000
+    budget: 50
+
+  monao_knowledge:
+    name: 墨脑知识
+    vp: 共同
+    responsibility: 集团知识管理与知识图谱建设
+    revenue_target: 1000
+    budget: 50
+
+  moce_data:
+    name: 墨测数据
+    vp: 共同
+    responsibility: 数据测试与BI数据平台
+    revenue_target: 2000
+    budget: 100
+
+# ── 月度目标合计 ──
+# 营收目标: ¥45,500/月
+# 预算合计: ¥2,170/月（各子公司运营成本）
+# governance monthly_cap: ¥1,360/月（AI API + 工具 + 推广）
+
+# ── 变现矩阵 ──
+monetization:
+  xianyu_store:
+    name: 闲鱼服务店铺
+    products:
+      - name: AI商业计划书定制
+        price: 800
+        category: 商业服务
+      - name: 简历优化升级
+        price: 100
+        category: 求职服务
+      - name: PRD产品需求文档
+        price: 500
+        category: 产品服务
+      - name: PPT美化设计
+        price: 200
+        category: 设计服务
+      - name: AI绘画定制
+        price: 100
+        category: 设计服务
+      - name: 小红书文案代写
+        price: 30
+        category: 内容服务
+  freelance:
+    platforms: [猪八戒, 程序员客栈, Upwork]
+    target_monthly: 3000
+
+# ── 内容管线 ──
+content_pipeline:
+  sequence:
+    - xiaohongshu_content_engine
+    - ffmpeg_video_engine
+    - social_push_publisher
+    - human_review
+  quality_gate: AI自审 + 人工抽检

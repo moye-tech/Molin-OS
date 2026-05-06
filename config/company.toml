@@ -1,0 +1,191 @@
+# =============================================================================
+# 墨域OS — 子公司映射配置文件
+# MoYu OS — Subsidiary Mapping Configuration
+# =============================================================================
+# 20家子公司归属5位VP + 3家共同子公司
+# VP营销 | VP运营 | VP技术 | VP财务 | VP战略
+# =============================================================================
+
+# ------------------------------------------------------------------
+# VP营销 (Marketing)
+# ------------------------------------------------------------------
+
+[[company]]
+name = "墨笔文创"
+old_name = "墨影, 墨迹"
+vp = "VP营销"
+description = "负责品牌内容创作与文创产品开发，原墨影(IP孵化)与墨迹(内容工厂)拆分整合后形成的内容创作核心"
+tools = ["BrandKit", "ContentStudio", "CreativeSuite", "PublishingEngine"]
+status = "active"
+
+[[company]]
+name = "墨韵IP"
+old_name = "墨影"
+vp = "VP营销"
+description = "负责IP孵化与管理运营，从原墨影(IP孵化)拆分而来，专注IP企划、授权与衍生开发"
+tools = ["IPManager", "LicensingPlatform", "StoryForge", "CopyrightTracker"]
+status = "active"
+
+[[company]]
+name = "墨图设计"
+old_name = "墨品, 墨工"
+vp = "VP营销"
+description = "负责产品视觉与UI/UX设计，原墨品(产品设计)改名并吸纳墨工(设计)后的一体化设计团队"
+tools = ["FigmaEnterprise", "DesignSystemHub", "AssetLibrary", "PrototypingLab"]
+status = "active"
+
+[[company]]
+name = "墨播短视频"
+old_name = "墨增"
+vp = "VP营销"
+description = "负责短视频内容制作与增长引擎，由原墨增(增长引擎)演变聚焦短视频赛道"
+tools = ["ShortVideoStudio", "GrowthAnalytics", "TrendForecaster", "AutoClipEngine"]
+status = "active"
+
+[[company]]
+name = "墨声配音"
+old_name = "墨声, 墨音"
+vp = "VP营销"
+description = "负责AI配音与音频内容制作，从原墨声(智能客服)拆分并与墨音(音频)合并，专注音频内容生产"
+tools = ["TTSStudio", "VoiceCloningLab", "AudioEditorPro", "SoundEffectLibrary"]
+status = "active"
+
+# ------------------------------------------------------------------
+# VP运营 (Operations)
+# ------------------------------------------------------------------
+
+[[company]]
+name = "墨域私域"
+old_name = "墨域"
+vp = "VP运营"
+description = "负责私域运营与CRM管理，由原墨域(CRM)升级为全域私域运营平台"
+tools = ["CRMSystem", "WeComBridge", "UserSegmentation", "AutomationWorkflow"]
+status = "active"
+
+[[company]]
+name = "墨声客服"
+old_name = "墨声"
+vp = "VP运营"
+description = "负责智能客服系统运营，从原墨声(智能客服)拆分，专注客服AI与工单系统"
+tools = ["AIChatbot", "TicketSystem", "SentimentAnalyzer", "KnowledgeBaseQA"]
+status = "active"
+
+[[company]]
+name = "墨链电商"
+old_name = "墨链"
+vp = "VP运营"
+description = "负责电商平台运营与交易链路管理，由原墨链(电商)延续发展"
+tools = ["ECommercePlatform", "OrderManager", "PaymentGateway", "LogisticsTracker"]
+status = "active"
+
+[[company]]
+name = "墨学教育"
+old_name = "墨育"
+vp = "VP运营"
+description = "负责在线教育与培训业务，由原墨育(教育)品牌升级而来"
+tools = ["LMSPlatform", "CourseBuilder", "ExamEngine", "LiveClassroom"]
+status = "active"
+
+# ------------------------------------------------------------------
+# VP技术 (Technology)
+# ------------------------------------------------------------------
+
+[[company]]
+name = "墨码开发"
+old_name = "墨智, 墨程"
+vp = "VP技术"
+description = "负责核心软件开发与编程工具链，原墨智(AI研发)改名并吸纳墨程(编程)后的综合开发团队"
+tools = ["IDECore", "CIPipeline", "CodeReviewBot", "APIGateway", "GitHubEnterprise"]
+status = "active"
+
+[[company]]
+name = "墨维运维"
+old_name = "墨维, 墨基"
+vp = "VP技术"
+description = "负责基础设施运维与平台稳定性，原墨维(运维)吸纳墨基(基础设施)后的统一运维团队"
+tools = ["KubernetesCluster", "MonitoringStack", "AutoScalingEngine", "DisasterRecovery", "AnsibleTower"]
+status = "active"
+
+[[company]]
+name = "墨安安全"
+old_name = "N/A"
+vp = "VP技术"
+description = "负责信息安全与合规安全，蓝图新增的独立安全子公司"
+tools = ["SIEMPlatform", "VulnerabilityScanner", "ZeroTrustGateway", "DLPSystem", "SOCDashboard"]
+status = "active"
+
+[[company]]
+name = "墨梦AutoDream"
+old_name = "N/A"
+vp = "VP技术"
+description = "负责AutoDream自动化智能体平台，蓝图新增的前沿AI自动化子公司"
+tools = ["AgentOrchestrator", "AutoMLSuite", "PromptEngine", "ModelRegistry", "InferenceServer"]
+status = "active"
+
+# ------------------------------------------------------------------
+# VP财务 (Finance)
+# ------------------------------------------------------------------
+
+[[company]]
+name = "墨算财务"
+old_name = "墨投"
+vp = "VP财务"
+description = "负责财务核算与交易管理，由原墨投(交易)整合升级为综合财务平台"
+tools = ["ERPFinance", "BudgetPlanner", "InvoiceEngine", "ComplianceChecker", "FinancialDashboard"]
+status = "active"
+
+# ------------------------------------------------------------------
+# VP战略 (Strategy)
+# ------------------------------------------------------------------
+
+[[company]]
+name = "墨商BD"
+old_name = "墨商"
+vp = "VP战略"
+description = "负责商务拓展与战略合作，由原墨商(销售)升级为商务发展部门"
+tools = ["CRMForBD", "ContractManager", "PipelineTracker", "PartnerPortal"]
+status = "active"
+
+[[company]]
+name = "墨海出海"
+old_name = "墨海"
+vp = "VP战略"
+description = "负责海外市场拓展与全球化运营，由原墨海(出海)延续发展"
+tools = ["GlobalExpansionKit", "LocalizationEngine", "CrossBorderPay", "ComplianceGlobal"]
+status = "active"
+
+[[company]]
+name = "墨研竞情"
+old_name = "墨思"
+vp = "VP战略"
+description = "负责行业研究与竞争情报分析，由原墨思(情报研究)升级为战略情报中心"
+tools = ["IntelligencePlatform", "MarketAnalyzer", "CompetitorTracker", "TrendRadar"]
+status = "active"
+
+# ------------------------------------------------------------------
+# 共同子公司 (Shared Services)
+# ------------------------------------------------------------------
+
+[[company]]
+name = "墨律法务"
+old_name = "墨律"
+vp = "共同"
+description = "负责集团法务与合规管理，由原墨律(法务)延续发展，服务全集团"
+tools = ["LegalDocSystem", "ContractReviewAI", "ComplianceMonitor", "IPProtectionSuite"]
+status = "active"
+
+[[company]]
+name = "墨脑知识"
+old_name = "墨脑"
+vp = "共同"
+description = "负责集团知识管理与知识图谱建设，由原墨脑(知识管理)延续发展，服务全集团"
+tools = ["KnowledgeGraph", "WikiEngine", "DocumentAI", "SearchUnified"]
+status = "active"
+
+[[company]]
+name = "墨测数据"
+old_name = "墨数, 墨测"
+vp = "共同"
+description = "负责数据测试与BI数据平台，原墨数(BI仪表盘)与墨测(测试)整合后的数据质量与BI服务团队"
+tools = ["BIStudio", "DataQualityEngine", "TestingAutomation", "DataWarehouse", "MetricHub"]
+status = "active"

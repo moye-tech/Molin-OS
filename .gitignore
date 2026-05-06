@@ -63,3 +63,22 @@ logs/
 
 # Local config overrides
 config/local.*
+
+# ═════════════════════════════════════════
+# Large binary files — > 50MB limit on GitHub
+# ═════════════════════════════════════════
+
+# 闲鱼逆向JS (4.2MB — large asset, download not commit)
+molib/xianyu/static/goofish_js_origin_version_2.js
+molin/xianyu/static/goofish_js_origin_version_2.js
+
+# Large reference docs (>500KB)
+skills/mlops/training/unsloth/references/llms-full.md
+skills/mlops/training/unsloth/references/llms-txt.md
+
+# Old duplicate code directories (moved to molib/)
+molin/agents_old/
+molin/core_old/
+
+# Large JS assets (313KB)
+molib/xianyu/utils/et_f.js

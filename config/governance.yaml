@@ -1,5 +1,6 @@
 # 墨麟 Hermes OS — 治理规则配置
 # =================================
+# Version: v1.0
 
 # 4级审批系统 (基于 Paperclip 62K★ 设计模式)
 approval_levels:

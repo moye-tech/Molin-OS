@@ -1,0 +1,485 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans)}
+.os{width:100%;padding:0 0 2rem}
+.title-bar{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1.25rem;background:var(--color-background-secondary);border-bottom:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg) var(--border-radius-lg) 0 0}
+.logo{font-size:15px;font-weight:500;color:var(--color-text-primary);letter-spacing:.5px}
+.logo span{color:#534AB7}
+.badge{font-size:11px;padding:3px 8px;border-radius:99px;background:var(--color-background-info);color:var(--color-text-info)}
+.nav{display:flex;gap:4px;padding:.5rem 1.25rem;border-bottom:.5px solid var(--color-border-tertiary)}
+.nav-btn{font-size:12px;padding:5px 12px;border-radius:99px;border:.5px solid var(--color-border-tertiary);background:transparent;color:var(--color-text-secondary);cursor:pointer;transition:all .2s}
+.nav-btn.active,.nav-btn:hover{background:var(--color-background-secondary);color:var(--color-text-primary);border-color:var(--color-border-secondary)}
+.nav-btn.active{font-weight:500}
+.panel{display:none;padding:1.25rem}
+.panel.active{display:block}
+.layer{margin-bottom:.75rem;border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden}
+.layer-head{display:flex;align-items:center;gap:10px;padding:.6rem 1rem;cursor:pointer;user-select:none;border-bottom:.5px solid var(--color-border-tertiary)}
+.layer-head:hover{background:var(--color-background-secondary)}
+.layer-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.layer-name{font-size:13px;font-weight:500;color:var(--color-text-primary)}
+.layer-desc{font-size:12px;color:var(--color-text-secondary);margin-left:auto}
+.layer-body{padding:.75rem 1rem;background:var(--color-background-primary)}
+.chip-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font-size:11px;padding:3px 10px;border-radius:99px;border:.5px solid var(--color-border-tertiary);color:var(--color-text-secondary);cursor:pointer;transition:all .15s}
+.chip:hover{background:var(--color-background-secondary);color:var(--color-text-primary)}
+.chip.hi{background:var(--color-background-info);color:var(--color-text-info);border-color:transparent}
+.chip.hs{background:var(--color-background-success);color:var(--color-text-success);border-color:transparent}
+.chip.hw{background:var(--color-background-warning);color:var(--color-text-warning);border-color:transparent}
+.chip.hd{background:var(--color-background-danger);color:var(--color-text-danger);border-color:transparent}
+.chip.hp{background:#EEEDFE;color:#3C3489;border-color:transparent}
+.detail-box{margin-top:8px;padding:8px 10px;border-radius:var(--border-radius-md);background:var(--color-background-secondary);border-left:2px solid #534AB7;display:none}
+.detail-box.show{display:block}
+.detail-box p{font-size:12px;color:var(--color-text-secondary);line-height:1.6}
+.detail-box strong{color:var(--color-text-primary);font-weight:500}
+.kv{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:1rem}
+.kv-card{padding:.75rem 1rem;border-radius:var(--border-radius-md);background:var(--color-background-secondary);text-align:center}
+.kv-num{font-size:20px;font-weight:500;color:var(--color-text-primary)}
+.kv-lab{font-size:11px;color:var(--color-text-secondary);margin-top:2px}
+.flow{position:relative}
+.flow-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.flow-node{flex:1;padding:8px 10px;border-radius:var(--border-radius-md);border:.5px solid var(--color-border-tertiary);font-size:12px;text-align:center;background:var(--color-background-primary)}
+.flow-arrow{font-size:14px;color:var(--color-text-tertiary);flex-shrink:0}
+.flow-node.ceo{background:#EEEDFE;border-color:#AFA9EC;color:#3C3489;font-weight:500}
+.flow-node.mgr{background:#E1F5EE;border-color:#5DCAA5;color:#085041;font-weight:500}
+.flow-node.infra{background:#E6F1FB;border-color:#85B7EB;color:#0C447C}
+.cost-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px}
+.cost-bar{height:6px;border-radius:3px;background:#534AB7;transition:width .3s}
+.cost-label{width:120px;color:var(--color-text-secondary);flex-shrink:0}
+.cost-val{margin-left:auto;color:var(--color-text-tertiary);font-size:11px;white-space:nowrap}
+.sub-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.sub-card{padding:.5rem .75rem;border-radius:var(--border-radius-md);border:.5px solid var(--color-border-tertiary);cursor:pointer;transition:all .15s}
+.sub-card:hover{background:var(--color-background-secondary)}
+.sub-card h4{font-size:12px;font-weight:500;color:var(--color-text-primary)}
+.sub-card p{font-size:11px;color:var(--color-text-secondary);margin-top:2px;line-height:1.4}
+.highlight-row{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
+.hl{flex:1;min-width:140px;padding:.6rem .8rem;border-radius:var(--border-radius-md);font-size:12px;border:.5px solid var(--color-border-tertiary)}
+.hl strong{display:block;font-size:11px;font-weight:500;margin-bottom:4px}
+.hl p{color:var(--color-text-secondary);line-height:1.5}
+.tab-detail{padding:1rem;border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);margin-top:.75rem;font-size:12px;color:var(--color-text-secondary);line-height:1.7;display:none}
+.tab-detail.show{display:block}
+.roadmap{counter-reset:step}
+.step{display:flex;gap:12px;margin-bottom:12px}
+.step-num{width:24px;height:24px;border-radius:50%;background:#EEEDFE;color:#3C3489;font-size:11px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.step-body h4{font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:3px}
+.step-body p{font-size:12px;color:var(--color-text-secondary);line-height:1.6}
+.tag{display:inline-block;font-size:10px;padding:2px 7px;border-radius:99px;margin-right:4px;margin-top:4px}
+.tag.phase1{background:#E1F5EE;color:#085041}
+.tag.phase2{background:#EEEDFE;color:#3C3489}
+.tag.phase3{background:#FAEEDA;color:#633806}
+.tag.phase4{background:#E6F1FB;color:#0C447C}
+</style>
+<div class="os">
+<div class="title-bar">
+  <div class="logo"><span>墨域</span>OS · SoloEmpire</div>
+  <div style="display:flex;gap:6px;align-items:center">
+    <div class="badge">v1.0 蓝图</div>
+    <div class="badge" style="background:var(--color-background-success);color:var(--color-text-success)">融合架构</div>
+  </div>
+</div>
+<div class="nav" id="nav">
+  <button class="nav-btn active" onclick="switchTab('arch')">系统架构</button>
+  <button class="nav-btn" onclick="switchTab('subs')">20子公司</button>
+  <button class="nav-btn" onclick="switchTab('flow')">运作流程</button>
+  <button class="nav-btn" onclick="switchTab('model')">模型路由</button>
+  <button class="nav-btn" onclick="switchTab('build')">搭建路线</button>
+</div>
+
+<div class="panel active" id="panel-arch">
+  <div class="kv">
+    <div class="kv-card"><div class="kv-num" style="color:#534AB7">6</div><div class="kv-lab">架构层级</div></div>
+    <div class="kv-card"><div class="kv-num" style="color:#0F6E56">20</div><div class="kv-lab">专属子公司</div></div>
+    <div class="kv-card"><div class="kv-num" style="color:#185FA5">1</div><div class="kv-lab">人类决策者</div></div>
+  </div>
+
+  <div class="layer" id="l0">
+    <div class="layer-head" onclick="toggleLayer('l0')">
+      <div class="layer-dot" style="background:#1D9E75"></div>
+      <div class="layer-name">L0 · 界面层 — 董事长控制台</div>
+      <div class="layer-desc">App / Web / 飞书</div>
+    </div>
+    <div class="layer-body" id="l0b" style="display:none">
+      <p style="font-size:12px;color:var(--color-text-secondary);margin-bottom:8px">人类与帝国之间的唯一交互界面，支持三端同步、自然语言指令、Plan Mode人工审批</p>
+      <div class="chip-row">
+        <span class="chip hs" onclick="showDetail('d0','mobile')">移动端App</span>
+        <span class="chip hs" onclick="showDetail('d0','desktop')">桌面控制台</span>
+        <span class="chip hs" onclick="showDetail('d0','feishu')">飞书Webhook</span>
+        <span class="chip hs" onclick="showDetail('d0','plan')">Plan Mode审批</span>
+        <span class="chip hs" onclick="showDetail('d0','kpi')">实时KPI看板</span>
+      </div>
+      <div class="detail-box" id="d0">
+        <p id="d0text"></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="layer" id="l1">
+    <div class="layer-head" onclick="toggleLayer('l1')">
+      <div class="layer-dot" style="background:#534AB7"></div>
+      <div class="layer-name">L1 · 决策层 — AI CEO引擎</div>
+      <div class="layer-desc">IntentRouter + 战略记忆</div>
+    </div>
+    <div class="layer-body" id="l1b" style="display:none">
+      <p style="font-size:12px;color:var(--color-text-secondary);margin-bottom:8px">核心大脑，解析人类意图并拆解为可执行任务，自动路由至对应VP层</p>
+      <div class="chip-row">
+        <span class="chip hp" onclick="showDetail('d1','intent')">IntentRouter</span>
+        <span class="chip hp" onclick="showDetail('d1','mem')">Qdrant战略记忆</span>
+        <span class="chip hp" onclick="showDetail('d1','risk')">风险评估引擎</span>
+        <span class="chip hp" onclick="showDetail('d1','dag')">Paperclip DAG</span>
+        <span class="chip hp" onclick="showDetail('d1','sop')">SOP自动持久化</span>
+      </div>
+      <div class="detail-box" id="d1"><p id="d1text"></p></div>
+    </div>
+  </div>
+
+  <div class="layer" id="l2">
+    <div class="layer-head" onclick="toggleLayer('l2')">
+      <div class="layer-dot" style="background:#185FA5"></div>
+      <div class="layer-name">L2 · 管理层 — 5位AI副总裁</div>
+      <div class="layer-desc">Manager质量门控 + 模型升级</div>
+    </div>
+    <div class="layer-body" id="l2b" style="display:none">
+      <p style="font-size:12px;color:var(--color-text-secondary);margin-bottom:8px">5个VP管理域，每位VP负责一个事业群，内置质量门控机制，不合格任务自动升级模型重试</p>
+      <div class="chip-row">
+        <span class="chip hi" onclick="showDetail('d2','mkt')">VP营销</span>
+        <span class="chip hi" onclick="showDetail('d2','ops')">VP运营</span>
+        <span class="chip hi" onclick="showDetail('d2','tech')">VP技术</span>
+        <span class="chip hi" onclick="showDetail('d2','fin')">VP财务</span>
+        <span class="chip hi" onclick="showDetail('d2','strat')">VP战略</span>
+      </div>
+      <div class="detail-box" id="d2"><p id="d2text"></p></div>
+    </div>
+  </div>
+
+  <div class="layer" id="l3">
+    <div class="layer-head" onclick="toggleLayer('l3')">
+      <div class="layer-dot" style="background:#D85A30"></div>
+      <div class="layer-name">L3 · 执行层 — 20专属子公司</div>
+      <div class="layer-desc">ClawTeam异步并发调度</div>
+    </div>
+    <div class="layer-body" id="l3b" style="display:none">
+      <p style="font-size:12px;color:var(--color-text-secondary);margin-bottom:8px">20个垂直领域Agent，各司其职，可并发执行，通过Redis Pub/Sub事件总线跨司协作</p>
+      <div class="chip-row">
+        <span class="chip hw">墨笔文创</span><span class="chip hw">墨韵IP</span><span class="chip hw">墨图设计</span>
+        <span class="chip hw">墨码开发</span><span class="chip hw">墨维运维</span><span class="chip hw">墨安安全</span>
+        <span class="chip hw">墨域私域</span><span class="chip hw">墨商BD</span><span class="chip hw">墨海出海</span>
+        <span class="chip hw">墨算财务</span><span class="chip hw">墨律法务</span><span class="chip hw">墨声客服</span>
+        <span class="chip hw">墨脑知识</span><span class="chip hw">墨测数据</span><span class="chip hw">墨学教育</span>
+        <span class="chip">→ 切换至"20子公司"看详情</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="layer" id="l4">
+    <div class="layer-head" onclick="toggleLayer('l4')">
+      <div class="layer-dot" style="background:#3B8BD4"></div>
+      <div class="layer-name">L4 · 基础设施层</div>
+      <div class="layer-desc">编排 · 调度 · 事件总线 · 记忆</div>
+    </div>
+    <div class="layer-body" id="l4b" style="display:none">
+      <div class="chip-row">
+        <span class="chip hi" onclick="showDetail('d4','dag')">Paperclip DAG编排</span>
+        <span class="chip hi" onclick="showDetail('d4','claw')">ClawTeam调度器</span>
+        <span class="chip hi" onclick="showDetail('d4','redis')">Redis Pub/Sub总线</span>
+        <span class="chip hi" onclick="showDetail('d4','qdrant')">Qdrant + ACL记忆</span>
+        <span class="chip hi" onclick="showDetail('d4','grafana')">Grafana KPI</span>
+      </div>
+      <div class="detail-box" id="d4"><p id="d4text"></p></div>
+    </div>
+  </div>
+
+  <div class="layer" id="l5">
+    <div class="layer-head" onclick="toggleLayer('l5')">
+      <div class="layer-dot" style="background:#888780"></div>
+      <div class="layer-name">L5 · 存储与外部集成层</div>
+      <div class="layer-desc">向量 · 关系型 · 缓存 · 云存储</div>
+    </div>
+    <div class="layer-body" id="l5b" style="display:none">
+      <div class="chip-row">
+        <span class="chip">Qdrant向量DB</span>
+        <span class="chip">PostgreSQL</span>
+        <span class="chip">Redis Cache</span>
+        <span class="chip">阿里云OSS</span>
+        <span class="chip">DashScope/百炼API</span>
+        <span class="chip">小红书/抖音API</span>
+        <span class="chip">飞书 Webhook</span>
+        <span class="chip">GitHub Actions</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="panel" id="panel-subs">
+  <div class="sub-grid">
+    <div class="sub-card" onclick="sendPrompt('详细介绍墨笔文创子公司的职能、工具链和输出物')">
+      <h4>📝 墨笔文创</h4>
+      <p>SEO文章、小红书图文、知乎专栏、公众号长文批量生产</p>
+    </div>
+    <div class="sub-card" onclick="sendPrompt('详细介绍墨韵IP子公司的职能和IP运营策略')">
+      <h4>✨ 墨韵IP</h4>
+      <p>数字IP人设打造、系列内容规划、品牌形象一致性管理</p>
+    </div>
+    <div class="sub-card" onclick="sendPrompt('墨图设计子公司工具链和设计产出详情')">
+      <h4>🎨 墨图设计</h4>
+      <p>封面图、Banner、UI原型、品牌视觉设计自动化</p>
+    </div>
+    <div class="sub-card" onclick="sendPrompt('墨声配音子公司能力和应用场景')">
+      <h4>🎙 墨声配音</h4>
+      <p>TTS配音、视频脚本配音、多语言本地化音频生产</p>
+    </div>
+    <div class="sub-card" onclick="sendPrompt('墨码开发子公司技术栈和自动化能力')">
+      <h4>💻 墨码开发</h4>
+      <p>全栈代码生成、GitHub自动PR、技术文档维护</p>
+    </div>
+    <div class="sub-card" onclick="sendPrompt('墨维运维子公司的监控告警和自愈能力')">
+      <h4>⚙️ 墨维运维</h4>
+      <p>Docker健康监控、自动重启、服务告警与自愈</p>
+    </div>
+    <div class="sub-card" onclick="sendPrompt('墨安安全子公司的安全扫描和合规能力')">
+      <h4>🔒 墨安安全</h4>
+      <p>API密钥扫描、依赖漏洞检测、合规审计报告</p>
+    </div>
+    <div class="sub-card" onclick="sendPrompt('墨域私域CRM系统的功能设计')">
+      <h4>🔗 墨域私域</h4>
+      <p>用户分层管理、私域触达序列、复购漏斗自动化</p>
+    </div>
+    <div class="sub-card" onclick="sendPrompt('墨商BD子公司的商务拓展和合作对接流程')">
+      <h4>🤝 墨商BD</h4>
+      <p>潜在客户识别、合作提案撰写、合同模板生成</p>
+    </div>
+    <div class="sub-card" onclick="sendPrompt('墨海出海子公司的台湾和东南亚市场策略')">
+      <h4>🌏 墨海出海</h4>
+      <p>台湾/东南亚本地化、多平台分发、跨境合规</p>
+    </div>
+    <div class="sub-card" onclick="sendPrompt('墨算财务子公司的收支管理和报表自动化')">
+      <h4>💰 墨算财务</h4>
+      <p>收支记录、API成本追踪、月度财务报表自动生成</p>
+    </div>
+    <div class="sub-card" onclick="sendPrompt('墨律法务子公司的合规风险管控能力')">
+      <h4>⚖️ 墨律法务</h4>
+      <p>合同审查、AI合规风险提示、版权保护建议</p>
+    </div>
+    <div class="sub-card" onclick="sendPrompt('墨声客服子公司的智能客服和用户服务能力')">
+      <h4>💬 墨声客服</h4>
+      <p>多平台消息统一收口、智能回复、用户问题分级处理</p>
+    </div>
+    <div class="sub-card" onclick="sendPrompt('墨脑知识库子公司的知识管理和检索能力')">
+      <h4>🧠 墨脑知识</h4>
+      <p>全司知识沉淀、RAG检索、SOP版本管理</p>
+    </div>
+    <div class="sub-card" onclick="sendPrompt('墨测数据子公司的数据分析和增长洞察能力')">
+      <h4>📊 墨测数据</h4>
+      <p>多平台数据汇总、增长归因分析、A/B测试报告</p>
+    </div>
+    <div class="sub-card" onclick="sendPrompt('墨学教育子公司的课程和知识付费产品策略')">
+      <h4>🎓 墨学教育</h4>
+      <p>课程体系设计、知识付费产品打包、学员运营</p>
+    </div>
+    <div class="sub-card" onclick="sendPrompt('墨播短视频子公司的内容生产和分发能力')">
+      <h4>📱 墨播短视频</h4>
+      <p>抖音/视频号脚本、剪辑指令生成、话题趋势捕捉</p>
+    </div>
+    <div class="sub-card" onclick="sendPrompt('墨链闲鱼猪八戒电商子公司的运营策略')">
+      <h4>🛒 墨链电商</h4>
+      <p>闲鱼/猪八戒商品上架、服务包定价、订单跟踪</p>
+    </div>
+    <div class="sub-card" onclick="sendPrompt('墨研竞情子公司的市场情报收集能力')">
+      <h4>🔍 墨研竞情</h4>
+      <p>竞品监控、GitHub趋势、行业情报日报自动生成</p>
+    </div>
+    <div class="sub-card" onclick="sendPrompt('墨梦AutoDream记忆整合子公司的功能')">
+      <h4>💭 墨梦AutoDream</h4>
+      <p>每周记忆整合、战略复盘、知识蒸馏存入Qdrant</p>
+    </div>
+  </div>
+</div>
+
+<div class="panel" id="panel-flow">
+  <div class="highlight-row">
+    <div class="hl">
+      <strong style="color:#534AB7">输入</strong>
+      <p>你说"帮我在小红书推广新课程"，App捕获语音/文字意图</p>
+    </div>
+    <div class="hl">
+      <strong style="color:#0F6E56">路由</strong>
+      <p>IntentRouter拆解任务 → 调度VP营销 + VP财务确认预算</p>
+    </div>
+    <div class="hl">
+      <strong style="color:#185FA5">执行</strong>
+      <p>墨笔文创写稿 + 墨图设计出图 + 墨播生成发布计划，并发完成</p>
+    </div>
+  </div>
+  <div class="flow">
+    <div class="flow-row">
+      <div class="flow-node" style="background:var(--color-background-success);border-color:var(--color-border-success);color:var(--color-text-success)">董事长一句话指令</div>
+    </div>
+    <div class="flow-row" style="justify-content:center"><span class="flow-arrow">↓</span></div>
+    <div class="flow-row">
+      <div class="flow-node ceo">IntentRouter · 意图解析 + 风险评估</div>
+    </div>
+    <div class="flow-row" style="justify-content:center"><span class="flow-arrow" style="font-size:11px;color:var(--color-text-tertiary)">重大决策 → Plan Mode人工确认</span></div>
+    <div class="flow-row">
+      <div class="flow-node ceo">Paperclip DAG · 任务拆解 + 依赖图生成</div>
+    </div>
+    <div class="flow-row" style="justify-content:center"><span class="flow-arrow">↓</span></div>
+    <div class="flow-row">
+      <div class="flow-node mgr">VP营销</div>
+      <div class="flow-node mgr">VP技术</div>
+      <div class="flow-node mgr">VP财务</div>
+    </div>
+    <div class="flow-row" style="justify-content:center"><span class="flow-arrow">↓ ClawTeam异步并发</span></div>
+    <div class="flow-row">
+      <div class="flow-node" style="font-size:11px">墨笔文创</div>
+      <div class="flow-node" style="font-size:11px">墨图设计</div>
+      <div class="flow-node" style="font-size:11px">墨播短视频</div>
+      <div class="flow-node" style="font-size:11px">墨测数据</div>
+    </div>
+    <div class="flow-row" style="justify-content:center"><span class="flow-arrow">↓</span></div>
+    <div class="flow-row">
+      <div class="flow-node mgr" style="flex:none;width:100%">Manager质量门控 · 不合格 → 升级模型重试</div>
+    </div>
+    <div class="flow-row" style="justify-content:center"><span class="flow-arrow">↓</span></div>
+    <div class="flow-row">
+      <div class="flow-node infra">结果汇报 → 飞书通知 + 看板更新 + 记忆写入Qdrant</div>
+    </div>
+    <div class="flow-row" style="justify-content:center"><span class="flow-arrow">↓</span></div>
+    <div class="flow-row">
+      <div class="flow-node" style="background:var(--color-background-success);border-color:var(--color-border-success);color:var(--color-text-success)">墨梦AutoDream · 周度记忆蒸馏 + 战略复盘</div>
+    </div>
+  </div>
+</div>
+
+<div class="panel" id="panel-model">
+  <p style="font-size:12px;color:var(--color-text-secondary);margin-bottom:1rem">六级模型路由，按任务复杂度智能匹配，目标降低60-70% API成本</p>
+  <div id="cost-rows"></div>
+  <div style="margin-top:1rem;padding:.75rem 1rem;border-radius:var(--border-radius-md);background:var(--color-background-secondary);font-size:12px;color:var(--color-text-secondary)">
+    <strong style="color:var(--color-text-primary);display:block;margin-bottom:6px">路由逻辑</strong>
+    IntentRouter先评估任务复杂度得分(0-100)，Manager质量门控检测到输出不合格时自动升级一级重试，最高到qwen-max。财务子公司持续监控各级用量，超阈值自动降级。
+  </div>
+</div>
+
+<div class="panel" id="panel-build">
+  <div class="roadmap">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>基础底座 · 本地Docker环境</h4>
+        <p>Mac M1 Air (8GB) 部署：Qdrant向量DB + Redis + PostgreSQL + Hermes核心容器，端口全部绑定127.0.0.1，静态密码生成避免持久化Bug</p>
+        <span class="tag phase1">Week 1-2</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>CEO + VP层 · 决策与管理骨架</h4>
+        <p>部署IntentRouter(qwen-max路由)，定义5个VP的system prompt和职责TOML，接入Paperclip DAG编排引擎，完成端到端第一个任务流</p>
+        <span class="tag phase1">Week 2-3</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>子公司逐批上线 · 分5批激活</h4>
+        <p>优先上线核心营收链：墨笔文创→墨图设计→墨链电商→墨测数据→墨算财务。每批上线后跑压测，稳定后激活下一批。ClawTeam异步调度确保M1不过热</p>
+        <span class="tag phase2">Week 3-6</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h4>飞书Webhook · 人机接口激活</h4>
+        <p>飞书WebSocket长连接事件订阅，Plan Mode审批卡片，Grafana KPI看板，实现"手机上一句话驱动全司运转"</p>
+        <span class="tag phase2">Week 5-6</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <h4>App封装 · 跨平台客户端</h4>
+        <p>Tauri(Rust桌面) + React Native(移动端)封装董事长控制台，自然语言输入栏 + 实时日志流 + 任务追踪看板 + 一键审批。后端仍是本地Docker，App通过本地API通信</p>
+        <span class="tag phase3">Week 7-10</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">6</div>
+      <div class="step-body">
+        <h4>记忆与智慧积累 · AutoDream上线</h4>
+        <p>墨梦AutoDream每周自动整合全司记忆，ACL隔离各子公司Qdrant命名空间，SOP反馈管道持续优化流程，系统越用越聪明</p>
+        <span class="tag phase3">Week 8+</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">7</div>
+      <div class="step-body">
+        <h4>云端迁移 · 突破M1算力天花板</h4>
+        <p>阿里云ECS(2核4G起步) + 弹性扩缩，或Feishu Aily企业版接管部分工作流，本地保留开发环境，生产迁云，为商业化SaaS化做准备</p>
+        <span class="tag phase4">Month 3+</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+const details={
+  d0:{mobile:'<strong>移动端App (Tauri/React Native)：</strong>自然语言输入 → 实时任务流追踪 → 飞书通知推送 → 一键Plan Mode审批。即使你人在外面，帝国照常运转，有重大决策才发出审批通知。',
+  desktop:'<strong>桌面控制台：</strong>全息KPI看板、Grafana嵌入、任务DAG可视化、子公司状态监控。设计参考真实集团董事会室大屏，让你感受掌控感。',
+  feishu:'<strong>飞书Webhook：</strong>WebSocket长连接，飞书消息即为指令。子公司产出自动汇报到指定飞书频道，支持结构化审批卡片，零基础用户也能操控全局。',
+  plan:'<strong>Plan Mode：</strong>高风险操作(发布正式内容/支出超阈值/法律合同)触发人工确认，飞书推送审批卡片，拒绝则任务挂起等待修订，避免AI自主闯祸。',
+  kpi:'<strong>实时KPI看板：</strong>统一追踪收入、内容产量、用户增长、API成本、子公司任务完成率。数据接入Grafana，每日自动生成日报发到飞书。'},
+  d1:{intent:'<strong>IntentRouter：</strong>qwen-max驱动，解析输入意图并打分，拆解为子任务树，分配到对应VP。比单一CEO Agent节省60%token成本。',
+  mem:'<strong>Qdrant战略记忆：</strong>按子公司ACL隔离命名空间，CEO层拥有全局读权限，各子公司只读自己的记忆，防止信息泄漏和幻觉。每周AutoDream蒸馏压缩。',
+  risk:'<strong>风险评估引擎：</strong>任务执行前自动检查：资金超限/内容合规/法律风险/隐私安全。评分超阈值自动触发Plan Mode或直接拒绝。',
+  dag:'<strong>Paperclip DAG：</strong>将任务拆解为有向无环图，自动识别并行可能性，ClawTeam按依赖关系调度，最大化并发效率，让M1 Air的资源利用率翻倍。',
+  sop:'<strong>SOP自动持久化：</strong>每次任务完成后，Agent将执行路径、工具参数、质量评分写入SOP库，下次同类任务直接复用，系统越用越快。'},
+  d2:{mkt:'<strong>VP营销：</strong>统管墨笔文创/墨韵IP/墨图设计/墨播短视频/墨声配音。主导内容矩阵策略、平台分发计划、品牌调性一致性。',
+  ops:'<strong>VP运营：</strong>统管墨域私域/墨声客服/墨链电商/墨学教育。负责用户全生命周期、复购漏斗、客诉处理、订单履约。',
+  tech:'<strong>VP技术：</strong>统管墨码开发/墨维运维/墨安安全/墨梦AutoDream。负责系统稳定性、代码质量、安全合规、记忆健康。',
+  fin:'<strong>VP财务：</strong>统管墨算财务。实时追踪API成本、收入、利润率，每月出报表，超支自动降级模型路由，保护现金流。',
+  strat:'<strong>VP战略：</strong>统管墨商BD/墨海出海/墨研竞情。负责市场情报、合作伙伴拓展、出海本地化策略、竞品监控。'},
+  d4:{dag:'<strong>Paperclip DAG编排：</strong>任务有向无环图，定义节点依赖、重试策略、超时机制。DAG可视化在控制台实时追踪，每个节点的状态/耗时/成本一目了然。',
+  claw:'<strong>ClawTeam异步调度器：</strong>并发任务队列管理，适配M1 Air 8GB内存限制，动态调节并发数，防止OOM。支持优先级抢占和任务暂停恢复。',
+  redis:'<strong>Redis Pub/Sub事件总线：</strong>取代CEO直接调度，子公司之间通过事件异步通信。墨测数据发布"流量报告就绪"事件，墨商BD自动订阅并触发BD策略更新，真正的无人协作。',
+  qdrant:'<strong>Qdrant + ACL记忆系统：</strong>memory_acl.toml配置各集合的读写权限，子公司间记忆隔离，CEO有全局读权限。支持语义检索，Agent能找到3个月前的类似案例。',
+  grafana:'<strong>Grafana KPI监控：</strong>Docker内嵌Grafana，预置仪表板追踪：任务完成率/API成本/各子公司产量/错误率/模型升级频率。数据驱动优化决策。'}
+};
+const models=[
+  {name:'qwen-max · CEO决策',task:'意图路由/战略分析',pct:10,cost:'¥0.12/千token'},
+  {name:'qwen-plus · VP管理',task:'任务分配/质量评审',pct:15,cost:'¥0.04/千token'},
+  {name:'qwen-long · 长文档',task:'合同/报告/长内容',pct:15,cost:'¥0.06/千token'},
+  {name:'qwen-turbo · 执行',task:'常规子公司任务',pct:40,cost:'¥0.012/千token'},
+  {name:'qwen-vl · 视觉',task:'图片分析/设计评审',pct:10,cost:'¥0.02/千token'},
+  {name:'text-embedding · 向量',task:'Qdrant记忆写入',pct:10,cost:'¥0.001/千token'}
+];
+function buildCostRows(){
+  const c=document.getElementById('cost-rows');
+  c.innerHTML=models.map(m=>`
+    <div class="cost-row">
+      <div class="cost-label">${m.name}</div>
+      <div style="flex:1">
+        <div style="font-size:11px;color:var(--color-text-tertiary);margin-bottom:2px">${m.task}</div>
+        <div class="cost-bar" style="width:${m.pct*5}px"></div>
+      </div>
+      <div class="cost-val">${m.pct}% 用量 · ${m.cost}</div>
+    </div>`).join('');
+}
+buildCostRows();
+function toggleLayer(id){
+  const b=document.getElementById(id+'b');
+  b.style.display=b.style.display==='none'?'block':'none';
+}
+function showDetail(box,key){
+  const b=document.getElementById(box);
+  const t=document.getElementById(box+'text');
+  const d=details[box]&&details[box][key];
+  if(!d)return;
+  b.classList.add('show');
+  t.innerHTML=d;
+}
+function switchTab(name){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>

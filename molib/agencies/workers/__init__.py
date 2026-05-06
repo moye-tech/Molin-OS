@@ -1,0 +1,60 @@
+"""墨域OS — 20家子公司Worker注册表"""
+from .base import SubsidiaryWorker, WorkerRegistry, Task, WorkerResult
+
+from .content_writer import ContentWriter
+from .ip_manager import IpManager
+from .designer import Designer
+from .short_video import ShortVideo
+from .voice_actor import VoiceActor
+from .crm import Crm
+from .customer_service import CustomerService
+from .ecommerce import Ecommerce
+from .education import Education
+from .developer import Developer
+from .ops import Ops
+from .security import Security
+from .auto_dream import AutoDream
+from .finance import Finance
+from .bd import Bd
+from .global_marketing import GlobalMarketing
+from .research import Research
+from .legal import Legal
+from .knowledge import Knowledge
+from .data_analyst import DataAnalyst
+
+def register_all():
+    WorkerRegistry.register(ContentWriter)
+    WorkerRegistry.register(IpManager)
+    WorkerRegistry.register(Designer)
+    WorkerRegistry.register(ShortVideo)
+    WorkerRegistry.register(VoiceActor)
+    WorkerRegistry.register(Crm)
+    WorkerRegistry.register(CustomerService)
+    WorkerRegistry.register(Ecommerce)
+    WorkerRegistry.register(Education)
+    WorkerRegistry.register(Developer)
+    WorkerRegistry.register(Ops)
+    WorkerRegistry.register(Security)
+    WorkerRegistry.register(AutoDream)
+    WorkerRegistry.register(Finance)
+    WorkerRegistry.register(Bd)
+    WorkerRegistry.register(GlobalMarketing)
+    WorkerRegistry.register(Research)
+    WorkerRegistry.register(Legal)
+    WorkerRegistry.register(Knowledge)
+    WorkerRegistry.register(DataAnalyst)
+
+def get_worker(name: str) -> SubsidiaryWorker | None:
+    cls = WorkerRegistry.get(name)
+    if cls:
+        return cls()
+    for wid, wcls in WorkerRegistry._workers.items():
+        if name in wid or name in wcls.worker_name:
+            return wcls()
+    return None
+
+def list_workers() -> list[dict]:
+    return [
+        {"id": wid, "name": wcls.worker_name, "desc": wcls.description, "line": getattr(wcls, "oneliner", "")}
+        for wid, wcls in WorkerRegistry._workers.items()
+    ]
