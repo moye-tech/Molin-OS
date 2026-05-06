@@ -47,6 +47,7 @@ _archived/
 
 # Logs & Cache
 *.log
+.coverage
 .molin/
 logs/
 .pytest_cache/
