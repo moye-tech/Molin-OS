@@ -138,21 +138,27 @@ class ManagerAgent(ABC):
         """
         执行子公司任务，并做质量门控。
         若质量不合格，升级模型（改为 escalation_model）重试最多 max_retries 次。
+        记录每次升级的原因用于后续优化。
         """
         original_model = subsidiary.model
+        escalation_log: list[dict] = []
+        last_quality = 0.0
+        passed = False
 
         for attempt in range(1 + max_retries):
             if attempt > 0:
                 logger.warning(
                     "[%s] 质量不合格，升级模型重试 (attempt %d/%d) "
-                    "subsidiary=%s, model=%s",
+                    "subsidiary=%s, model=%s, last_score=%.1f",
                     self.name, attempt, max_retries,
-                    subsidiary.name, self.escalation_model,
+                    subsidiary.name, self.escalation_model, last_quality,
                 )
                 subsidiary.model = self.escalation_model
 
             raw_result = await subsidiary.execute(sub_task, context)
             quality = await self.quality_check(raw_result)
+            last_quality = quality.score
+            passed = quality.passed
 
             raw_result["quality"] = {
                 "score": quality.score,
@@ -162,16 +168,45 @@ class ManagerAgent(ABC):
                 "model_used": subsidiary.model,
             }
 
+            # 记录升级日志
+            if attempt > 0:
+                escalation_log.append({
+                    "attempt": attempt,
+                    "subsidiary": subsidiary.name,
+                    "model": subsidiary.model,
+                    "score": quality.score,
+                    "passed": quality.passed,
+                    "reason": quality.details,
+                })
+
             if quality.passed:
+                logger.info(
+                    "[%s] ✅ 子公司 %s 质量通过 score=%.1f attempt=%d model=%s",
+                    self.name, subsidiary.name, quality.score, attempt, subsidiary.model,
+                )
                 break
         else:
+            # 所有重试都失败
             logger.error(
-                "[%s] 子公司 %s 质量门控最终失败，score=%.1f",
-                self.name, subsidiary.name, quality.score,
+                "[%s] ❌ 子公司 %s 质量门控最终失败，"
+                "score=%.1f after %d retries. Escalating to CEO.",
+                self.name, subsidiary.name, quality.score, max_retries,
+            )
+            # 标记为需要CEO关注
+            raw_result["needs_ceo_attention"] = True
+            raw_result["ceo_message"] = (
+                f"子公司 {subsidiary.name} ({self.name}) 质量门控失败: "
+                f"最终评分 {quality.score:.1f}（阈值 {self.quality_gate}）"
+                f"，已重试 {max_retries} 次。请CEO决策。"
             )
 
         # 恢复原始模型
         subsidiary.model = original_model
+
+        # 附加升级日志
+        raw_result["escalation_log"] = escalation_log
+        raw_result["total_attempts"] = attempt + 1
+        raw_result["final_passed"] = passed
         return raw_result
 
     async def _run_all_subsidiaries(

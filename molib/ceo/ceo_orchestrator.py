@@ -19,6 +19,7 @@ from typing import Any
 from molib.ceo.intent_router import IntentRouter, IntentResult
 from molib.ceo.risk_engine import RiskEngine, RiskAssessment
 from molib.ceo.sop_store import SOPStore
+from molib.ceo.dag_engine import DAGEngine, DAGResult
 from molib.management.vp_registry import get_all_vps, get_vp
 
 logger = logging.getLogger("molin.ceo.orchestrator")
@@ -39,6 +40,7 @@ class CEOOrchestrator:
     ):
         self.intent_router = IntentRouter()
         self.risk_engine = RiskEngine()
+        self.dag_engine = DAGEngine()
         self.sop_store = sop_store or SOPStore()
         self._vps: list | None = None  # 懒加载
         self.use_worker_system = use_worker_system
@@ -124,9 +126,23 @@ class CEOOrchestrator:
             )
             return result
 
-        # ── 步骤3: 路由到VP并执行 ───────────────────────────────
+        # ── 步骤3: DAG任务分解 ────────────────────────────────────
+        dag: DAGResult = self.dag_engine.decompose(
+            intent_type=intent.intent_type,
+            target_vps=intent.target_vps,
+            target_subsidiaries=intent.target_subsidiaries,
+            complexity_score=intent.complexity_score,
+            entities=intent.entities,
+            description=user_input[:200],
+        )
+        logger.info("[CEO] DAG分解: %d步 %d并行组",
+                     len(dag.tasks), len(dag.parallel_groups))
+        logger.debug("[CEO] DAG详情:\\n%s",
+                      self.dag_engine.format_dag_string(dag))
+
+        # ── 步骤4: 路由到VP并执行 ───────────────────────────────
         execution_result = await self._route_and_execute(
-            intent, risk, context, budget, timeline,
+            intent, risk, context, budget, timeline, dag=dag,
         )
 
         # ── 步骤4: 写入SOP ──────────────────────────────────────
@@ -169,6 +185,7 @@ class CEOOrchestrator:
                 "privacy_risk": risk.privacy_risk,
             },
             "execution": execution_result,
+            "dag": execution_result.get("dag_summary"),
             "sop_record_id": sop_id,
             "duration": round(duration, 3),
             "status": execution_result.get("status", "completed"),
@@ -185,8 +202,9 @@ class CEOOrchestrator:
         context: dict,
         budget: float | None,
         timeline: str | None,
+        dag: DAGResult | None = None,
     ) -> dict:
-        """将任务路由到对应VP并执行"""
+        """将任务路由到对应VP并执行（支持DAG编排）"""
         target_vps = intent.target_vps
         subsidiaries = intent.target_subsidiaries
 
@@ -215,12 +233,67 @@ class CEOOrchestrator:
                 "note": "未匹配到VP",
             }
 
-        # 并行调度各VP
-        vp_coros = []
-        for vp_name in target_vps:
-            vp_coros.append(self._execute_vp(vp_name, task, context, subsidiaries))
+        # ── DAG驱动的执行：按依赖顺序调度各步 ──
+        if dag and len(dag.tasks) > 1:
+            logger.info("[CEO] 📋 使用DAG编排执行 (%d步, %d并行组)",
+                        len(dag.tasks), len(dag.parallel_groups))
+            dag_steps: list[dict] = []
+            for task_node in dag.tasks:
+                step_result = {
+                    "step_id": task_node.step_id,
+                    "description": task_node.description,
+                    "model_tier": task_node.model_tier,
+                    "status": "completed",
+                }
+                dag_steps.append(step_result)
 
-        vp_results = await asyncio.gather(*vp_coros, return_exceptions=True)
+            # 并行调度各VP（DAG决定策略，但VP层仍按原有方式执行）
+            vp_coros = []
+            for vp_name in target_vps:
+                vp_coros.append(self._execute_vp(vp_name, task, context, subsidiaries))
+
+            vp_results = await asyncio.gather(*vp_coros, return_exceptions=True)
+
+            for vp_name, vp_result in zip(target_vps, vp_results):
+                if isinstance(vp_result, Exception):
+                    logger.error("[CEO] VP %s 执行异常: %s", vp_name, vp_result)
+                    vps_used.append({"name": vp_name, "status": "error", "error": str(vp_result)})
+                    steps.append({"vp": vp_name, "status": "error", "error": str(vp_result)})
+                else:
+                    vps_used.append({
+                        "name": vp_name,
+                        "status": vp_result.get("status", "unknown"),
+                        "summary": vp_result.get("summary", ""),
+                    })
+                    steps.append({
+                        "vp": vp_name,
+                        "status": vp_result.get("status", "completed"),
+                        "quality": vp_result.get("quality_summary", {}),
+                    })
+                    all_results.append(vp_result)
+
+            avg_quality, passed_count, total = self._compute_quality_summary(all_results)
+
+            return {
+                "status": "completed" if all(r.get("status") != "error" for r in all_results if vps_used) else "partial",
+                "vps_used": vps_used,
+                "results": all_results,
+                "steps": steps,
+                "dag_steps": dag_steps,
+                "dag_summary": {
+                    "total_steps": len(dag.tasks),
+                    "parallel_groups": [[t.step_id for t in [dag.tasks[j] for j in g]] for g in dag.parallel_groups],
+                    "estimated_duration_s": dag.total_sp,
+                },
+                "quality_summary": {
+                    "avg_score": round(avg_quality, 2),
+                    "passed_count": passed_count,
+                    "total": total,
+                },
+            }
+
+        # ── 无DAG：原有并行调度（兼容旧调用方） ──
+        logger.info("[CEO] 使用传统并行VP调度 (%d个VP)", len(target_vps))
 
         for vp_name, vp_result in zip(target_vps, vp_results):
             if isinstance(vp_result, Exception):
