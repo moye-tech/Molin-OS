@@ -43,21 +43,23 @@ approval_levels:
 # ── 预算控制 ──
 # ⚠️ 预算口径说明（两个不同维度，不要混淆）
 #
-# 1. 此处 monthly_cap = ¥1,360 → AI API + 工具 + 内容推广的「运营预算」
+# 1. 此处 monthly_cap = ¥1,360 → AI API + 工具 + 内容推广的「花出去的钱」
 #    分类: ai_services(1000) + platform_tools(200) + content_boost(160) = 1360
+#    注意：当前系统为零空转模式，实际AI API消耗接近零
 #
-# 2. company.yaml 口径不同：22家子公司的「目标收入预算」
-#    子公司预算总计 ¥2,440/月（各子公司运营成本），目标收入 ¥48,000/月
+# 2. 子公司架构的预算是「各子公司运营分配」
+#    L0+L1+L2 总计 ¥3,490/月，收入目标 ¥52,000/月
+#    详见 molin-company-structure 技能或 docs/墨麟OS-系统架构v5.0-飞书文档.md
 #
 # 对比:
 #   governance monthly_cap = ¥1,360 → 花出去的钱（AI API调用 + 工具订阅 + 推广费）
-#   company budget_monthly = ¥2,440 → 各子公司的预算分配（运营成本）
-#   company revenue_target = ¥48,000 → 收入目标（不是预算）
+#   company 总预算 = ¥3,490 → 各子公司的预算分配（运营成本）
+#   company 收入目标 = ¥52,000 → 收入目标（不是预算）
 #
 # Hermes 在触发预算告警时：
-# - 检查 AI API 消耗 → 用 governance monthly_cap (1360)
-# - 检查子公司预算分配 → 用 company budget_monthly (2440)
-# - 查看进度 → 用 company revenue_target (48000)
+# - 检查 AI API 消耗 → 用 governance monthly_cap (1360，当前接近零)
+# - 检查子公司预算分配 → 用 company 总预算 (3490)
+# - 查看进度 → 用 company 收入目标 (52000)
 budget:
   monthly_cap: 1360  # ¥1,360/月 运营预算（AI API + 工具 + 推广）
   categories:
