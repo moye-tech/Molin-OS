@@ -9,7 +9,7 @@ def test_simple_task():
     result = dag.decompose("content", ["vp_marketing"], ["content_writer"], 25, {}, "写一篇简单文章")
     assert len(result.tasks) == 1
     assert result.tasks[0].step_id == "execute"
-    assert result.tasks[0].model_tier == "turbo"
+    assert result.tasks[0].model_tier == "flash"
     assert result.tasks[0].ready is True
 
 
@@ -34,12 +34,31 @@ def test_parallel_groups():
 
 
 def test_model_tier_assignment():
-    """模型等级分配：高复杂度步骤用max"""
+    """模型等级分配：高复杂度战略步骤用pro，普通步骤用flash"""
     dag = DAGEngine()
     result = dag.decompose("strategy", ["vp_marketing"], ["content_writer"], 90, {}, "顶层战略")
+    # 高复杂度策略任务：analysis/strategy/review/retrospect 用 pro
     for task in result.tasks:
-        if task.step_id in ("analysis", "retrospect"):
-            assert task.model_tier == "max", f"{task.step_id} should be 'max', got '{task.model_tier}'"
+        if task.step_id in ("analysis", "strategy", "review", "retrospect"):
+            assert task.model_tier == "pro", f"{task.step_id} should be 'pro', got '{task.model_tier}'"
+        elif task.step_id == "scan":
+            assert task.model_tier == "flash", f"{task.step_id} should be 'flash' (simple step), got '{task.model_tier}'"
+
+def test_vision_and_video_tier():
+    """视觉/视频相关任务自动分配对应的模型tier"""
+    dag = DAGEngine()
+    # 视觉相关任务 → vision
+    result = dag.decompose("content", ["vp_marketing"], ["designer"], 50, {}, "设计封面图片")
+    vision_tasks = [t for t in result.tasks if t.model_tier == "vision"]
+    assert len(vision_tasks) > 0, "Should have some vision-tier tasks"
+    # 所有涉及design/设计子公司的都是vision
+    for t in result.tasks:
+        if t.assigned_subsidiary == "designer" and "图片" in t.description:
+            assert t.model_tier == "vision"
+    # 视频相关任务 → video
+    result_v = dag.decompose("content", ["vp_marketing"], ["video_editor"], 50, {}, "制作短视频")
+    video_tasks = [t for t in result_v.tasks if t.model_tier == "video"]
+    assert len(video_tasks) > 0, "Should have some video-tier tasks"
 
 
 def test_medium_task():

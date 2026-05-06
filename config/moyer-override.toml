@@ -13,18 +13,19 @@
 # 实际运行时：Hermes Agent 通过 OpenRouter 调用 DeepSeek
 # 描述级路由策略，供 DAGEngine 和 Manager 质量门控参考
 
-[model_routing]
+| [model_routing]
 default_provider = "deepseek"
 fallback_provider = "openrouter"
 strategy = "cost_optimized"
 
 # 模型等级映射（对应 DAGEngine 的 model_tier）
-# turbo  = deepseek-chat（日常任务，低成本）
-# plus   = deepseek-chat（复杂创作）
-# max    = deepseek-reasoner（CEO决策/战略分析）
-# long   = deepseek-chat + 长上下文（文档处理）
-# vl     = 视觉分析（暂用外部工具）
-# embedding = 向量嵌入（暂用ChromaDB内置）
+# 简单日常任务 → flash   = deepseek-v4-flash（低成本）
+# 复杂分析/创作 → pro    = deepseek-v4-pro（深度推理）
+# 视觉识别/生成 → vision = qwen3-vl-plus（千问百炼API）
+# 视频生成      → video  = HappyHorse-1.0-T2V（千问百炼API）
+#
+# 注意：实际模型调用由 Hermes Agent 运行时管理（config.yaml + OpenRouter）
+# 此处为概念路由参考，DAGEngine 根据任务类型自动分配 model_tier
 
 # ── 向量数据库 ──
 # 当前使用：ChromaDB（Herme s 内置）

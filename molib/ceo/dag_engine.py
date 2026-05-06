@@ -282,17 +282,42 @@ class DAGEngine:
         complexity: float,
         target_subsidiaries: list[str],
     ) -> list[DAGTask]:
-        """根据复杂度和子公司分配模型等级"""
-        # 等级: turbo(最便宜) → plus → max(最贵) → long(长文本)
+        """根据复杂度和子公司分配模型等级
+
+        实际模型映射（Hermes Agent 运行时管理，此处为概念层路由）:
+        - flash: DeepSeek v4 flash （简单任务，低成本）
+        - pro:  DeepSeek v4 pro   （复杂分析/创作）
+        - vision: qwen3-vl-plus  （图像识别/生成相关，通过千问百炼API）
+        - video:  HappyHorse-1.0-T2V（视频相关，通过千问百炼API）
+        """
+        vision_keywords = {"image", "图片", "photo", "视觉", "vision", "design",
+                          "截图", "screenshot", "封面", "cover", "chart", "图"}
+        video_keywords = {"video", "视频", "animation", "动画", "clip", "短片",
+                         "短视频", "movie", "film", "渲染", "render"}
+
         for task in tasks:
-            if complexity >= COMPLEX_THRESHOLD and task.step_id in ("analysis", "strategy", "review", "retrospect"):
-                task.model_tier = "max"
+            # 检查子公司的视觉/视频相关性
+            sub_lower = task.assigned_subsidiary.lower() if task.assigned_subsidiary else ""
+            desc_lower = task.description.lower()
+
+            # 视频相关任务 → HappyHorse
+            if any(kw in sub_lower or kw in desc_lower for kw in video_keywords):
+                task.model_tier = "video"
+            # 视觉/图片相关任务 → qwen3-vl-plus
+            elif any(kw in sub_lower or kw in desc_lower for kw in vision_keywords):
+                task.model_tier = "vision"
+            # 高复杂度 + 战略步骤 → DeepSeek v4 pro
+            elif complexity >= COMPLEX_THRESHOLD and task.step_id in ("analysis", "strategy", "review", "retrospect"):
+                task.model_tier = "pro"
+            # 中等复杂度 + 创作步骤 → DeepSeek v4 pro
             elif complexity >= MEDIUM_THRESHOLD and task.step_id in ("draft", "proposal", "analyze", "design"):
-                task.model_tier = "plus"
+                task.model_tier = "pro"
+            # 长文档 → DeepSeek v4 pro (长上下文)
             elif task.step_id in ("document_review", "report"):
-                task.model_tier = "long"
+                task.model_tier = "pro"
+            # 默认简单任务 → DeepSeek v4 flash
             else:
-                task.model_tier = "turbo"
+                task.model_tier = "flash"
         return tasks
 
     def get_executable_tasks(self, tasks: list[DAGTask]) -> list[DAGTask]:
