@@ -1,5 +1,6 @@
 """
-墨麟 Hermes OS — Python包安装配置
+墨麟OS (Molin OS) — Python包安装配置
+28实体 · 339技能 · 22营收子公司 · 5VP管理层
 """
 
 from setuptools import setup, find_packages
@@ -8,15 +9,15 @@ with open("README.md", "r", encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
-    name="molin-hermes-os",
-    version="2.0.0",
+    name="molin-os",
+    version="5.0.0",
     author="moye-tech",
     author_email="fengye940708@gmail.com",
-    description="墨麟 Hermes OS — AI一人公司操作系统",
+    description="墨麟OS — AI一人公司操作系统 (28实体·339技能·¥52K/月)",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/moye-tech/-Hermes-OS",
-    packages=find_packages(),
+    packages=find_packages(include=["molib", "molib.*", "molin", "molin.*"]),
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
@@ -36,7 +37,8 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "molin=molin.cli:main",
+            "molin=molib.cli:main",
+            "moyu=molib.cli:main",
         ],
     },
 )

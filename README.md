@@ -1,6 +1,6 @@
-<!-- 墨麟 Hermes OS README v5.0 -->
+<!-- 墨麟OS README v5.0 -->
 
-# 🏛️ 墨麟 Hermes OS
+# 🏛️ 墨麟OS (Molin OS)
 
 <p align="center">
   <strong>AI 一人公司操作系统 · 28实体 · 339技能 · 5VP管理层 · 22家营收子公司</strong><br>

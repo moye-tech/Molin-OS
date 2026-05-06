@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ═══════════════════════════════════════════════════════════════
-# 墨麟 Hermes OS — 一键部署脚本
+# 墨麟OS (Molin OS) — 一键部署脚本
 # =============================================================
 # 用法: bash setup.sh
 #
@@ -23,8 +23,8 @@ PYTHON="${PYTHON:-python3}"
 
 echo -e "${BLUE}"
 echo "╔══════════════════════════════════════════╗"
-echo "║     墨麟 Hermes OS v2.0 部署脚本        ║"
-echo "║     AI一人公司操作系统                    ║"
+echo "║     墨麟OS (Molin OS) 部署脚本          ║"
+echo "║     28实体 · 339技能 · ¥52K/月          ║"
 echo "╚══════════════════════════════════════════╝"
 echo -e "${NC}"
 
@@ -77,6 +77,7 @@ mkdir -p "${MOLIN_HOME}/config"
 mkdir -p "${MOLIN_HOME}/audit"
 mkdir -p "${MOLIN_HOME}/cron"
 mkdir -p "${MOLIN_HOME}/logs"
+mkdir -p "${MOLIN_HOME}/vectors"
 
 # 复制环境变量模板
 if [ ! -f "${MOLIN_HOME}/.env" ]; then
@@ -88,19 +89,28 @@ else
 fi
 
 # ── Step 5: 安装CLI ──
-echo -e "${YELLOW}[5/6]${NC} 安装 molin 命令行工具..."
+echo -e "${YELLOW}[5/6]${NC} 安装墨麟OS命令行工具..."
 pip install -e . -q 2>/dev/null || true
 
-# 创建可执行脚本
+# 创建可执行脚本（支持两种入口：新版 molib 和 旧版 molin）
 mkdir -p "${MOLIN_HOME}/bin"
 cat > "${MOLIN_HOME}/bin/molin" << 'SCRIPT'
 #!/usr/bin/env bash
 source "${HOME}/.molin/venv/bin/activate"
-python3 -m molin.cli "$@"
+# 优先使用新版 molib.CLI，兼容旧版 molin
+if python3 -c "import molib" 2>/dev/null; then
+    python3 -m molib.cli "$@"
+else
+    python3 -m molin.cli "$@"
+fi
 SCRIPT
 chmod +x "${MOLIN_HOME}/bin/molin"
 
+# 创建快捷方式
+ln -sf "${MOLIN_HOME}/bin/molin" "${MOLIN_HOME}/bin/moyu" 2>/dev/null || true
+
 echo -e "  ${GREEN}✓${NC} CLI 已安装: ${MOLIN_HOME}/bin/molin"
+echo -e "  ${GREEN}✓${NC} 别名: ${MOLIN_HOME}/bin/moyu"
 
 # 添加到 PATH (如果尚未添加)
 if ! grep -q "${MOLIN_HOME}/bin" "${HOME}/.bashrc" 2>/dev/null; then
@@ -110,22 +120,41 @@ fi
 
 # ── Step 6: 验证安装 ──
 echo -e "${YELLOW}[6/6]${NC} 验证安装..."
-python3 -c "import molin; print(f'  ✓ 墨麟版本: {molin.__version__}')" 2>/dev/null || \
-    echo -e "  ${YELLOW}⚠${NC} 包导入失败 (非致命)"
+if python3 -c "import molib; print(f'  墨麟OS引擎: v{molib.__version__}')" 2>/dev/null; then
+    echo -e "  ${GREEN}✓${NC} 核心引擎可用"
+else
+    echo -e "  ${YELLOW}⚠${NC} 新版引擎导入失败 (使用旧版兼容)"
+    python3 -c "import molin; print(f'  墨麟旧版: v{molin.__version__}')" 2>/dev/null || \
+        echo -e "  ${YELLOW}⚠${NC} 旧版也无法导入 (非致命，仅影响CLI)"
+fi
+
+# 验证系统目录
+echo -n "  ${GREEN}✓${NC} 系统组件: "
+COMPONENTS=("CEO引擎" "VP管理层" "子公司Worker" "共享层" "闲鱼集成")
+CHECKS=("molib/ceo" "molib/management" "molib/agencies/workers" "molib/shared" "molib/xianyu")
+OK=0
+for dir in "${CHECKS[@]}"; do
+    if [ -d "$dir" ]; then ((OK++)); fi
+done
+echo "${OK}/${#CHECKS[@]} 可用"
 
 # ── 完成 ──
 echo ""
 echo -e "${GREEN}╔══════════════════════════════════════════╗"
-echo -e "║   ✅ 墨麟 Hermes OS 部署完成！           ║"
+echo -e "║   ✅ 墨麟OS (Molin OS) 部署完成！       ║"
 echo -e "╚══════════════════════════════════════════╝${NC}"
 echo ""
 echo "  快速开始:"
-echo "    source ~/.bashrc            # 加载环境"
-echo "    molin --help                # 查看命令"
-echo "    molin health                # 健康检查"
-echo "    molin ceo strategy          # CEO战略决策"
-echo "    molin content xhs AI工具     # 生成小红书内容"
-echo "    molin xianyu list           # 查看闲鱼商品"
+echo "    source ~/.bashrc                    # 加载环境"
+echo "    molin --help                        # 查看命令"
+echo "    molin health                        # 健康检查"
+echo "    molin vps                           # 查看5位VP"
+echo "    molin workers                       # 查看22家子公司"
+echo "    molin '帮我写一篇小红书文章'          # 执行任务"
+echo ""
+echo "  启动API服务:"
+echo "    python3 -m molib.ceo.main           # FastAPI @ 127.0.0.1:5050"
 echo ""
 echo "  重要: 编辑 ${MOLIN_HOME}/.env 配置API Keys"
+echo "  完整文档: ./docs/墨麟HermesOS-系统架构v5.0-飞书文档.md"
 echo ""
