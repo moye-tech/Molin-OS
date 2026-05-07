@@ -1,0 +1,84 @@
+# 墨麟 AIOS — 模型配置文件
+# Model Router 的配置源，实现灵活回退。
+#
+# 模型路由规则：
+# - 简单任务 → DeepSeek V4 Flash (¥0.00014/1K)
+# - 复杂任务 → DeepSeek V4 Pro (¥0.0004/1K)
+# - 图片分析/生成 → qwen3-vl-plus  via 千问百炼API
+# - 视频生成 → HappyHorse-1.0-T2V via 千问百炼API
+#
+# 字段说明:
+#   provider:       模型供应商 (deepseek/qwen)
+#   cost_input:     ¥/1K tokens (输入)
+#   cost_output:    ¥/1K tokens (输出)
+#   max_tokens:     最大上下文长度
+#   complexity_range: (最小复杂度, 最大复杂度) — 0~100
+#   capabilities:   能力标签
+#   display_name:   展示名
+#   description:    模型描述
+
+# ═══════════════════════════════════════════════════════
+# DeepSeek 系列（主力模型 — 低成本高性能）
+# ═══════════════════════════════════════════════════════
+
+[deepseek-v4-flash]
+provider = "deepseek"
+cost_input = 0.00014
+cost_output = 0.00028
+max_tokens = 65536
+complexity_range = [0, 40]
+capabilities = ["text", "code", "reasoning_basic", "tool_use"]
+display_name = "DeepSeek V4 Flash"
+description = "轻量快速，适合简单任务、CEO路由推理、质量门控评估"
+
+[deepseek-v4-pro]
+provider = "deepseek"
+cost_input = 0.0004
+cost_output = 0.0014
+max_tokens = 131072
+complexity_range = [41, 100]
+capabilities = ["text", "code", "reasoning_advanced", "tool_use", "agentic"]
+display_name = "DeepSeek V4 Pro"
+description = "高性能主力模型，适合复杂推理、代码生成、多步任务、LLM合成"
+
+# ═══════════════════════════════════════════════════════
+# Qwen 系列（视觉/视频 — 千问百炼API）
+# ═══════════════════════════════════════════════════════
+
+[qwen3-vl-plus]
+provider = "qwen"
+cost_input = 0.0015
+cost_output = 0.0045
+max_tokens = 8192
+complexity_range = [0, 100]
+capabilities = ["vision", "ocr", "image_generation", "text", "reasoning_basic"]
+display_name = "Qwen3 VL Plus"
+description = "图片分析/OCR/封面图/截图/图表理解，通过千问百炼API调用"
+
+[happyhorse-t2v]
+provider = "qwen"
+cost_input = 0.01
+cost_output = 0.02
+max_tokens = 4096
+complexity_range = [0, 100]
+capabilities = ["video", "animation", "render"]
+display_name = "HappyHorse-1.0-T2V"
+description = "视频生成，通过千问百炼API调用"
+
+# ═══════════════════════════════════════════════════════
+# 路由策略配置
+# ═══════════════════════════════════════════════════════
+
+[strategy]
+# CEO 决策路由使用的模型
+ceo_default = "deepseek-v4-flash"
+# 深度推理场景（复杂决策）
+deep_reasoning = "deepseek-v4-pro"
+# 图片分析/生成
+vision_model = "qwen3-vl-plus"
+# 视频生成
+video_model = "happyhorse-t2v"
+# 降级兜底模型
+ultimate_fallback = "deepseek-v4-flash"
+# 启用前缀缓存（减少长system prompt成本）
+enable_prefix_cache = true

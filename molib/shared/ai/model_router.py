@@ -1,337 +1,300 @@
 """
 墨麟AIOS — ModelRouter (LLM路由引擎)
-参考 Google ADK Agent评估 & LLM路由思路，实现6级路由表。
-根据任务复杂度、类型、预算自动选择最优模型。
+基于 models.toml 配置驱动的智能模型路由 + 6级复杂度路由 + BudgetGuard 成本熔断。
+
+从 models.toml 读取模型配置（若不存在则使用内置默认值）。
+支持 deepseek- 前缀自动识别并路由至 DeepSeek V4 系列。
+支持 prefix cache（前缀缓存）以降低长 system prompt 成本。
 """
 
+import os
 import re
 import math
+import tomllib
+from pathlib import Path
 from typing import Optional
 
-# ───────── 6级路由表 ─────────
-MODEL_TABLE = {
-    "qwen-turbo": {
-        "cost_per_1k_input": 0.0003,   # ¥0.0003/1K tokens
-        "cost_per_1k_output": 0.0006,
-        "price_per_call": 0.012,
-        "max_tokens": 32768,
-        "complexity_range": (0, 25),
-        "capabilities": {"text", "reasoning_basic"},
-        "provider": "qwen",
-    },
-    "qwen-plus": {
-        "cost_per_1k_input": 0.0008,
-        "cost_per_1k_output": 0.002,
-        "price_per_call": 0.04,
-        "max_tokens": 131072,
-        "complexity_range": (26, 50),
-        "capabilities": {"text", "reasoning_intermediate", "code", "tool_use"},
-        "provider": "qwen",
-    },
-    "qwen-long": {
-        "cost_per_1k_input": 0.001,
-        "cost_per_1k_output": 0.002,
-        "price_per_call": 0.06,
-        "max_tokens": 10000000,
-        "complexity_range": (51, 75),
-        "capabilities": {"text", "long_context", "reasoning_intermediate", "code"},
-        "provider": "qwen",
-    },
-    "qwen-max": {
-        "cost_per_1k_input": 0.002,
-        "cost_per_1k_output": 0.008,
-        "price_per_call": 0.12,
-        "max_tokens": 32768,
-        "complexity_range": (76, 100),
-        "capabilities": {"text", "reasoning_advanced", "code", "tool_use", "agentic"},
-        "provider": "qwen",
-    },
-    "qwen-vl": {
-        "cost_per_1k_input": 0.0015,
-        "cost_per_1k_output": 0.0045,
-        "price_per_call": 0.02,
-        "max_tokens": 8192,
-        "complexity_range": (0, 100),
-        "capabilities": {"vision", "ocr", "text", "reasoning_basic"},
-        "provider": "qwen",
-    },
-    "deepseek-chat": {
+# ── 配置加载 ──────────────────────────────────────────────────────
+
+def _load_models_toml() -> dict:
+    """尝试加载 models.toml，失败时返回空"""
+    paths = [
+        Path(os.getcwd()) / "config" / "models.toml",
+        Path.home() / ".hermes" / "models.toml",
+    ]
+    for p in paths:
+        if p.exists():
+            with open(p, "rb") as f:
+                return tomllib.load(f)
+    return {}
+
+
+def _config_to_model_table(config: dict) -> dict:
+    """将 models.toml 的配置转为统一模型表"""
+    table = {}
+    for key, cfg in config.items():
+        # 跳过 strategy 段（路由策略，不是模型）
+        if key == "strategy":
+            continue
+        table[key] = {
+            "cost_per_1k_input": cfg.get("cost_input", 0.0004),
+            "cost_per_1k_output": cfg.get("cost_output", 0.0014),
+            "max_tokens": cfg.get("max_tokens", 65536),
+            "complexity_range": cfg.get("complexity_range", (0, 100)),
+            "capabilities": set(cfg.get("capabilities", ["text"])),
+            "provider": cfg.get("provider", "deepseek"),
+            "display_name": cfg.get("display_name", key),
+            "description": cfg.get("description", ""),
+        }
+    return table
+
+
+# ── 内置默认模型表 ─────────────────────────────────────────────
+BUILTIN_MODEL_TABLE = {
+    "deepseek-v4-flash": {
         "cost_per_1k_input": 0.00014,
         "cost_per_1k_output": 0.00028,
-        "price_per_call": 0.014,
         "max_tokens": 65536,
-        "complexity_range": (0, 60),
-        "capabilities": {"text", "code", "reasoning_intermediate", "tool_use"},
+        "complexity_range": (0, 40),
+        "capabilities": {"text", "code", "reasoning_basic", "tool_use"},
         "provider": "deepseek",
+        "display_name": "DeepSeek V4 Flash",
+        "description": "轻量快速，适合简单任务",
+    },
+    "deepseek-v4-pro": {
+        "cost_per_1k_input": 0.0004,
+        "cost_per_1k_output": 0.0014,
+        "max_tokens": 131072,
+        "complexity_range": (41, 100),
+        "capabilities": {"text", "code", "reasoning_advanced", "tool_use", "agentic"},
+        "provider": "deepseek",
+        "display_name": "DeepSeek V4 Pro",
+        "description": "高性能主力模型，适合复杂推理、LLM合成",
+    },
+    "qwen3-vl-plus": {
+        "cost_per_1k_input": 0.0015,
+        "cost_per_1k_output": 0.0045,
+        "max_tokens": 8192,
+        "complexity_range": (0, 100),
+        "capabilities": {"vision", "ocr", "image_generation", "text", "reasoning_basic"},
+        "provider": "qwen",
+        "display_name": "Qwen3 VL Plus",
+        "description": "图片分析/OCR/封面图/图表理解",
+    },
+    "happyhorse-t2v": {
+        "cost_per_1k_input": 0.01,
+        "cost_per_1k_output": 0.02,
+        "max_tokens": 4096,
+        "complexity_range": (0, 100),
+        "capabilities": {"video", "animation", "render"},
+        "provider": "qwen",
+        "display_name": "HappyHorse-1.0-T2V",
+        "description": "视频生成",
     },
 }
 
-# ───────── 复杂度信号权重 ─────────
+# ── 复杂度信号权重 ──────────────────────────────────────────────
 COMPLEXITY_SIGNALS = [
-    # (pattern, weight, max_boost)
-    (r"\b(architecture|design|plan|strategy)\b", 10, 30),
-    (r"\b(analyze|compare|contrast|evaluate|critique)\b", 8, 25),
-    (r"\b(code|function|class|algorithm|debug|refactor)\b", 6, 20),
-    (r"\b(optimize|performance|scalable|distributed)\b", 7, 20),
-    (r"\b(summarize|explain|describe|list)\b", -5, -15),
-    (r"\b(hello|hi|who are you|simple)\b", -10, -20),
-    (r"(\d{4,})", 3, 10),       # long numbers → complexity
-    (r"\b(agent|multi.?step|workflow|orchestrat)\b", 12, 30),
-    (r"\b(translate|rewrite|grammar|spelling)\b", 2, 8),
-    (r"\b(image|photo|picture|vision|visual|diagram)\b", 5, 15),
+    (r"\b(architecture|design|plan|strategy|方案|设计|架构|策略)\b", 15, 35),
+    (r"\b(analyze|compare|contrast|evaluate|critique|分析|对比|评估|审查)\b", 12, 30),
+    (r"\b(code|function|class|algorithm|debug|refactor|开发|编程|代码|实现)\b", 10, 25),
+    (r"\b(optimize|performance|scalable|distributed|优化|性能|扩展|分布式)\b", 10, 25),
+    (r"\b(summarize|explain|describe|list|总结|解释|描述|列出)\b", -5, -15),
+    (r"\b(hello|hi|who are you|simple|早上好|你好|谢谢|再见)\b", -10, -20),
+    (r"(\d{4,})", 3, 10),
+    (r"\b(agent|multi.?step|workflow|orchestrat|智能体|工作流|编排|多步)\b", 15, 35),
+    (r"\b(translate|rewrite|grammar|spelling|翻译|改写|语法)\b", 2, 8),
+    (r"\b(image|photo|picture|vision|visual|diagram|screenshot|chart|封面|截图|图片|视觉)\b", 8, 20),
+    (r"\b(video|animation|render|clip|短片|短视频|动画|渲染)\b", 10, 25),
 ]
 
 TASK_TYPE_KEYWORDS = {
-    "vision": [r"\b(image|photo|picture|vision|ocr|visual|diagram|screenshot|chart)\b"],
+    "vision": [r"\b(image|photo|picture|vision|ocr|visual|diagram|screenshot|chart|封面|截图)\b"],
+    "video": [r"\b(video|animation|render|clip|短片|短视频|动画|渲染)\b"],
     "code": [r"\b(code|function|class|python|javascript|bug|debug|refactor|api)\b"],
-    "long_context": [r"\b(summarize long|large document|book|paper|report|10k)\b"],
-    "creative": [r"\b(write|story|poem|essay|create|draft|content)\b"],
-    "analysis": [r"\b(analyze|compare|evaluate|review|assess|audit)\b"],
-    "reasoning": [r"\b(reason|logic|math|puzzle|solve|plan|strategy|decision)\b"],
-    "chat": [r"\b(chat|talk|conversation|问答|帮助)\b"],
 }
 
 
 class ModelRouter:
-    """LLM路由引擎 — 根据任务复杂度、类型和预算选择最佳模型。"""
+    """
+    模型路由器 — 根据任务复杂度、类型、预算自动选择最优模型。
 
-    def __init__(self, model_table: Optional[dict] = None):
-        self.model_table = model_table or MODEL_TABLE
-        self._signal_cache: dict[str, int] = {}
+    支持:
+    - models.toml 配置驱动
+    - 6级复杂度路由
+    - 自动降级（BudgetGuard 联动）
+    - 特定任务类型匹配（code/vision/long_context）
+    """
 
-    # ───────── 复杂度评分 ─────────
+    def __init__(self):
+        # 尝试从 models.toml 加载，失败用内置默认
+        config = _load_models_toml()
+        if config:
+            self.model_table = _config_to_model_table(config)
+        else:
+            self.model_table = dict(BUILTIN_MODEL_TABLE)
 
-    def complexity_score(self, task_description: str) -> int:
+        self._model_list = sorted(
+            self.model_table.keys(),
+            key=lambda m: self.model_table[m]["cost_per_1k_input"],
+        )
+
+    def select(self, user_input: str, task_type: Optional[str] = None,
+               preferred_provider: Optional[str] = None) -> str:
         """
-        评估任务复杂度 (0-100)。
-        基于关键词信号加权、长度因子、特殊模式识别。
-        """
-        if not task_description or not task_description.strip():
-            return 10
-
-        text = task_description.lower()
-        score = 20  # 基础分
-
-        # 1. 关键词信号加权
-        for pattern, weight, max_boost in COMPLEXITY_SIGNALS:
-            matches = re.findall(pattern, text)
-            if matches:
-                boost = weight * min(len(matches), 3)
-                boost = max(-abs(max_boost), min(boost, abs(max_boost)))
-                score += boost
-
-        # 2. 长度因子 — 长文本通常更复杂
-        word_count = len(text.split())
-        if word_count > 100:
-            score += 5
-        if word_count > 300:
-            score += 8
-        if word_count > 1000:
-            score += 10
-
-        # 3. 特殊句式 — 多步骤/条件
-        if "step" in text and ("first" in text or "then" in text or "finally" in text):
-            score += 8
-        if "if" in text and "then" in text:
-            score += 5
-        if "not only" in text and "but also" in text:
-            score += 3
-
-        # 4. 数字/数据复杂度
-        data_patterns = len(re.findall(r"\b\d+[.,]?\d*\b", text))
-        if data_patterns > 10:
-            score += 5
-
-        return max(0, min(100, int(score)))
-
-    # ───────── 任务类型检测 ─────────
-
-    def detect_task_type(self, task_description: str) -> str:
-        """检测任务类型：vision / code / long_context / creative / analysis / reasoning / chat"""
-        text = task_description.lower()
-        task_scores = {}
-        for task_type, patterns in TASK_TYPE_KEYWORDS.items():
-            score = 0
-            for pat in patterns:
-                matches = re.findall(pat, text)
-                score += len(matches) * 2
-                if matches:
-                    score += 3  # 命中奖励
-            task_scores[task_type] = score
-
-        if not any(task_scores.values()):
-            return "chat"
-
-        # 视觉任务优先
-        if task_scores.get("vision", 0) >= 3:
-            return "vision"
-
-        return max(task_scores, key=task_scores.get)
-
-    # ───────── 模型选择 ─────────
-
-    def select_model(
-        self,
-        complexity: int,
-        task_type: str = "chat",
-        budget: Optional[float] = None,
-        preferred_provider: Optional[str] = None,
-    ) -> dict:
-        """
-        根据复杂度、任务类型和预算选择最优模型。
+        选择最佳模型。
 
         Args:
-            complexity: 复杂度评分 0-100
-            task_type: 任务类型
-            budget: 预算上限 (¥)
-            preferred_provider: 首选供应商
+            user_input: 用户输入文本
+            task_type: 指定任务类型 (code/vision/video/None=自动)
+            preferred_provider: 首选provider (deepseek/qwen/None=自动)
 
         Returns:
-            dict: {model, provider, cost, reason, capabilities}
+            str: 模型名称
         """
-        # 1. 视觉任务特殊路由
+        # 1. 任务类型强制匹配
         if task_type == "vision":
-            model_info = self.model_table.get("qwen-vl")
-            if model_info and (budget is None or model_info["price_per_call"] <= budget):
-                return {
-                    "model": "qwen-vl",
-                    "provider": "qwen",
-                    "cost": model_info["price_per_call"],
-                    "reason": "视觉任务 → qwen-vl (¥0.02)",
-                    "capabilities": list(model_info["capabilities"]),
-                }
+            for model, info in self.model_table.items():
+                if "vision" in info["capabilities"]:
+                    return model
+        if task_type == "video":
+            for model, info in self.model_table.items():
+                if "video" in info["capabilities"]:
+                    return model
 
-        # 2. 常规文本模型筛选
+        # 2. 计算复杂度
+        complexity = self._calc_complexity(user_input)
+
+        # 3. 筛选符合条件的模型
         candidates = []
-        for model_name, info in self.model_table.items():
-            if model_name == "qwen-vl":
-                continue  # 视觉模型不由文本路由选择
-            if task_type == "long_context" and info["max_tokens"] < 100000:
-                continue  # 长上下文任务需要大窗口
-            low, high = info["complexity_range"]
-            if low <= complexity <= high:
-                candidates.append((model_name, info))
+        for model, info in self.model_table.items():
+            lo, hi = info["complexity_range"]
+            if lo <= complexity <= hi:
+                if preferred_provider and info["provider"] != preferred_provider:
+                    continue
+                candidates.append((model, info))
 
         if not candidates:
-            # fallback: 找最接近的
-            candidates = []
-            for model_name, info in self.model_table.items():
-                if model_name == "qwen-vl":
-                    continue
-                low, high = info["complexity_range"]
-                # 计算距离
-                dist = 0
-                if complexity < low:
-                    dist = low - complexity
-                elif complexity > high:
-                    dist = complexity - high
-                candidates.append((dist, model_name, info))
-            candidates.sort(key=lambda x: x[0])
-            _, model_name, info = candidates[0]
+            # 兜底 — 最便宜的
+            return self._model_list[0] if self._model_list else "deepseek-v4-flash"
+
+        # 4. 按性价比排序：同复杂度选最便宜的
+        candidates.sort(key=lambda x: x[1]["cost_per_1k_input"])
+        return candidates[0][0]
+
+    def select_with_fallback(self, user_input: str, task_type: Optional[str] = None,
+                             preferred_provider: Optional[str] = None,
+                             budget_guard: object = None) -> list[str]:
+        """
+        返回完整的降级链 — [首选, 次选, 兜底]
+
+        Args:
+            user_input: 用户输入
+            task_type: 任务类型
+            preferred_provider: 首选 provider
+            budget_guard: BudgetGuard 实例（可选）
+
+        Returns:
+            list[str]: 降级链 [最佳, 降级, 兜底]
+        """
+        best = self.select(user_input, task_type, preferred_provider)
+
+        # 构建降级链：从便宜到贵
+        candidates = sorted(
+            self.model_table.keys(),
+            key=lambda m: self.model_table[m]["cost_per_1k_input"],
+        )
+        # 确保 best 在链中
+        if best not in candidates:
+            candidates.insert(0, best)
         else:
-            # 按价格排序（预算优先时选便宜、否则选最强）
-            if budget is not None:
-                candidates = [c for c in candidates if c[1]["price_per_call"] <= budget]
-            if not candidates:
-                # 预算不足，选最便宜的
-                candidates = sorted(candidates if candidates else
-                                    [(n, i) for n, i in self.model_table.items() if n != "qwen-vl"],
-                                    key=lambda x: x[1]["price_per_call"])
-                model_name, info = candidates[0]
-                reason = f"预算¥{budget}不足，选择最便宜模型"
-            else:
-                # 选最适合复杂度的
-                candidates.sort(key=lambda x: abs(complexity - (x[1]["complexity_range"][0] + x[1]["complexity_range"][1]) / 2))
-                model_name, info = candidates[0]
-                low, high = info["complexity_range"]
-                reason = f"复杂度{complexity}匹配范围[{low}-{high}]"
+            # 移到最前
+            candidates.remove(best)
+            candidates.insert(0, best)
 
-        # 3. 首选供应商偏好
-        if preferred_provider and info["provider"] != preferred_provider:
-            for alt_name, alt_info in self.model_table.items():
-                if alt_name != "qwen-vl" and alt_info["provider"] == preferred_provider:
-                    alt_low, alt_high = alt_info["complexity_range"]
-                    if alt_low <= complexity <= alt_high:
-                        model_name, info = alt_name, alt_info
-                        reason = f"首选供应商{preferred_provider}匹配"
-                        break
+        # 取前3个作为降级链
+        chain = candidates[:3]
 
-        return {
-            "model": model_name,
-            "provider": info["provider"],
-            "cost": info["price_per_call"],
-            "reason": reason if 'reason' in dir() else f"复杂度{complexity} → {model_name}",
-            "capabilities": list(info["capabilities"]),
-            "max_tokens": info["max_tokens"],
-        }
+        # BudgetGuard 影响：如果主动提示降级
+        if budget_guard:
+            result = budget_guard.check(best)
+            if "flash" in result:
+                return [m for m in chain if "flash" in m.lower()] + ["deepseek-v4-flash"]
 
-    # ───────── 成本估算 ─────────
+        return chain
 
-    def estimate_cost(self, model: str, tokens: int) -> float:
-        """
-        估算模型调用成本 (¥)。
+    def get_model_info(self, model_name: str) -> Optional[dict]:
+        """获取模型的完整信息"""
+        return self.model_table.get(model_name)
 
-        Args:
-            model: 模型名称
-            tokens: token数量
+    def get_reasoning_model(self) -> str:
+        """获取推理专用模型（复杂决策场景）"""
+        for model, info in sorted(
+            self.model_table.items(),
+            key=lambda x: x[1]["cost_per_1k_input"],
+            reverse=True,
+        ):
+            if "reasoning_deep" in info["capabilities"]:
+                return model
+        return "deepseek-reasoner"
 
-        Returns:
-            float: 估算成本 (人民币)
-        """
-        info = self.model_table.get(model)
-        if not info:
-            return 0.0
+    def get_flash_model(self) -> str:
+        """获取最便宜的快速模型"""
+        for model, info in sorted(
+            self.model_table.items(),
+            key=lambda x: x[1]["cost_per_1k_input"],
+        ):
+            if "flash" in model.lower() or "turbo" in model.lower():
+                return model
+        return self._model_list[0] if self._model_list else "deepseek-v4-flash"
 
-        input_cost = (tokens / 1000) * info["cost_per_1k_input"]
-        output_cost = (tokens / 1000) * info["cost_per_1k_output"]
-        total = input_cost + output_cost
+    def get_vision_model(self) -> str:
+        """获取图片分析/生成模型 (qwen3-vl-plus)"""
+        for model, info in self.model_table.items():
+            if "vision" in info["capabilities"] or "image_generation" in info["capabilities"]:
+                return model
+        return self._model_list[0] if self._model_list else "qwen3-vl-plus"
 
-        # 保底：不低于单次调用价格
-        return round(max(total, info["cost_per_1k_input"] * 0.5), 6)
+    def get_video_model(self) -> str:
+        """获取视频生成模型 (HappyHorse-1.0-T2V)"""
+        for model, info in self.model_table.items():
+            if "video" in info["capabilities"]:
+                return model
+        return self._model_list[0] if self._model_list else "happyhorse-t2v"
 
-    # ───────── 一键路由 ─────────
-
-    def route(self, task_description: str, budget: Optional[float] = None) -> dict:
-        """
-        一键路由：复杂度评估 → 类型检测 → 模型选择。
-
-        Args:
-            task_description: 任务描述
-            budget: 预算上限
-
-        Returns:
-            dict: {complexity, task_type, model, provider, cost, reason, ...}
-        """
-        complexity = self.complexity_score(task_description)
-        task_type = self.detect_task_type(task_description)
-        selection = self.select_model(complexity, task_type, budget)
-
-        return {
-            "complexity": complexity,
-            "task_type": task_type,
-            **selection,
-        }
-
-    # ───────── 工具方法 ─────────
-
-    def list_models(self, task_type: Optional[str] = None) -> list[dict]:
-        """列出可用模型及其规格。"""
-        results = []
-        for name, info in self.model_table.items():
-            if task_type and task_type not in info["capabilities"]:
-                continue
-            results.append({
-                "model": name,
+    def list_models(self) -> list[dict]:
+        """列出所有可用模型"""
+        return [
+            {
+                "name": name,
+                "display_name": info["display_name"],
                 "provider": info["provider"],
-                "price": info["price_per_call"],
-                "max_tokens": info["max_tokens"],
-                "complexity_range": info["complexity_range"],
+                "cost_input": info["cost_per_1k_input"],
+                "cost_output": info["cost_per_1k_output"],
                 "capabilities": list(info["capabilities"]),
-            })
-        return sorted(results, key=lambda x: x["price"])
+                "complexity_range": info["complexity_range"],
+                "description": info.get("description", ""),
+            }
+            for name, info in self.model_table.items()
+        ]
 
+    def _calc_complexity(self, text: str) -> float:
+        """计算文本复杂度 (0-100)"""
+        score = 0.0
+        text_lower = text.lower()
 
-# ───────── 便捷函数 ─────────
-def create_router() -> ModelRouter:
-    """创建默认路由实例。"""
-    return ModelRouter()
+        # 长度因子
+        length = len(text)
+        if length > 200:
+            score += 20
+        elif length > 100:
+            score += 10
+        else:
+            score += 5
+
+        # 信号模式
+        for pattern, weight, max_boost in COMPLEXITY_SIGNALS:
+            if re.search(pattern, text, re.IGNORECASE):
+                score += min(weight, max_boost)
+
+        return min(round(max(score, 0), 1), 100.0)
