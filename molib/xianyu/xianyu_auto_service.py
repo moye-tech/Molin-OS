@@ -19,67 +19,79 @@ COOKIE_FILE = os.path.expanduser("~/.xianyu_cookies_new.txt")
 ITEM_ID = "1049910720757"  # 已发布的AI商业计划书
 
 # ============================================================
-# AI 客服回复逻辑
+# AI 客服回复逻辑 — LLM 驱动（废弃关键词匹配）
 # ============================================================
 
-ORDER_QUESTIONS = {
-    "价格": "我们的AI商业计划书定制服务统一价 ¥199（约10-15页），含封面+目录+正文+封底+财务模型。现在下单享早鸟价，免费修改一次。",
-    "流程": "下单流程很简单：① 拍下商品并付款 → ② 告诉我们您的项目概况（行业/阶段/融资目标）→ ③ 我们AI智能生成框架，人工精修 → ④ 24小时内交付初稿 → ⑤ 免费修改一次到满意。",
-    "时间": "从您提供项目信息开始，24小时内出初稿！免费修改一次（一般在2小时内改完）。加急可6小时出稿。",
-    "修改": "免费修改一次！包含内容调整、数据更新、排版优化等。超出一次后每次修改收取 ¥50 工本费。",
-    "案例": "我们主要服务初创企业融资BP，涵盖AI/电商/本地生活/教育等多个行业。您可以先提供项目概况，我们出框架给您看。",
-    "资质": "我们是专业AI内容服务团队，使用最新AI模型+行业模板库，结合人工精修，确保每份BP数据可靠、逻辑清晰、视觉专业。",
-    "退款": "如果初稿质量不满意，全额退款。我们对自己的品质有信心！",
-    "适用范围": "适用于：① 种子轮/A轮融资BP ② 路演PPT ③ 创业大赛 ④ 商业计划书申报 ⑤ 内部提案。不适用：上市公司年报、学术论文。",
-}
+import logging
+
+logger = logging.getLogger("molin.xianyu.auto_service")
+
+AUTO_REPLY_SYSTEM_PROMPT = (
+    "你是墨麟AI集团·墨声客服（自动化客服系统）。\n"
+    "产品：AI商业计划书定制服务，¥199，24小时交付，免费修改一次。\n\n"
+    "你的客户服务风格：\n"
+    "- 热情友好、简洁专业\n"
+    "- 不过度推销\n"
+    "- 回复字数控制在100字以内\n"
+    "- 根据买家的真实问题给出个性化回复\n\n"
+    "治理规则（必须严格遵守）：\n"
+    "- L0 自动：回答产品信息、流程、价格、时间 — 直接回复，无需审批\n"
+    "- L2 审批：买家出价>¥500或询问复杂定制价格，必须告知需要跟团队确认后回复您\n"
+    "- L3 坚决不做：不碰任何涉及退款操作、改价操作、转账链接\n\n"
+    "常见产品信息（用于参考，不是模板套话）：\n"
+    "- 价格：¥199/份\n"
+    "- 交付时间：24小时出初稿\n"
+    "- 修改政策：免费修改一次\n"
+    "- 适用场景：种子轮/A轮融资BP、路演PPT、创业大赛\n"
+    "- 退款政策：初稿不满意全额退款"
+)
+
+
+async def get_auto_reply_llm(user_message_text: str) -> str:
+    """基于LLM的智能客服回复"""
+    try:
+        from openai import AsyncOpenAI
+
+        client = AsyncOpenAI(
+            base_url="https://openrouter.ai/api/v1",
+            api_key=os.environ.get("OPENROUTER_API_KEY", ""),
+        )
+
+        response = await client.chat.completions.create(
+            model="deepseek/deepseek-chat",
+            messages=[
+                {"role": "system", "content": AUTO_REPLY_SYSTEM_PROMPT},
+                {"role": "user", "content": user_message_text},
+            ],
+            max_tokens=200,
+            temperature=0.7,
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        logger.warning(f"LLM 回复失败，回退到模板: {e}")
+        return _fallback_reply(user_message_text)
+
+
+def _fallback_reply(text: str) -> str:
+    """LLM 不可用时的降级回复"""
+    text_lower = text.lower()
+    if any(w in text_lower for w in ["你好", "您好", "hi", "hello", "在吗"]):
+        return "您好！欢迎来到AI商业计划书定制服务 👋 有什么可以帮您的？"
+    if any(w in text_lower for w in ["价格", "多少钱", "费用"]):
+        return "我们的AI商业计划书定制服务统一价 ¥199（约10-15页），含封面+目录+正文+封底+财务模型。"
+    return "感谢咨询！关于AI商业计划书定制服务，¥199/份，24小时出稿。您可以告诉我具体需求，我帮您评估。"
+
 
 def get_auto_reply(user_message_text: str) -> str:
-    """根据买家消息自动回复"""
-    text = user_message_text.lower()
-    
-    # 问候
-    if any(w in text for w in ["你好", "您好", "hi", "hello", "在吗", "在不在", "嗨"]):
-        return ("您好！欢迎来到AI商业计划书定制服务 👋\n\n"
-                "我们提供24小时出稿的商业计划书/融资BP定制服务，AI智能生成+人工精修，仅需 ¥199。\n\n"
-                "有什么可以帮您的？您可以直接问：价格、流程、案例、时间。")
-    
-    # 价格
-    if any(w in text for w in ["价格", "多少钱", "费用", "价钱", "咋卖", "多少", "贵吗", "价格"]):
-        return ORDER_QUESTIONS["价格"]
-    
-    # 流程/下单
-    if any(w in text for w in ["怎么买", "如何下单", "流程", "怎么操作", "拍下", "下单"]):
-        return ORDER_QUESTIONS["流程"]
-    
-    # 时间/速度
-    if any(w in text for w in ["多久", "时间", "什么时候", "快吗", "速度", "急", "加急"]):
-        return ORDER_QUESTIONS["时间"]
-    
-    # 修改
-    if any(w in text for w in ["修改", "改", "调整", "不满意", "能改"]):
-        return ORDER_QUESTIONS["修改"]
-    
-    # 案例
-    if any(w in text for w in ["案例", "作品", "样板", "参考", "看看效果", "有样本吗"]):
-        return ORDER_QUESTIONS["案例"]
-    
-    # 资质
-    if any(w in text for w in ["靠谱", "可靠", "正规", "公司", "团队", "学历", "经验"]):
-        return ORDER_QUESTIONS["资质"]
-    
-    # 退款
-    if any(w in text for w in ["退款", "退钱", "不满意能退", "保障"]):
-        return ORDER_QUESTIONS["退款"]
-    
-    # 适用范围
-    if any(w in text for w in ["能做什么", "适用", "范围", "什么样", "行业", "什么类型"]):
-        return ORDER_QUESTIONS["适用范围"]
-    
-    # 默认回复
-    return ("感谢咨询！关于AI商业计划书定制服务，¥199/份，24小时出稿。\n\n"
-            "您可以查看商品页面了解更多，或者直接告诉我您的项目和需求，"
-            "我先帮您评估能否接单。\n\n"
-            "常见问题：价格¥199 / 24h出稿 / 免费修改一次")
+    """同步兼容包装 — 保持原调用接口不变"""
+    import asyncio
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            return asyncio.ensure_future(get_auto_reply_llm(user_message_text))
+        return asyncio.run(get_auto_reply_llm(user_message_text))
+    except Exception:
+        return _fallback_reply(user_message_text)
 
 
 # ============================================================

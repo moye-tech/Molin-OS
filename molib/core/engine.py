@@ -28,11 +28,15 @@ class MolinEngine:
         self.logger = logger
 
     def _load_company_config(self) -> dict:
-        """加载公司配置"""
-        config_file = self.config_dir / "company.yaml"
+        """加载公司配置 — 统一读取 company.toml（唯一配置源）"""
+        config_file = self.config_dir / "company.toml"
         if config_file.exists():
+            import tomllib
+            with open(config_file, "rb") as f:
+                return tomllib.load(f)
+        elif (self.config_dir / "company.yaml").exists():
             import yaml
-            with open(config_file) as f:
+            with open(self.config_dir / "company.yaml") as f:
                 return yaml.safe_load(f)
         return self._default_company_config()
 

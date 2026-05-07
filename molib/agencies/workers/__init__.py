@@ -1,4 +1,4 @@
-"""墨域OS — 20家子公司Worker注册表"""
+"""墨域OS — 子公司Worker注册表"""
 from .base import SubsidiaryWorker, WorkerRegistry, Task, WorkerResult
 
 from .content_writer import ContentWriter
@@ -6,7 +6,7 @@ from .ip_manager import IpManager
 from .designer import Designer
 from .short_video import ShortVideo
 from .voice_actor import VoiceActor
-from .crm import Crm
+from .crm import TwentyClient, segment_users, build_touch_sequence, get_twenty_status
 from .customer_service import CustomerService
 from .ecommerce import Ecommerce
 from .education import Education
@@ -21,6 +21,8 @@ from .research import Research
 from .legal import Legal
 from .knowledge import Knowledge
 from .data_analyst import DataAnalyst
+from .cocoindex_sync import CocoIndexSync
+from .scrapling_worker import ScraplingWorker
 
 def register_all():
     WorkerRegistry.register(ContentWriter)
@@ -28,7 +30,7 @@ def register_all():
     WorkerRegistry.register(Designer)
     WorkerRegistry.register(ShortVideo)
     WorkerRegistry.register(VoiceActor)
-    WorkerRegistry.register(Crm)
+    # Crm: Twenty API模式（非Worker子类）
     WorkerRegistry.register(CustomerService)
     WorkerRegistry.register(Ecommerce)
     WorkerRegistry.register(Education)
@@ -43,6 +45,8 @@ def register_all():
     WorkerRegistry.register(Legal)
     WorkerRegistry.register(Knowledge)
     WorkerRegistry.register(DataAnalyst)
+    WorkerRegistry.register(CocoIndexSync)
+    WorkerRegistry.register(ScraplingWorker)
 
 def get_worker(name: str) -> SubsidiaryWorker | None:
     cls = WorkerRegistry.get(name)

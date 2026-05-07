@@ -13,7 +13,7 @@
 # 实际运行时：Hermes Agent 通过 OpenRouter 调用 DeepSeek
 # 描述级路由策略，供 DAGEngine 和 Manager 质量门控参考
 
-| [model_routing]
+[model_routing]
 default_provider = "deepseek"
 fallback_provider = "openrouter"
 strategy = "cost_optimized"
