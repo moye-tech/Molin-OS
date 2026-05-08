@@ -314,3 +314,178 @@ def get_twenty_status() -> dict:
             "status": "error",
             "message": f"连接失败: {e}",
         }
+
+
+# ═══ 墨域私域 CRM 数据持久化 ═══
+
+# 数据文件路径
+CRM_DIR = os.path.expanduser("~/.hermes/crm")
+USERS_FILE = os.path.join(CRM_DIR, "users.json")
+CAMPAIGNS_FILE = os.path.join(CRM_DIR, "campaigns.json")
+
+
+def _load_json(path: str) -> dict:
+    """安全加载 JSON 文件，不存在则返回空结构"""
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, OSError) as e:
+        logger.warning("读取 %s 失败 (%s)，返回空数据", path, e)
+        return {}
+
+
+def _save_json(path: str, data: dict) -> None:
+    """安全保存 JSON 文件"""
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def add_user_to_segment(name: str, level: str, source: str) -> dict:
+    """记录用户分层
+
+    参数:
+        name: 用户昵称或标识
+        level: 分层级别 high / medium / low
+        source: 来源渠道 xianyu / xiaohongshu / zhubajie / other
+
+    返回:
+        包含用户信息的 dict
+    """
+    # 参数校验
+    level = level.lower().strip()
+    source = source.lower().strip()
+    valid_levels = {"high", "medium", "low"}
+    valid_sources = {"xianyu", "xiaohongshu", "zhubajie", "other"}
+    if level not in valid_levels:
+        raise ValueError(f"level 必须为 {valid_levels}，收到: {level!r}")
+    if source not in valid_sources:
+        raise ValueError(f"source 必须为 {valid_sources}，收到: {source!r}")
+
+    data = _load_json(USERS_FILE)
+    if "users" not in data:
+        data["users"] = []
+    if "segments" not in data:
+        data["segments"] = {}
+
+    user_entry = {
+        "name": name,
+        "level": level,
+        "source": source,
+        "created_at": __import__("datetime").datetime.now().isoformat(),
+    }
+    data["users"].append(user_entry)
+
+    # 更新分层统计
+    if level not in data["segments"]:
+        data["segments"][level] = {"count": 0, "users": []}
+    data["segments"][level]["count"] += 1
+    data["segments"][level]["users"].append(name)
+
+    _save_json(USERS_FILE, data)
+    logger.info("用户 %s 已记录: level=%s, source=%s", name, level, source)
+    return user_entry
+
+
+def build_campaign(name: str, segment: str, steps: list[dict]) -> dict:
+    """创建自动触达序列（Campaign）
+
+    参数:
+        name: 活动名称（唯一标识）
+        segment: 目标用户分层 (high / medium / low / all)
+        steps: 触达步骤列表，每个 step 包含:
+            - day (int): 触发天数（0=立即）
+            - action (str): 动作类型，如 push / message / email
+            - content (str): 触达内容模板
+
+    返回:
+        包含 campaign 完整信息的 dict
+    """
+    if not steps:
+        raise ValueError("steps 不能为空")
+
+    for i, step in enumerate(steps):
+        if not all(k in step for k in ("day", "action", "content")):
+            raise ValueError(
+                f"steps[{i}] 缺少必要字段: day, action, content"
+            )
+
+    data = _load_json(CAMPAIGNS_FILE)
+    if "campaigns" not in data:
+        data["campaigns"] = []
+
+    # 检查重名
+    for existing in data["campaigns"]:
+        if existing["name"] == name:
+            raise ValueError(f"Campaign 名称已存在: {name}")
+
+    campaign = {
+        "name": name,
+        "segment": segment,
+        "steps": steps,
+        "status": "active",
+        "created_at": __import__("datetime").datetime.now().isoformat(),
+    }
+    data["campaigns"].append(campaign)
+    _save_json(CAMPAIGNS_FILE, data)
+    logger.info("Campaign %s 已创建 (%d 步, 目标: %s)", name, len(steps), segment)
+    return campaign
+
+
+def generate_report() -> dict:
+    """生成私域运营总览报告
+
+    统计内容:
+        - 各分层人数 (high / medium / low)
+        - 各来源人数 (xianyu / xiaohongshu / zhubajie / other)
+        - 活跃 campaign 列表
+
+    返回:
+        包含统计数据的 dict
+    """
+    users_data = _load_json(USERS_FILE)
+    camp_data = _load_json(CAMPAIGNS_FILE)
+
+    users = users_data.get("users", [])
+
+    # 分层统计
+    level_counts: dict[str, int] = {"high": 0, "medium": 0, "low": 0}
+    for u in users:
+        lvl = u.get("level", "").lower()
+        if lvl in level_counts:
+            level_counts[lvl] += 1
+
+    # 来源统计
+    source_counts: dict[str, int] = {
+        "xianyu": 0, "xiaohongshu": 0, "zhubajie": 0, "other": 0,
+    }
+    for u in users:
+        src = u.get("source", "").lower()
+        if src in source_counts:
+            source_counts[src] += 1
+
+    # 活跃 campaign
+    campaigns = camp_data.get("campaigns", [])
+    active_campaigns = [c for c in campaigns if c.get("status") == "active"]
+
+    report = {
+        "total_users": len(users),
+        "level_breakdown": level_counts,
+        "source_breakdown": source_counts,
+        "active_campaigns": [
+            {
+                "name": c["name"],
+                "segment": c.get("segment", "unknown"),
+                "steps": len(c.get("steps", [])),
+            }
+            for c in active_campaigns
+        ],
+        "total_campaigns": len(campaigns),
+        "active_campaign_count": len(active_campaigns),
+        "generated_at": __import__("datetime").datetime.now().isoformat(),
+    }
+    logger.info("私域运营报告已生成: %d 用户, %d 活跃活动",
+                report["total_users"], report["active_campaign_count"])
+    return report

@@ -189,3 +189,15 @@ vp = "共同"
 description = "负责数据测试与BI数据平台，原墨数(BI仪表盘)与墨测(测试)整合后的数据质量与BI服务团队"
 tools = ["BIStudio", "DataQualityEngine", "TestingAutomation", "DataWarehouse", "MetricHub"]
 status = "active"
+
+# ------------------------------------------------------------------
+# VP财务 (Finance) — 新增交易子公司
+# ------------------------------------------------------------------
+
+[[company]]
+name = "墨投交易"
+old_name = "N/A"
+vp = "VP财务"
+description = "负责量化交易策略研究与交易信号生成，由原墨算(财务)拆分的专业化交易子公司"
+tools = ["TradingView", "BacktestEngine", "SignalGenerator", "RiskManager"]
+status = "active"

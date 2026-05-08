@@ -72,15 +72,19 @@ class CEOAction:
     deliverable_spec: str = ""     # 交付物规格说明
     confidence: float = 0.0        # 决策置信度 0-1
     context_clues: list[str] = field(default_factory=list)  # 推理线索
+    plan: dict | None = None       # 结构化计划（从 deepagents Planning Tool 吸收）
 
     def to_output(self) -> dict:
-        return {
+        result = {
             "action_type": self.action_type,
             "message": self.message,
             "subsidiaries": self.subsidiaries,
             "deliverable_spec": self.deliverable_spec,
             "confidence": self.confidence,
         }
+        if self.plan:
+            result["plan"] = self.plan
+        return result
 
 
 # ── 对话上下文存储（内存） ─────────────────────────────────────
@@ -296,6 +300,16 @@ class CEOReasoningSession:
         # 提取线索（从用户输入和推理中提取有用信息）
         clues = self._extract_clues(user_input, reasoning)
 
+        # 如果是 dispatch，自动生成结构化计划
+        plan_data = None
+        if action_type == "dispatch" and valid_subs:
+            try:
+                from molib.agencies.planning import decompose_task
+                plan = decompose_task(deliverable_spec or user_input)
+                plan_data = plan.to_dict()
+            except Exception:
+                pass
+
         return CEOAction(
             action_type=action_type,
             message=message,
@@ -303,6 +317,7 @@ class CEOReasoningSession:
             deliverable_spec=deliverable_spec,
             confidence=confidence,
             context_clues=clues,
+            plan=plan_data,
         )
 
     def _extract_clues(self, user_input: str, reasoning: str) -> list[str]:

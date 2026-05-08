@@ -4,6 +4,7 @@
 
 # Secrets & Credentials — NEVER COMMIT
 .env
+**/.env
 *.key
 *.pem
 *secret*
@@ -11,12 +12,16 @@
 *token*
 credentials*
 **/auth.*
+**/.env.*
+!**/.env.example
+!**/.env.dev.example
 
-# Python
+# Python artifacts
 __pycache__/
 *.py[cod]
 *.pyo
 *.egg-info/
+*.egg-info
 dist/
 build/
 *.egg
@@ -29,6 +34,7 @@ venv/
 env/
 .env/
 *.venv
+.venv
 
 # IDE
 .vscode/
@@ -36,6 +42,7 @@ env/
 *.swp
 *.swo
 *~
+*.iml
 
 # OS
 .DS_Store
@@ -52,26 +59,10 @@ _archived/
 logs/
 .pytest_cache/
 .mypy_cache/
-*.tar.gz
-*.zip
-!backup_*.tar.gz
+.ruff_cache/
 
-# Backup archives
-*_backup_*/
-
-# Jupyter
-.ipynb_checkpoints/
-
-# Local config overrides
-config/local.*
-
-# ═════════════════════════════════════════
-# Large binary files — > 50MB limit on GitHub
-# ═════════════════════════════════════════
-
-# 闲鱼逆向JS (4.2MB — large asset, download not commit)
-molib/xianyu/static/goofish_js_origin_version_2.js
-molin/xianyu/static/goofish_js_origin_version_2.js
+# Hermes Agent system files
+.molin/
 
 # Large reference docs (>500KB)
 skills/mlops/training/unsloth/references/llms-full.md
@@ -81,5 +72,34 @@ skills/mlops/training/unsloth/references/llms-txt.md
 molin/agents_old/
 molin/core_old/
 
+# Local config overrides
+config/local.*
+
+# ═════════════════════════════════════════
+# Assets that should be gitignored
+# ═════════════════════════════════════════
+
+# 闲鱼逆向JS (4.2MB — large binary, download not commit)
+molib/xianyu/static/goofish_js_origin_version_2.js
+molin/xianyu/static/goofish_js_origin_version_2.js
+
 # Large JS assets (313KB)
 molib/xianyu/utils/et_f.js
+
+# Relay data (generated on-demand)
+molin/relay/*.json
+
+# Temporary docs / auto-generated reports
+docs/absorption-report-*.md
+docs/system-status-*.md
+
+# Fork repos (downloaded on-demand)
+fork_repos/
+
+# Compressed archives
+*.tar.gz
+*.zip
+!backup_*.tar.gz
+
+# Backup directories
+*_backup_*/

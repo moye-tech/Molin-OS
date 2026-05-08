@@ -1,0 +1,39 @@
+{
+  "timestamp": "2026-05-08T09:00:00",
+  "source": "墨迹内容工厂(09:00)",
+  "upstream": "墨思情报银行(08:00) → relay/intelligence_morning.json",
+  "themes": [
+    {
+      "primary": "AI自动化工作流",
+      "rationale": "收藏率190%全场最高, 竞争少差异化强, 我们Hermes OS自身就是最佳素材",
+      "hot_reference": "装了6个AI SKILL后再也没加过班 4022❤️/7719⭐ 收藏率192%"
+    },
+    {
+      "secondary": "AI一人公司工具实战",
+      "rationale": "收藏率123%, 人设型内容IP化最佳方向",
+      "hot_reference": "不要一直悲催打工用AI赋能一人公司 5518❤️/6280⭐"
+    }
+  ],
+  "content": {
+    "variant_a": {
+      "formula": "A-数字+结果",
+      "title": "AI自动帮我干活后，每周省出20小时",
+      "word_count": 342,
+      "tone": "亲切真实",
+      "target_platform": "小红书图文"
+    },
+    "variant_b": {
+      "formula": "D-身份代入",
+      "title": "一人公司第90天，AI自动化让我不用再熬夜",
+      "word_count": 336,
+      "tone": "故事感",
+      "target_platform": "小红书图文"
+    }
+  },
+  "issues": [
+    "DASHSCOPE_API_KEY missing in cron env — cover images not generated",
+    "memory tool unavailable — relay data written to file instead"
+  ],
+  "next_station": "墨增增长引擎(10:00)",
+  "recommendation": "先发Variant A（AI自动化主题，与今日爆款趋势吻合），2小时后发Variant B做A/B测试"
+}

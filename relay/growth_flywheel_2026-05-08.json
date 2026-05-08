@@ -1,0 +1,50 @@
+{
+  "relay_date": "2026-05-08",
+  "timestamp": "2026-05-08T10:00:00+08:00",
+  "source": "墨增增长引擎(10:00)",
+  "upstream": "墨迹内容工厂(09:00) → relay/content_flywheel_2026-05-08.json",
+  "content_received": {
+    "variant_a": {
+      "title": "AI自动帮我干活后，每周省出20小时",
+      "formula": "A-数字+结果",
+      "word_count": 342,
+      "tone": "亲切真实",
+      "score_overall": 4.2,
+      "score_authenticity": 5,
+      "score_conversion": 2
+    },
+    "variant_b": {
+      "title": "一人公司第90天，AI自动化让我不用再熬夜",
+      "formula": "D-身份代入",
+      "word_count": 336,
+      "tone": "故事感",
+      "score_overall": 4.1,
+      "score_authenticity": 5,
+      "score_conversion": 2.5
+    }
+  },
+  "optimization_advice": [
+    {"priority": "P0", "item": "补封面图 - DASHSCOPE_API_KEY需在cron环境配置，否则内容无法发布"},
+    {"priority": "P0", "item": "闲鱼实名认证 - 6个草稿商品无法发布，内容营销转化ROI为0"},
+    {"priority": "P1", "item": "Variant A加引流钩子 - 在文末加入\"工具清单\"引流话术"},
+    {"priority": "P1", "item": "Variant B加数据锚点 - 补充具体工具名称/收入数字"},
+    {"priority": "P2", "item": "建立内容→产品转化路径 - 每篇小红书文末引导到闲鱼/公众号"},
+    {"priority": "P2", "item": "SEO优化 - 标题含核心关键词，body增加H2结构"}
+  ],
+  "ab_test_plan": {
+    "primary_test": "Variant A (数字+结果) vs Variant B (身份代入)",
+    "test_metrics": "收藏率、评论数、私信转化率",
+    "next_test": "封面图A/B测试 — 亮黄大字报 vs 深蓝故事感",
+    "post_publish_analysis": "48小时后分析数据，选出赢家做批量矩阵"
+  },
+  "bottlenecks": [
+    "DASHSCOPE_API_KEY missing in cron env — cover images blocked",
+    "闲鱼店铺0个已发布商品 — 6个草稿待实名认证",
+    "无内容→产品转化漏斗 — 内容只有曝光没有转化路径"
+  ],
+  "seo_score": 35,
+  "seo_findings": "小红书内容SEO天然受限（非搜索引擎），但标题/标签关键词优化良好。建议将内容二次加工为公众号文章以获取搜索引擎流量。",
+  "next_content_direction": "AI自动化实操教程（步骤拆解型，收藏率最大化）",
+  "downstream": "墨域私域(11:00)",
+  "report_file": "relay/growth_flywheel_2026-05-08.json"
+}

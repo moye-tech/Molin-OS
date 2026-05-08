@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>墨麟OS · 拓展方向全景图</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Noto+Serif+SC:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400;500&display=swap');
+
+:root {
+  --ink:#0e0c08;--ink2:#2a2720;--ink3:#585040;--ink4:#9a9080;
+  --paper:#f8f5ef;--paper2:#f0ebe0;--paper3:#e4ddd0;
+  --gold:#9a7b2a;--gold2:#c9a84c;--gold3:#f0d080;
+  --red:#8b1e1e;--green:#1a5c35;--blue:#1a3f6b;--purple:#3d2e7a;
+  --border:rgba(14,12,8,.1);--border2:rgba(14,12,8,.05);
+  --mono:'JetBrains Mono',monospace;
+  --display:'Playfair Display',serif;
+  --body:'Noto Serif SC',serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--body);background:var(--paper);color:var(--ink);font-size:15px;line-height:1.9}
+
+/* ── COVER ── */
+.cover{
+  background:var(--ink2);min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:5rem 2rem;position:relative;overflow:hidden;
+}
+.cover-grid{
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(201,168,76,.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(201,168,76,.05) 1px,transparent 1px);
+  background-size:60px 60px;
+}
+.cover-glow{
+  position:absolute;top:20%;left:50%;transform:translateX(-50%);
+  width:600px;height:600px;border-radius:50%;
+  background:radial-gradient(circle,rgba(154,123,42,.12) 0%,transparent 70%);
+  pointer-events:none;
+}
+.cover-label{
+  font-family:var(--mono);font-size:10px;letter-spacing:4px;
+  color:var(--gold2);text-transform:uppercase;
+  border:1px solid rgba(201,168,76,.25);
+  padding:5px 18px;border-radius:1px;
+  margin-bottom:3rem;position:relative;
+}
+.cover h1{
+  font-family:var(--display);
+  font-size:clamp(3rem,6vw,5.5rem);
+  font-weight:900;color:#f5f0e8;
+  line-height:1.05;letter-spacing:-2px;
+  margin-bottom:.75rem;position:relative;
+}
+.cover h1 em{font-style:italic;color:var(--gold2)}
+.cover-sub{
+  font-size:1.05rem;color:rgba(255,255,255,.35);
+  max-width:480px;margin:0 auto 4rem;
+  line-height:2;position:relative;font-weight:300;
+}
+.cover-numbers{
+  display:flex;gap:4rem;justify-content:center;position:relative;
+}
+.cn-item{text-align:center}
+.cn-num{
+  font-family:var(--display);font-size:3rem;
+  font-weight:700;color:var(--gold2);
+  display:block;line-height:1;
+}
+.cn-label{font-size:10px;color:rgba(255,255,255,.3);letter-spacing:2px;margin-top:6px}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  position:fixed;left:0;top:0;bottom:0;width:210px;
+  background:var(--ink);
+  padding:2rem 1.25rem;overflow-y:auto;z-index:100;
+}
+.sb-brand{
+  font-family:var(--mono);font-size:10px;letter-spacing:3px;
+  color:var(--gold);text-transform:uppercase;
+  padding-bottom:1.25rem;margin-bottom:1.25rem;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.sb-section{
+  font-family:var(--mono);font-size:8px;letter-spacing:2px;
+  color:rgba(255,255,255,.2);text-transform:uppercase;
+  margin:1.25rem 0 .4rem;
+}
+.sb-list{list-style:none}
+.sb-list a{
+  display:block;font-size:11.5px;color:rgba(255,255,255,.4);
+  text-decoration:none;padding:3px 6px;
+  border-radius:2px;transition:all .15s;
+  border-left:1.5px solid transparent;
+}
+.sb-list a:hover{color:#f5f0e8;border-left-color:var(--gold2);background:rgba(255,255,255,.05)}
+
+/* ── MAIN ── */
+.main{margin-left:210px}
+
+/* ── CHAPTER HEADER ── */
+.ch-header{
+  padding:5rem 3.5rem 3rem;
+  border-bottom:1px solid var(--border);
+  position:relative;overflow:hidden;
+}
+.ch-bg-num{
+  position:absolute;right:2rem;top:50%;transform:translateY(-50%);
+  font-family:var(--display);font-size:10rem;font-weight:900;
+  color:rgba(14,12,8,.03);line-height:1;pointer-events:none;
+  user-select:none;letter-spacing:-5px;
+}
+.ch-eyebrow{
+  font-family:var(--mono);font-size:9px;letter-spacing:3px;
+  color:var(--gold);text-transform:uppercase;margin-bottom:.75rem;
+}
+.ch-title{
+  font-family:var(--display);font-size:2.6rem;font-weight:700;
+  letter-spacing:-1px;color:var(--ink);line-height:1.15;
+  margin-bottom:.5rem;
+}
+.ch-title em{font-style:italic;color:var(--gold)}
+.ch-lead{
+  font-size:14px;color:var(--ink3);max-width:600px;
+  line-height:1.9;font-weight:300;
+}
+
+/* ── CONTENT AREA ── */
+.content{padding:3rem 3.5rem 5rem}
+h3{
+  font-family:var(--display);font-size:1.35rem;font-weight:700;
+  color:var(--ink);margin:2.5rem 0 .75rem;
+  padding-bottom:.4rem;border-bottom:1px solid var(--border);
+}
+h4{
+  font-size:.85rem;font-weight:600;letter-spacing:.5px;
+  color:var(--ink2);margin:1.5rem 0 .4rem;
+  text-transform:uppercase;font-family:var(--mono);
+}
+p{font-size:13.5px;color:var(--ink3);margin-bottom:.75rem;line-height:1.85}
+strong{color:var(--ink);font-weight:600}
+
+/* ── DIVIDER ── */
+.hr{height:1px;background:var(--border);margin:4rem 0}
+.hr-gold{height:1px;background:linear-gradient(90deg,var(--gold2),transparent);margin:4rem 0}
+
+/* ── PRIORITY CARDS ── */
+.priority-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:1.5rem}
+.p-card{
+  padding:1.1rem 1.2rem;border-radius:3px;
+  border:1px solid var(--border);background:#fff;
+  border-top:3px solid;position:relative;
+}
+.p-card.p1{border-top-color:var(--red)}
+.p-card.p2{border-top-color:var(--gold)}
+.p-card.p3{border-top-color:var(--green)}
+.p-card.p4{border-top-color:var(--blue)}
+.p-tag{
+  font-family:var(--mono);font-size:8px;letter-spacing:2px;
+  text-transform:uppercase;margin-bottom:6px;
+  display:flex;align-items:center;gap:5px;
+}
+.p-tag.t1{color:var(--red)}
+.p-tag.t2{color:var(--gold)}
+.p-tag.t3{color:var(--green)}
+.p-tag.t4{color:var(--blue)}
+.p-name{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:4px}
+.p-desc{font-size:11.5px;color:var(--ink4);line-height:1.6}
+
+/* ── EXPANSION SECTIONS ── */
+.exp-block{
+  border:1px solid var(--border);border-radius:3px;
+  overflow:hidden;margin-bottom:1.25rem;
+}
+.exp-head{
+  display:grid;grid-template-columns:60px 1fr auto;
+  align-items:center;gap:1rem;
+  padding:.85rem 1.25rem;background:var(--paper2);
+  border-bottom:1px solid var(--border);
+}
+.exp-num{
+  font-family:var(--display);font-size:1.5rem;font-weight:700;
+  color:var(--gold2);line-height:1;
+}
+.exp-title{font-size:14px;font-weight:600;color:var(--ink)}
+.exp-sub{font-size:11px;color:var(--ink4)}
+.exp-badge{
+  font-family:var(--mono);font-size:9px;padding:3px 10px;
+  border-radius:1px;white-space:nowrap;
+}
+.b-now{background:#fee;color:var(--red);border:1px solid rgba(139,30,30,.2)}
+.b-week{background:#fef9e8;color:var(--gold);border:1px solid rgba(154,123,42,.2)}
+.b-month{background:#eaf3ee;color:var(--green);border:1px solid rgba(26,92,53,.2)}
+.b-long{background:#e8eef6;color:var(--blue);border:1px solid rgba(26,63,107,.2)}
+.exp-body{padding:1.25rem;background:#fff}
+.exp-body p{font-size:12.5px;color:var(--ink3);margin-bottom:.5rem;line-height:1.75}
+.feature-list{list-style:none;margin:.5rem 0}
+.feature-list li{
+  font-size:12px;color:var(--ink3);padding:4px 0;
+  border-bottom:1px solid var(--border2);
+  display:flex;gap:8px;align-items:flex-start;
+}
+.feature-list li:last-child{border-bottom:none}
+.fi{color:var(--gold2);flex-shrink:0;font-size:11px;margin-top:3px}
+.cols2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cols3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+
+/* ── CODE ── */
+.code{
+  background:var(--ink);border-radius:3px;
+  padding:1.1rem 1.4rem;margin:.6rem 0;overflow-x:auto;
+}
+.code pre{
+  font-family:var(--mono);font-size:11.5px;
+  color:rgba(245,240,232,.75);line-height:1.75;white-space:pre;
+}
+.code .cm{color:rgba(245,240,232,.3)}
+.code .ck{color:#88ccff}
+.code .cs{color:#a8ff78}
+.code .cn{color:#ffd580}
+.code .ce{color:#ff9f7e}
+.code-label{
+  font-family:var(--mono);font-size:9px;letter-spacing:1.5px;
+  color:var(--ink4);text-transform:uppercase;margin-bottom:4px;
+}
+
+/* ── TABLE ── */
+.tbl{width:100%;border-collapse:collapse;margin:1rem 0 1.5rem}
+.tbl th{
+  text-align:left;padding:.55rem .85rem;
+  font-family:var(--mono);font-size:9px;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--ink4);
+  background:var(--paper2);border-bottom:1px solid var(--border);
+}
+.tbl td{
+  padding:.55rem .85rem;font-size:12px;
+  border-bottom:1px solid var(--border2);
+  color:var(--ink3);vertical-align:top;
+}
+.tbl tr:hover td{background:var(--paper2)}
+.tbl strong{color:var(--ink);font-weight:500}
+
+/* ── INFO BOXES ── */
+.box{
+  padding:.85rem 1.1rem;border-radius:2px;
+  margin:.75rem 0;font-size:12.5px;line-height:1.8;
+  color:var(--ink3);border-left:2.5px solid;
+}
+.bx-gold{background:#fef9e8;border-color:var(--gold2)}
+.bx-red{background:#fef5f5;border-color:var(--red)}
+.bx-green{background:#eaf3ee;border-color:var(--green)}
+.bx-blue{background:#e8eef6;border-color:var(--blue)}
+.bx-purple{background:#f0edf8;border-color:var(--purple)}
+
+/* ── METRIC CARD ── */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1.5rem}
+.metric{
+  padding:.85rem 1rem;background:#fff;
+  border:1px solid var(--border);border-radius:3px;text-align:center;
+}
+.metric-num{
+  font-family:var(--display);font-size:1.8rem;font-weight:700;
+  color:var(--gold2);display:block;line-height:1;
+}
+.metric-label{font-size:10px;color:var(--ink4);margin-top:4px;
+  font-family:var(--mono);letter-spacing:1px}
+
+/* ── ROADMAP ── */
+.rm{position:relative;padding-left:2.5rem}
+.rm::before{
+  content:'';position:absolute;left:9px;top:8px;bottom:8px;
+  width:1px;background:var(--border);
+}
+.rm-item{position:relative;margin-bottom:2rem}
+.rm-dot{
+  position:absolute;left:-2.5rem;top:3px;
+  width:20px;height:20px;border-radius:50%;
+  border:1px solid var(--border);background:var(--paper2);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:9px;color:var(--ink4);font-weight:500;
+}
+.rm-dot.hot{background:var(--red);color:#fff;border-color:var(--red)}
+.rm-dot.warm{background:var(--gold);color:#fff;border-color:var(--gold)}
+.rm-dot.cool{background:var(--blue);color:#fff;border-color:var(--blue)}
+.rm-phase{
+  font-family:var(--mono);font-size:8px;letter-spacing:2px;
+  color:var(--gold2);text-transform:uppercase;margin-bottom:2px;
+}
+.rm-title{font-size:13.5px;font-weight:600;color:var(--ink);margin-bottom:.3rem}
+.rm-desc{font-size:12px;color:var(--ink4);line-height:1.7;margin-bottom:.5rem}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{
+  font-family:var(--mono);font-size:9px;padding:2px 8px;
+  border-radius:1px;background:var(--paper3);
+  color:var(--ink3);border:1px solid var(--border);
+}
+
+/* ── SUMMARY ── */
+.summary{
+  background:var(--ink);padding:3rem 3.5rem;
+  color:rgba(245,240,232,.8);
+}
+.summary h2{
+  font-family:var(--display);font-size:2rem;
+  color:var(--gold2);margin-bottom:1.5rem;
+  font-style:italic;
+}
+.sg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.5rem;margin-bottom:2rem}
+.sg-item{}
+.sg-l{
+  font-family:var(--mono);font-size:8px;letter-spacing:2px;
+  color:rgba(245,240,232,.3);text-transform:uppercase;margin-bottom:4px;
+}
+.sg-v{font-size:13px;color:rgba(245,240,232,.8);line-height:1.7}
+.summary-foot{
+  padding-top:1.5rem;border-top:1px solid rgba(255,255,255,.08);
+  font-size:12px;color:rgba(245,240,232,.3);line-height:1.9;
+  font-family:var(--mono);
+}
+
+/* ── FOOTER ── */
+.foot{
+  margin-left:210px;background:var(--ink2);
+  padding:1.25rem 3.5rem;
+  font-family:var(--mono);font-size:9px;letter-spacing:2px;
+  color:rgba(255,255,255,.2);text-align:center;
+}
+
+@media(max-width:760px){
+  .sidebar{display:none}
+  .main,.foot{margin-left:0}
+  .ch-header,.content{padding-left:1.5rem;padding-right:1.5rem}
+  .priority-grid,.cols2,.cols3,.metrics,.sg{grid-template-columns:1fr}
+  .summary{padding:2rem 1.5rem}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ COVER ═══════════════════════════════════════════ -->
+<div class="cover">
+  <div class="cover-grid"></div>
+  <div class="cover-glow"></div>
+  <div class="cover-label">System Expansion · Complete Roadmap</div>
+  <h1>墨麟<em>帝国</em><br>拓展全景图</h1>
+  <p class="cover-sub">基于系统现状深度分析<br>从"能跑"到"真正强大"的完整升级路径</p>
+  <div class="cover-numbers">
+    <div class="cn-item"><span class="cn-num">9</span><div class="cn-label">拓展方向</div></div>
+    <div class="cn-item"><span class="cn-num">42</span><div class="cn-label">具体行动</div></div>
+    <div class="cn-item"><span class="cn-num">∞</span><div class="cn-label">增长潜力</div></div>
+  </div>
+</div>
+
+<!-- ═══ SIDEBAR ════════════════════════════════════════ -->
+<nav class="sidebar">
+  <div class="sb-brand">墨麟OS · 拓展图谱</div>
+  <div class="sb-section">核心层</div>
+  <ul class="sb-list">
+    <li><a href="#ch1">01 · 记忆与自进化</a></li>
+    <li><a href="#ch2">02 · 已有技能激活</a></li>
+  </ul>
+  <div class="sb-section">业务层</div>
+  <ul class="sb-list">
+    <li><a href="#ch3">03 · 变现矩阵扩张</a></li>
+    <li><a href="#ch4">04 · 内容生产升级</a></li>
+    <li><a href="#ch5">05 · 电商与私域深化</a></li>
+  </ul>
+  <div class="sb-section">技术层</div>
+  <ul class="sb-list">
+    <li><a href="#ch6">06 · GitHub吸收管线</a></li>
+    <li><a href="#ch7">07 · 多模态能力</a></li>
+    <li><a href="#ch8">08 · 出海与本地化</a></li>
+  </ul>
+  <div class="sb-section">战略层</div>
+  <ul class="sb-list">
+    <li><a href="#ch9">09 · SaaS化与产品化</a></li>
+    <li><a href="#summary">总结路线图</a></li>
+  </ul>
+</nav>
+
+<main class="main">
+
+<!-- ═══ CH01 · 记忆与自进化 ═══════════════════════════ -->
+<div id="ch1">
+<div class="ch-header">
+  <div class="ch-bg-num">01</div>
+  <div class="ch-eyebrow">Chapter 01 · Memory & Self-Evolution</div>
+  <h2 class="ch-title">记忆系统与<em>自进化</em></h2>
+  <p class="ch-lead">系统现在最大的瓶颈——每次会话重置，268个技能学到的东西不会沉淀。解决这个问题，系统才能真正"越用越聪明"。</p>
+</div>
+<div class="content">
+
+<div class="metrics">
+  <div class="metric"><span class="metric-num">0</span><div class="metric-label">跨会话记忆</div></div>
+  <div class="metric"><span class="metric-num">268</span><div class="metric-label">现有技能数</div></div>
+  <div class="metric"><span class="metric-num">8</span><div class="metric-label">Cron定时任务</div></div>
+  <div class="metric"><span class="metric-num">0</span><div class="metric-label">自学习沉淀</div></div>
+</div>
+
+<h3>1.1 · 激活 supermemory — 跨会话持久记忆</h3>
+
+<p>你已经 fork 了 <strong>supermemory（22k Stars）</strong>，也有 <strong>claude-mem（71k Stars）</strong>，但都没有真正接入 Hermes。这是投入产出比最高的单一升级——接入后 Hermes 能记住每次对话产生的知识，不再每次从零开始。</p>
+
+<div class="cols2">
+  <div class="exp-block">
+    <div class="exp-head">
+      <div class="exp-num">A</div>
+      <div><div class="exp-title">claude-mem 接入</div><div class="exp-sub">自动捕捉 → 知识图谱</div></div>
+      <span class="exp-badge b-week">本周</span>
+    </div>
+    <div class="exp-body">
+      <p>claude-mem 在每次 Claude/Hermes 对话结束时自动捕捉关键信息，存入向量数据库。对你的系统意味着：每次和 Hermes 讨论的策略、决定、洞察，都会被记住并在下次相关对话中自动调取。</p>
+      <ul class="feature-list">
+        <li><span class="fi">→</span>安装 claude-mem 到 ~/.hermes/ 插件目录</li>
+        <li><span class="fi">→</span>配置自动触发：每次 Hermes 会话结束后运行</li>
+        <li><span class="fi">→</span>存储目标：~/.hermes/memory/long_term/</li>
+        <li><span class="fi">→</span>在 AGENTS.md 中注明记忆检索指令</li>
+      </ul>
+    </div>
+  </div>
+  <div class="exp-block">
+    <div class="exp-head">
+      <div class="exp-num">B</div>
+      <div><div class="exp-title">self-learning-loop 激活</div><div class="exp-sub">任务反思 → 技能进化</div></div>
+      <span class="exp-badge b-week">本周</span>
+    </div>
+    <div class="exp-body">
+      <p>你已经有 <strong>skills/meta/self-learning-loop/SKILL.md</strong>，但它只是知识描述，没有接入执行链路。接通后，每次复杂任务完成后 Hermes 自动反思"什么有效/什么失败"，并将洞察写入对应子公司的 SKILL.md。</p>
+      <ul class="feature-list">
+        <li><span class="fi">→</span>在 SOUL.md 中添加"任务完成后反思"触发条件</li>
+        <li><span class="fi">→</span>反思结果写入 molib 的 FileEventBus</li>
+        <li><span class="fi">→</span>墨梦AutoDream 每周整合反思，更新 SKILL.md</li>
+        <li><span class="fi">→</span>效果：系统每周都比上周更聪明</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<h3>1.2 · AutoDream 深化 — 从"周报生成"到"战略大脑"</h3>
+
+<p>墨梦AutoDream 现在只做周报汇总，远未发挥潜力。它应该成为系统的战略记忆中枢，承担三件事：</p>
+
+<div class="exp-block">
+  <div class="exp-head">
+    <div class="exp-num">C</div>
+    <div><div class="exp-title">三层记忆蒸馏架构</div><div class="exp-sub">工作记忆 → 情节记忆 → 语义记忆</div></div>
+    <span class="exp-badge b-month">月内</span>
+  </div>
+  <div class="exp-body">
+    <div class="cols3">
+      <div>
+        <h4>工作记忆（24小时）</h4>
+        <p style="font-size:12px">当天任务、决策、错误。每日cron自动清理，精华部分提炼到情节记忆。存储：relay/ 目录的 JSON 文件。</p>
+      </div>
+      <div>
+        <h4>情节记忆（30天）</h4>
+        <p style="font-size:12px">每周 AutoDream 将7天的工作记忆压缩为"本周发生了什么"。存储：~/.hermes/memory/episodic/。</p>
+      </div>
+      <div>
+        <h4>语义记忆（永久）</h4>
+        <p style="font-size:12px">从情节记忆中提炼的通用规律、SOP模式、成功策略。存储：更新到对应子公司的 SKILL.md 文件中。</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="box bx-green">
+  <strong>预期效果：</strong>3个月后，Hermes 能说出"上次我们做类似的推广时，发现小红书比知乎转化率高3倍，建议这次优先投小红书"——这种基于真实历史的决策，才是真正的智慧积累。
+</div>
+
+</div>
+</div>
+
+<div class="hr-gold"></div>
+
+<!-- ═══ CH02 · 已有技能激活 ════════════════════════════ -->
+<div id="ch2">
+<div class="ch-header">
+  <div class="ch-bg-num">02</div>
+  <div class="ch-eyebrow">Chapter 02 · Dormant Skills Activation</div>
+  <h2 class="ch-title">沉睡技能<em>激活</em></h2>
+  <p class="ch-lead">系统 skills/ 目录里有 60+ 个技能类别，其中至少一半处于"安装了但从未被调用"的沉睡状态。激活它们不需要写新代码，只需要在 AGENTS.md 中告诉 Hermes 它们的存在。</p>
+</div>
+<div class="content">
+
+<table class="tbl" style="border:1px solid var(--border);border-radius:3px;overflow:hidden">
+  <thead>
+    <tr><th>沉睡技能</th><th>现状</th><th>激活方式</th><th>对应子公司</th><th>优先级</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>molin-trading / trading-agents-cn</strong></td>
+      <td>技能文件存在，molib/agencies/workers/ 中无 trading worker</td>
+      <td>创建 trading.py Worker + 在 AGENTS.md 注册</td>
+      <td>墨投交易（新增）</td>
+      <td><span class="exp-badge b-month">月内</span></td>
+    </tr>
+    <tr>
+      <td><strong>ghost-os / cli-anything</strong></td>
+      <td>技能描述计算机全控制，但从未在任务中被引用</td>
+      <td>在 SOUL.md 中说明：系统管理任务时可调用 ghost-os 技能</td>
+      <td>墨维运维增强</td>
+      <td><span class="exp-badge b-week">本周</span></td>
+    </tr>
+    <tr>
+      <td><strong>molin-xiaohongshu</strong></td>
+      <td>小红书专属技能，墨笔文创很少主动调用</td>
+      <td>在墨笔文创的 SKILL.md 中明确"小红书内容必须调用 molin-xiaohongshu"</td>
+      <td>墨笔文创</td>
+      <td><span class="exp-badge b-now">今天</span></td>
+    </tr>
+    <tr>
+      <td><strong>moneymaker-turbo</strong></td>
+      <td>变现策略技能，CEO 层从未主动调用</td>
+      <td>每次新业务规划时，CEO 自动加载此技能评估变现路径</td>
+      <td>VP财务辅助</td>
+      <td><span class="exp-badge b-week">本周</span></td>
+    </tr>
+    <tr>
+      <td><strong>karpathy-autoresearch</strong></td>
+      <td>Karpathy 的自动化研究框架，没有接入情报链路</td>
+      <td>接入墨研竞情的日常情报扫描流程</td>
+      <td>墨研竞情</td>
+      <td><span class="exp-badge b-week">本周</span></td>
+    </tr>
+    <tr>
+      <td><strong>molin-trading-agents</strong></td>
+      <td>量化交易 Agent 框架，完全沉睡</td>
+      <td>创建墨投子公司 + 接入 TradingAgents-CN fork</td>
+      <td>墨投交易（新增）</td>
+      <td><span class="exp-badge b-long">长期</span></td>
+    </tr>
+    <tr>
+      <td><strong>smart-home</strong></td>
+      <td>智能家居集成技能，与一人公司主线不相关</td>
+      <td>低优先级，保留备用</td>
+      <td>—</td>
+      <td><span class="exp-badge" style="background:var(--paper3);color:var(--ink4);border:1px solid var(--border)">搁置</span></td>
+    </tr>
+    <tr>
+      <td><strong>mcp/ 技能集</strong></td>
+      <td>MCP 服务器集成指南，没有具体配置</td>
+      <td>选择 2-3 个真正有价值的 MCP（GitHub / Chatwoot），写入具体连接配置</td>
+      <td>全局增强</td>
+      <td><span class="exp-badge b-month">月内</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="box bx-gold">
+  <strong>激活原则：</strong>不是所有沉睡技能都值得激活。判断标准只有一个——这个技能能产生真实的商业产出（内容/销售/数据/收入）吗？能的优先激活，不能的继续搁置。
+</div>
+
+</div>
+</div>
+
+<div class="hr-gold"></div>
+
+<!-- ═══ CH03 · 变现矩阵 ══════════════════════════════ -->
+<div id="ch3">
+<div class="ch-header">
+  <div class="ch-bg-num">03</div>
+  <div class="ch-eyebrow">Chapter 03 · Revenue Matrix Expansion</div>
+  <h2 class="ch-title">变现矩阵<em>扩张</em></h2>
+  <p class="ch-lead">当前变现渠道：闲鱼客服（被动）+ 零散内容。以下是基于系统现有能力可以立即开拓的变现矩阵，从低风险到高潜力排列。</p>
+</div>
+<div class="content">
+
+<h3>3.1 · 立即可开的新收入线</h3>
+
+<div class="cols2">
+
+<div class="exp-block">
+  <div class="exp-head">
+    <div class="exp-num">01</div>
+    <div><div class="exp-title">知识星球 AI工具陪跑圈</div><div class="exp-sub">¥365/年 × 目标100人 = ¥36,500</div></div>
+    <span class="exp-badge b-now">立即</span>
+  </div>
+  <div class="exp-body">
+    <p>你有 Hermes OS 完整实战经验 + 一人公司运营积累，这本身就是稀缺内容。知识星球作为私域产品，墨域私域负责运营，墨笔文创每周输出星球内容，墨测数据追踪留存率。</p>
+    <ul class="feature-list">
+      <li><span class="fi">→</span>定位：AI工具实战 + 一人公司系统搭建</li>
+      <li><span class="fi">→</span>每周2-3条干货（Hermes自动生产）</li>
+      <li><span class="fi">→</span>每月1次直播答疑（你出场）</li>
+      <li><span class="fi">→</span>冷启动策略：小红书引流 → 星球转化</li>
+    </ul>
+  </div>
+</div>
+
+<div class="exp-block">
+  <div class="exp-head">
+    <div class="exp-num">02</div>
+    <div><div class="exp-title">AI系统定制服务（猪八戒/闲鱼）</div><div class="exp-sub">¥500-3000/单 × 月10单</div></div>
+    <span class="exp-badge b-now">立即</span>
+  </div>
+  <div class="exp-body">
+    <p>你已经搭建了业内极少人真正跑通的 Hermes OS 系统，这本身就是稀缺服务能力。墨商BD 主动开拓，墨律法务准备服务协议，墨码开发交付定制化配置。</p>
+    <ul class="feature-list">
+      <li><span class="fi">→</span>产品一：Hermes基础配置套餐（¥500）</li>
+      <li><span class="fi">→</span>产品二：完整一人公司OS搭建（¥2000）</li>
+      <li><span class="fi">→</span>产品三：企业定制 + 培训（¥5000+）</li>
+      <li><span class="fi">→</span>墨声客服处理询单，墨律法务准备合同</li>
+    </ul>
+  </div>
+</div>
+
+<div class="exp-block">
+  <div class="exp-head">
+    <div class="exp-num">03</div>
+    <div><div class="exp-title">小红书博主变现</div><div class="exp-sub">接广告 + 带货 + 涨粉变现</div></div>
+    <span class="exp-badge b-week">本周开始</span>
+  </div>
+  <div class="exp-body">
+    <p>一人公司 + AI工具 + 副业变现 是小红书当下最热赛道之一。墨笔文创批量生产笔记，墨图设计做封面，墨测数据追踪爆款规律，形成内容飞轮。</p>
+    <ul class="feature-list">
+      <li><span class="fi">→</span>账号定位：老墨的AI副业日记（真实感）</li>
+      <li><span class="fi">→</span>内容节奏：3篇/周，墨笔文创生产草稿</li>
+      <li><span class="fi">→</span>变现路径：粉丝1k后开橱窗带货AI工具</li>
+      <li><span class="fi">→</span>长期：接AI工具品牌广告（¥2000-10000/篇）</li>
+    </ul>
+  </div>
+</div>
+
+<div class="exp-block">
+  <div class="exp-head">
+    <div class="exp-num">04</div>
+    <div><div class="exp-title">Notion/飞书模板商店</div><div class="exp-sub">¥29-199/套，被动收入</div></div>
+    <span class="exp-badge b-week">本周</span>
+  </div>
+  <div class="exp-body">
+    <p>墨脑知识 + 墨码开发 协作，将系统内的 SOP、流程模板、TOML配置模板封装成产品，上架 Notion 模板站和即刻/小红书销售。</p>
+    <ul class="feature-list">
+      <li><span class="fi">→</span>产品：一人公司OS Notion看板（¥49）</li>
+      <li><span class="fi">→</span>产品：Hermes OS 快速启动模板包（¥99）</li>
+      <li><span class="fi">→</span>产品：内容创作者飞轮模板（¥29）</li>
+      <li><span class="fi">→</span>上架平台：Notion市场 + 即刻 + 闲鱼</li>
+    </ul>
+  </div>
+</div>
+
+<div class="exp-block">
+  <div class="exp-head">
+    <div class="exp-num">05</div>
+    <div><div class="exp-title">AI代运营服务</div><div class="exp-sub">¥1500-5000/月，稳定现金流</div></div>
+    <span class="exp-badge b-month">月内</span>
+  </div>
+  <div class="exp-body">
+    <p>帮助其他人用你的系统能力代运营他们的社媒账号或电商店铺。墨笔文创写稿、墨图设计出图、墨测数据汇报效果，你只需要把系统的输出打包交付。</p>
+    <ul class="feature-list">
+      <li><span class="fi">→</span>服务一：小红书账号月度代运营（¥1500/月）</li>
+      <li><span class="fi">→</span>服务二：闲鱼店铺自动化管理（¥800/月）</li>
+      <li><span class="fi">→</span>每个客户由一个专属 molib Worker 管理</li>
+      <li><span class="fi">→</span>月报由墨测数据自动生成，邮件发送</li>
+    </ul>
+  </div>
+</div>
+
+<div class="exp-block">
+  <div class="exp-head">
+    <div class="exp-num">06</div>
+    <div><div class="exp-title">付费课程：AI一人公司实战</div><div class="exp-sub">¥499-999/人，可复购</div></div>
+    <span class="exp-badge b-month">月内</span>
+  </div>
+  <div class="exp-body">
+    <p>墨学教育 负责课程体系设计，将你搭建 Hermes OS 的全过程录制成课程。墨笔文创写课程文案，墨播短视频做引流。</p>
+    <ul class="feature-list">
+      <li><span class="fi">→</span>课程一：Hermes OS 快速上手（¥199，引流款）</li>
+      <li><span class="fi">→</span>课程二：一人公司AI系统完整搭建（¥699）</li>
+      <li><span class="fi">→</span>平台：腾讯课堂 / 知识星球 / 自有小程序</li>
+      <li><span class="fi">→</span>目标：季度收入 ¥20,000+</li>
+    </ul>
+  </div>
+</div>
+
+</div>
+
+<h3>3.2 · 变现矩阵总览</h3>
+
+<table class="tbl" style="border:1px solid var(--border);border-radius:3px;overflow:hidden">
+  <thead>
+    <tr><th>收入线</th><th>启动成本</th><th>月收入预期</th><th>时间成本</th><th>AI自动化程度</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>闲鱼客服（现有）</strong></td><td>¥0</td><td>¥2,000-5,000</td><td>极低</td><td><span class="exp-badge b-now">90%自动化</span></td></tr>
+    <tr><td><strong>知识星球</strong></td><td>¥500</td><td>¥3,000-10,000</td><td>低（2h/周）</td><td><span class="exp-badge b-week">70%自动化</span></td></tr>
+    <tr><td><strong>AI系统定制</strong></td><td>¥0</td><td>¥5,000-15,000</td><td>中（交付）</td><td><span class="exp-badge b-month">50%自动化</span></td></tr>
+    <tr><td><strong>小红书博主</strong></td><td>¥0</td><td>¥1,000-8,000</td><td>低</td><td><span class="exp-badge b-week">80%自动化</span></td></tr>
+    <tr><td><strong>模板商店</strong></td><td>¥200</td><td>¥500-3,000</td><td>极低</td><td><span class="exp-badge b-now">95%自动化</span></td></tr>
+    <tr><td><strong>代运营服务</strong></td><td>¥0</td><td>¥3,000-15,000</td><td>低</td><td><span class="exp-badge b-week">75%自动化</span></td></tr>
+    <tr><td><strong>付费课程</strong></td><td>¥1,000</td><td>¥5,000-20,000</td><td>中（录制）</td><td><span class="exp-badge b-month">40%自动化</span></td></tr>
+  </tbody>
+</table>
+
+</div>
+</div>
+
+<div class="hr-gold"></div>
+
+<!-- ═══ CH04 · 内容生产升级 ═══════════════════════════ -->
+<div id="ch4">
+<div class="ch-header">
+  <div class="ch-bg-num">04</div>
+  <div class="ch-eyebrow">Chapter 04 · Content Production Upgrade</div>
+  <h2 class="ch-title">内容生产<em>升级</em></h2>
+  <p class="ch-lead">墨笔文创是整个帝国的基础设施——没有内容就没有流量，没有流量就没有变现。当前内容生产是单篇手动触发，应该升级为全自动内容飞轮。</p>
+</div>
+<div class="content">
+
+<h3>4.1 · 内容飞轮自动化</h3>
+
+<div class="exp-block">
+  <div class="exp-head">
+    <div class="exp-num">D</div>
+    <div><div class="exp-title">情报→内容→分发 全自动飞轮</div><div class="exp-sub">每日自动产出 5-10 条内容</div></div>
+    <span class="exp-badge b-week">本周接通</span>
+  </div>
+  <div class="exp-body">
+    <p>你的 cron 已经定义了飞轮第一棒（墨研竞情扫描）、第二棒（墨笔文创生产）、第三棒（墨增分发），但三棒之间的数据接力没有接通。接通 relay 协议后，飞轮自动转动。</p>
+    <div class="cols3">
+      <div>
+        <h4>第一棒 · 08:00</h4>
+        <p style="font-size:12px">墨研竞情扫描 GitHub Trending + 小红书热点 + 知乎热榜，输出 intelligence_morning_JSON，评分筛选出今日可做的3个内容选题。</p>
+      </div>
+      <div>
+        <h4>第二棒 · 09:00</h4>
+        <p style="font-size:12px">墨笔文创读取情报 JSON，为3个选题各生产1篇稿件（小红书版 + 知乎版），墨图设计生成配套封面图提示词，输出 content_flywheel_JSON。</p>
+      </div>
+      <div>
+        <h4>第三棒 · 10:00</h4>
+        <p style="font-size:12px">墨播短视频将稿件改写为抖音脚本，墨链电商评估内容是否可带货，墨测数据记录分发时间和预期指标，输出 growth_flywheel_JSON。</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h3>4.2 · 新增内容品类</h3>
+
+<div class="cols2">
+  <div class="exp-block">
+    <div class="exp-head">
+      <div class="exp-num">E</div>
+      <div><div class="exp-title">每日 AI 情报简报</div><div class="exp-sub">邮件列表 / 公众号 / 知识星球</div></div>
+      <span class="exp-badge b-week">本周</span>
+    </div>
+    <div class="exp-body">
+      <p>基于墨研竞情的每日扫描，自动生成"老墨AI日报"。100字内核心洞察 + 3个值得关注的项目 + 一个行动建议。邮件列表是最高留存率的私域渠道。</p>
+      <ul class="feature-list">
+        <li><span class="fi">→</span>工具：Buttondown（邮件列表，免费版）</li>
+        <li><span class="fi">→</span>墨梦AutoDream 每日 06:00 生成草稿</li>
+        <li><span class="fi">→</span>墨算财务追踪订阅转化率</li>
+        <li><span class="fi">→</span>长期：付费版日报（¥99/年）</li>
+      </ul>
+    </div>
+  </div>
+  <div class="exp-block">
+    <div class="exp-head">
+      <div class="exp-num">F</div>
+      <div><div class="exp-title">播客：老墨的AI实验室</div><div class="exp-sub">小宇宙 / 喜马拉雅</div></div>
+      <span class="exp-badge b-month">月内</span>
+    </div>
+    <div class="exp-body">
+      <p>墨声配音 + 墨笔文创 协作，每周生产一期播客。选题来自内容飞轮，脚本由 Hermes 生成，TTS 配音，你做最终润色即可。</p>
+      <ul class="feature-list">
+        <li><span class="fi">→</span>格式：15-20分钟，单人叙述</li>
+        <li><span class="fi">→</span>主题：每周一个 AI 实战案例</li>
+        <li><span class="fi">→</span>TTS：阿里云 TTS + 后期降噪</li>
+        <li><span class="fi">→</span>变现：赞助 + 付费内容</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<h3>4.3 · MoneyPrinterTurbo 接入</h3>
+
+<p>你已经 fork 了 <strong>MoneyPrinterTurbo（57k Stars）</strong>——一键生成完整短视频（选题+脚本+TTS+字幕+素材+剪辑）。这是墨播短视频最缺少的能力——自动生成视频文件，而不只是生成脚本。</p>
+
+<div class="code-label">接入方案</div>
+<div class="code"><pre><span class="cm"># molib/agencies/workers/short_video.py — 新增视频生成能力</span>
+<span class="ck">async def</span> <span class="cn">generate_video</span>(self, topic: str, platform: str = "douyin") -> dict:
+    <span class="cm"># 调用 MoneyPrinterTurbo API（本地部署）</span>
+    payload = {
+        <span class="cs">"video_subject"</span>: topic,
+        <span class="cs">"video_language"</span>: <span class="cs">"zh-CN"</span>,
+        <span class="cs">"voice_name"</span>: <span class="cs">"zh-CN-YunxiNeural"</span>,  <span class="cm"># 男声，适合科技内容</span>
+        <span class="cs">"video_clip_duration"</span>: 4,
+        <span class="cs">"subtitle_enabled"</span>: <span class="cn">True</span>,
+    }
+    result = requests.post(<span class="cs">"http://localhost:8080/api/v1/videos"</span>, json=payload)
+    <span class="ck">return</span> {<span class="cs">"video_path"</span>: result.json()[<span class="cs">"video_path"</span>], <span class="cs">"topic"</span>: topic}</pre></div>
+
+</div>
+</div>
+
+<div class="hr-gold"></div>
+
+<!-- ═══ CH05 · 电商与私域 ════════════════════════════ -->
+<div id="ch5">
+<div class="ch-header">
+  <div class="ch-bg-num">05</div>
+  <div class="ch-eyebrow">Chapter 05 · E-Commerce & Private Domain</div>
+  <h2 class="ch-title">电商私域<em>深化</em></h2>
+  <p class="ch-lead">闲鱼客服是系统目前唯一真正运行的业务自动化。在这个基础上向两侧延伸：向前优化客服质量，向后建立复购体系。</p>
+</div>
+<div class="content">
+
+<div class="cols2">
+  <div>
+    <h3>5.1 · 闲鱼升级方向</h3>
+    <ul class="feature-list" style="border:1px solid var(--border);border-radius:3px;padding:1rem;background:#fff">
+      <li><span class="fi">→</span><strong>主动触达：</strong>检测到用户浏览但未下单，48小时后自动发优惠信息（xianyu WebSocket 已支持）</li>
+      <li><span class="fi">→</span><strong>好评收集：</strong>交易完成3天后自动发催评消息 + 引导进私域</li>
+      <li><span class="fi">→</span><strong>动态定价：</strong>墨研竞情监控同类商品价格，墨算财务建议调价，墨链电商执行</li>
+      <li><span class="fi">→</span><strong>SKU扩展：</strong>基于成交数据，墨测数据识别高需求品类，墨商BD开发新服务</li>
+      <li><span class="fi">→</span><strong>批量上架：</strong>墨码开发写爬虫批量生成商品描述，墨链电商批量上架</li>
+    </ul>
+  </div>
+  <div>
+    <h3>5.2 · 私域复购体系</h3>
+    <ul class="feature-list" style="border:1px solid var(--border);border-radius:3px;padding:1rem;background:#fff">
+      <li><span class="fi">→</span><strong>买家分层：</strong>按消费金额/频次自动打标，墨域私域管理用户档案</li>
+      <li><span class="fi">→</span><strong>触达序列：</strong>进群后7天/14天/30天自动发不同内容的跟进消息</li>
+      <li><span class="fi">→</span><strong>二次购买：</strong>30天未复购的用户自动推送新品 + 限时优惠</li>
+      <li><span class="fi">→</span><strong>转介绍激励：</strong>高价值用户分享可得积分，墨算财务追踪ROI</li>
+      <li><span class="fi">→</span><strong>twenty CRM 接入：</strong>将用户数据统一管理，比 Excel 更结构化</li>
+    </ul>
+  </div>
+</div>
+
+<h3>5.3 · 新电商平台拓展</h3>
+
+<table class="tbl" style="border:1px solid var(--border);border-radius:3px;overflow:hidden">
+  <thead><tr><th>平台</th><th>适合品类</th><th>自动化程度</th><th>优先级</th></tr></thead>
+  <tbody>
+    <tr><td><strong>闲鱼（现有）</strong></td><td>AI服务、数字商品、技术服务</td><td>WebSocket 全自动</td><td>持续优化</td></tr>
+    <tr><td><strong>猪八戒</strong></td><td>AI定制服务、系统搭建、技术外包</td><td>半自动（需人工接单）</td><td><span class="exp-badge b-week">本周</span></td></tr>
+    <tr><td><strong>小红书商品</strong></td><td>数字资产、模板、课程</td><td>内容引流 → 私信转化</td><td><span class="exp-badge b-week">本周</span></td></tr>
+    <tr><td><strong>知识付费平台</strong></td><td>课程、训练营、咨询</td><td>内容自动生产，平台人工上架</td><td><span class="exp-badge b-month">月内</span></td></tr>
+    <tr><td><strong>独立站（未来）</strong></td><td>SaaS订阅、高客单定制</td><td>需要开发</td><td><span class="exp-badge b-long">长期</span></td></tr>
+  </tbody>
+</table>
+
+</div>
+</div>
+
+<div class="hr-gold"></div>
+
+<!-- ═══ CH06 · GitHub 吸收管线 ══════════════════════ -->
+<div id="ch6">
+<div class="ch-header">
+  <div class="ch-bg-num">06</div>
+  <div class="ch-eyebrow">Chapter 06 · GitHub Absorption Pipeline</div>
+  <h2 class="ch-title">GitHub 吸收<em>管线</em></h2>
+  <p class="ch-lead">你已经到了第 11 轮吸收，有 54 个 fork 仓库，但吸收质量参差不齐。建立一个标准化的评估→转换→验证流程，让每轮吸收都真正产生系统价值。</p>
+</div>
+<div class="content">
+
+<h3>6.1 · 标准化吸收流程（三步法）</h3>
+
+<div class="exp-block">
+  <div class="exp-head">
+    <div class="exp-num">G</div>
+    <div><div class="exp-title">评估→SKILL→验证 标准管线</div><div class="exp-sub">每个项目的统一处理流程</div></div>
+    <span class="exp-badge b-now">立即建立</span>
+  </div>
+  <div class="exp-body">
+    <div class="cols3">
+      <div>
+        <h4>Step 1 · 评估（墨研竞情）</h4>
+        <p style="font-size:12px">评分标准：<br>Stars数量 × 0.3<br>+ 与子公司匹配度 × 0.4<br>+ 实际可执行性 × 0.3<br><br>≥70分：立即吸收<br>40-70：下轮吸收<br>&lt;40：归档不吸收</p>
+      </div>
+      <div>
+        <h4>Step 2 · 转换（墨脑知识）</h4>
+        <p style="font-size:12px">SKILL 化原则：<br>• 提炼工作流，不复制文档<br>• 写明 Hermes terminal 调用命令<br>• 配置最小可运行示例<br>• 指明对应子公司 Worker<br><br>复杂项目 → molib 原生模块</p>
+      </div>
+      <div>
+        <h4>Step 3 · 验证（墨测数据）</h4>
+        <p style="font-size:12px">验收标准：<br>• Hermes 能主动调用（不需要提示）<br>• 产出物质量 ≥ 人工操作70%<br>• 执行耗时 &lt; 5分钟<br><br>未通过 → 返回Step 2重写<br>通过 → 写入 AGENTS.md 注册</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h3>6.2 · 第11轮26个项目优先排序</h3>
+
+<table class="tbl" style="border:1px solid var(--border);border-radius:3px;overflow:hidden">
+  <thead><tr><th>项目</th><th>Stars</th><th>吸收方式</th><th>对应子公司</th><th>价值评分</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>TradingAgents-CN</strong></td><td>25k</td>
+      <td>SKILL + molib/workers/trading.py</td><td>墨投交易（新增）</td>
+      <td><span class="exp-badge b-now">95分</span></td>
+    </tr>
+    <tr>
+      <td><strong>worldmonitor</strong></td><td>53k</td>
+      <td>SKILL（情报源配置）</td><td>墨研竞情增强</td>
+      <td><span class="exp-badge b-now">90分</span></td>
+    </tr>
+    <tr>
+      <td><strong>supermemory</strong></td><td>22k</td>
+      <td>Python 原生集成（记忆层）</td><td>全局记忆系统</td>
+      <td><span class="exp-badge b-now">90分</span></td>
+    </tr>
+    <tr>
+      <td><strong>twenty CRM</strong></td><td>30k</td>
+      <td>SKILL + molib/workers/crm.py</td><td>墨域私域升级</td>
+      <td><span class="exp-badge b-week">82分</span></td>
+    </tr>
+    <tr>
+      <td><strong>MoneyPrinterTurbo</strong></td><td>57k</td>
+      <td>Docker部署 + SKILL + terminal调用</td><td>墨播短视频</td>
+      <td><span class="exp-badge b-week">80分</span></td>
+    </tr>
+    <tr>
+      <td><strong>Chatwoot</strong></td><td>25k</td>
+      <td>Docker部署 + MCP包装（唯一值得MCP的）</td><td>墨声客服升级</td>
+      <td><span class="exp-badge b-month">75分</span></td>
+    </tr>
+    <tr>
+      <td><strong>LaWGPT</strong></td><td>10k</td>
+      <td>SKILL（法律推理模式提炼）</td><td>墨律法务</td>
+      <td><span class="exp-badge b-month">70分</span></td>
+    </tr>
+    <tr>
+      <td><strong>dbt-core</strong></td><td>14k</td>
+      <td>SKILL + pip install + CLI调用</td><td>墨测数据增强</td>
+      <td><span class="exp-badge b-month">68分</span></td>
+    </tr>
+    <tr>
+      <td><strong>invoiceninja</strong></td><td>9k</td>
+      <td>SKILL（发票模式）</td><td>墨算财务</td>
+      <td><span class="exp-badge b-long">55分</span></td>
+    </tr>
+    <tr>
+      <td><strong>Rasa</strong></td><td>20k</td>
+      <td>SKILL（对话状态机模式提炼，不部署服务）</td><td>墨声客服增强</td>
+      <td><span class="exp-badge b-long">50分</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>6.3 · 新增：墨投交易子公司</h3>
+
+<div class="box bx-purple">
+  <strong>你有一个被严重低估的资产：</strong> TradingAgents-CN（25k Stars）+ molin-trading + molin-trading-agents 三个技能都在，却没有对应的 Worker 和子公司。量化交易是高复购、高客单的变现方向。建议新增墨投交易子公司，作为第 23 家，在 company.toml 中注册，molib 中创建 trading.py Worker。
+</div>
+
+</div>
+</div>
+
+<div class="hr-gold"></div>
+
+<!-- ═══ CH07 · 多模态能力 ════════════════════════════ -->
+<div id="ch7">
+<div class="ch-header">
+  <div class="ch-bg-num">07</div>
+  <div class="ch-eyebrow">Chapter 07 · Multimodal Capabilities</div>
+  <h2 class="ch-title">多模态<em>能力</em></h2>
+  <p class="ch-lead">系统目前是纯文本输出。下一个质变是：能生成图片、视频、语音。这三种能力让系统的产出可以直接发布，而不需要人工再加工。</p>
+</div>
+<div class="content">
+
+<div class="cols3">
+  <div class="exp-block">
+    <div class="exp-head">
+      <div class="exp-num">H</div>
+      <div><div class="exp-title">图片生成</div><div class="exp-sub">墨图设计 → 真实出图</div></div>
+      <span class="exp-badge b-week">本周</span>
+    </div>
+    <div class="exp-body">
+      <p>墨图设计现在只能生成"生图提示词"，需要人去复制到 Midjourney。升级为自动调用图片 API 直接输出文件。</p>
+      <ul class="feature-list">
+        <li><span class="fi">→</span>即梦 API（字节，国内稳定）</li>
+        <li><span class="fi">→</span>Stability AI（国际，效果好）</li>
+        <li><span class="fi">→</span>DALL-E 3（OpenAI，创意强）</li>
+        <li><span class="fi">→</span>输出直接写入 relay/ 目录</li>
+      </ul>
+    </div>
+  </div>
+  <div class="exp-block">
+    <div class="exp-head">
+      <div class="exp-num">I</div>
+      <div><div class="exp-title">语音合成</div><div class="exp-sub">墨声配音 → 真实音频</div></div>
+      <span class="exp-badge b-week">本周</span>
+    </div>
+    <div class="exp-body">
+      <p>墨声配音现在只写 TTS 参数建议，不调用 API 生成音频文件。接入阿里云 TTS 后，播客和配音内容可以完全自动生成。</p>
+      <ul class="feature-list">
+        <li><span class="fi">→</span>阿里云 TTS（国内，多音色）</li>
+        <li><span class="fi">→</span>ElevenLabs（克隆音色，英文）</li>
+        <li><span class="fi">→</span>CosyVoice（开源，可本地）</li>
+        <li><span class="fi">→</span>音频文件 → OSS 存储</li>
+      </ul>
+    </div>
+  </div>
+  <div class="exp-block">
+    <div class="exp-head">
+      <div class="exp-num">J</div>
+      <div><div class="exp-title">视频生成</div><div class="exp-sub">墨播短视频 → 视频文件</div></div>
+      <span class="exp-badge b-month">月内</span>
+    </div>
+    <div class="exp-body">
+      <p>MoneyPrinterTurbo 接入后，墨播短视频能直接产出可上传的 MP4 文件，而不只是脚本。</p>
+      <ul class="feature-list">
+        <li><span class="fi">→</span>MoneyPrinterTurbo（已fork）</li>
+        <li><span class="fi">→</span>CapCut API（抖音生态）</li>
+        <li><span class="fi">→</span>可灵 API（字节，文生视频）</li>
+        <li><span class="fi">→</span>成片直接发抖音/视频号</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<h3>7.2 · 视觉身份系统</h3>
+
+<p>墨韵IP 应该负责维护一套一致的视觉身份系统——字体组合、颜色方案、排版模板——让所有内容产出都有统一的品牌感，而不是每次都风格不一。</p>
+
+<div class="code-label">墨韵IP — 品牌规范 SKILL 应新增的内容</div>
+<div class="code"><pre><span class="cm">## 墨麟视觉身份规范（新增到 ip-manager 技能）</span>
+
+<span class="cn">主色调：</span> 墨金 #9a7b2a | 墨黑 #0e0c08 | 纸白 #f8f5ef
+<span class="cn">字体搭配：</span> 标题用 Playfair Display（庄重感） + 正文用 Noto Serif SC
+<span class="cn">图片风格：</span> 暗色调 + 金色点缀，避免明亮活泼色调
+<span class="cn">封面模板：</span> ~/molib/assets/templates/ 目录，5套场景模板
+<span class="cn">水印规范：</span> 右下角"老墨AI"，透明度30%
+
+<span class="cm">## 生图时强制在 prompt 末尾附加风格 seed</span>
+style_seed = <span class="cs">"editorial photography, dark moody, gold accent, premium brand feel, 
+              minimal text, professional composition --ar 4:5 --style raw"</span></pre></div>
+
+</div>
+</div>
+
+<div class="hr-gold"></div>
+
+<!-- ═══ CH08 · 出海与本地化 ══════════════════════════ -->
+<div id="ch8">
+<div class="ch-header">
+  <div class="ch-bg-num">08</div>
+  <div class="ch-eyebrow">Chapter 08 · Global Expansion</div>
+  <h2 class="ch-title">出海<em>本地化</em></h2>
+  <p class="ch-lead">墨海出海子公司存在但几乎没有产出。台湾市场是最低门槛的第一步——语言接近、平台熟悉，复制成本极低。</p>
+</div>
+<div class="content">
+
+<h3>8.1 · 台湾市场优先级最高</h3>
+
+<div class="cols2">
+  <div>
+    <h4>为什么台湾</h4>
+    <ul class="feature-list" style="border:1px solid var(--border);border-radius:3px;padding:.75rem 1rem;background:#fff">
+      <li><span class="fi">→</span>繁体中文，墨海出海已有本地化能力</li>
+      <li><span class="fi">→</span>台湾 AI 工具市场相对空白（对比中国大陆）</li>
+      <li><span class="fi">→</span>小红书对台湾用户有一定渗透</li>
+      <li><span class="fi">→</span>Payment：Stripe 已支持台湾（绕过大陆限制）</li>
+      <li><span class="fi">→</span>TWD 定价：你的 ¥199 服务对应 TWD 890，符合市场</li>
+    </ul>
+  </div>
+  <div>
+    <h4>行动清单</h4>
+    <ul class="feature-list" style="border:1px solid var(--border);border-radius:3px;padding:.75rem 1rem;background:#fff">
+      <li><span class="fi">→</span>墨海出海：将现有小红书内容翻译为繁体版</li>
+      <li><span class="fi">→</span>开设 Dcard（台湾最大论坛）账号，发布技术内容</li>
+      <li><span class="fi">→</span>Vocus.cc（台湾知乎）发布专栏</li>
+      <li><span class="fi">→</span>LINE 官方账号（台湾主流即时通讯）</li>
+      <li><span class="fi">→</span>Shopee 台湾站上架数字商品（模板/课程）</li>
+    </ul>
+  </div>
+</div>
+
+<h3>8.2 · 东南亚第二步</h3>
+
+<table class="tbl" style="border:1px solid var(--border);border-radius:3px;overflow:hidden">
+  <thead><tr><th>市场</th><th>切入平台</th><th>内容语言</th><th>变现方式</th><th>时间线</th></tr></thead>
+  <tbody>
+    <tr><td><strong>台湾</strong></td><td>Dcard / Vocus / LINE</td><td>繁体中文</td><td>Stripe订阅 + Shopee数字商品</td><td><span class="exp-badge b-month">月内</span></td></tr>
+    <tr><td><strong>马来西亚华人圈</strong></td><td>Facebook Groups / Shopee MY</td><td>繁体/简体</td><td>课程 + 咨询</td><td><span class="exp-badge b-long">Q3</span></td></tr>
+    <tr><td><strong>新加坡</strong></td><td>Reddit r/singapore / LinkedIn</td><td>英文为主</td><td>高客单SaaS定制</td><td><span class="exp-badge b-long">Q4</span></td></tr>
+  </tbody>
+</table>
+
+</div>
+</div>
+
+<div class="hr-gold"></div>
+
+<!-- ═══ CH09 · SaaS化与产品化 ══════════════════════ -->
+<div id="ch9">
+<div class="ch-header">
+  <div class="ch-bg-num">09</div>
+  <div class="ch-eyebrow">Chapter 09 · SaaS & Productization</div>
+  <h2 class="ch-title">SaaS化<em>产品化</em></h2>
+  <p class="ch-lead">系统发展到一定阶段，最大的杠杆是把系统本身变成产品卖给别人。你已经有了全部的技术底座，缺的只是产品化的包装和付费机制。</p>
+</div>
+<div class="content">
+
+<h3>9.1 · 产品化路径（三阶段）</h3>
+
+<div class="rm">
+  <div class="rm-item">
+    <div class="rm-dot hot">P1</div>
+    <div class="rm-phase">Phase 1 · 当前—3个月</div>
+    <div class="rm-title">服务化：把系统能力包装成服务卖</div>
+    <div class="rm-desc">不需要技术改造，直接把现有系统输出的东西作为服务出售。AI代运营、系统定制、一对一咨询。用真实交付建立口碑和案例。</div>
+    <div class="chips">
+      <span class="chip">AI代运营服务</span><span class="chip">Hermes系统定制</span>
+      <span class="chip">一人公司咨询</span><span class="chip">闲鱼店铺管理</span>
+    </div>
+  </div>
+  <div class="rm-item">
+    <div class="rm-dot warm">P2</div>
+    <div class="rm-phase">Phase 2 · 3—6个月</div>
+    <div class="rm-title">工具化：把工作流封装成可复用产品</div>
+    <div class="rm-desc">将内部使用的流程打包成标准化工具。Notion模板、Hermes配置包、内容飞轮模板。低价高量，建立用户基础。</div>
+    <div class="chips">
+      <span class="chip">Hermes OS模板包</span><span class="chip">内容飞轮Notion看板</span>
+      <span class="chip">一人公司SOP文档</span><span class="chip">AI工具选型指南</span>
+    </div>
+  </div>
+  <div class="rm-item">
+    <div class="rm-dot cool">P3</div>
+    <div class="rm-phase">Phase 3 · 6个月以上</div>
+    <div class="rm-title">平台化：墨麟OS作为SaaS产品</div>
+    <div class="rm-desc">为不会配置 Hermes 的普通用户提供开箱即用的一人公司OS。Web界面 + 预配置子公司 + 引导式上手流程。订阅制，¥99-499/月。</div>
+    <div class="chips">
+      <span class="chip">Web控制台</span><span class="chip">订阅制计费</span>
+      <span class="chip">多租户架构</span><span class="chip">应用市场（技能商店）</span>
+    </div>
+  </div>
+</div>
+
+<h3>9.2 · 技能商店（最有想象力的方向）</h3>
+
+<div class="box bx-purple">
+  <strong>终极形态：</strong>你的 268 个技能本身就是一个"应用商店"的原型。墨麟技能商店——用户可以购买特定子公司的专属技能包（¥29-199/包），安装后 Hermes 就获得了对应能力。这是把"技能 IP 化"的思路，每个月的 GitHub 吸收轮次产出的优质 SKILL.md 都可以成为商品。
+</div>
+
+<div class="cols2">
+  <div>
+    <h4>技能商品示例</h4>
+    <ul class="feature-list" style="border:1px solid var(--border);border-radius:3px;padding:.75rem 1rem;background:#fff">
+      <li><span class="fi">→</span>小红书爆款创作技能包（¥49）</li>
+      <li><span class="fi">→</span>闲鱼自动化运营套装（¥99）</li>
+      <li><span class="fi">→</span>量化交易信号解读包（¥199）</li>
+      <li><span class="fi">→</span>法律合规审查套件（¥149）</li>
+      <li><span class="fi">→</span>出海本地化工具包（¥79）</li>
+    </ul>
+  </div>
+  <div>
+    <h4>技能商店技术方案</h4>
+    <ul class="feature-list" style="border:1px solid var(--border);border-radius:3px;padding:.75rem 1rem;background:#fff">
+      <li><span class="fi">→</span>GitHub Private Repo 作为分发载体</li>
+      <li><span class="fi">→</span>购买后获得 repo 访问权限</li>
+      <li><span class="fi">→</span>一键安装脚本：自动复制到 skills/ 目录</li>
+      <li><span class="fi">→</span>付费：Stripe / 微信支付</li>
+      <li><span class="fi">→</span>墨梦AutoDream 定期更新已购技能</li>
+    </ul>
+  </div>
+</div>
+
+</div>
+</div>
+
+<div class="hr-gold"></div>
+
+<!-- ═══ SUMMARY ════════════════════════════════════════ -->
+<div id="summary" class="summary">
+  <h2>42个行动的执行优先级</h2>
+  <div class="sg" style="margin-bottom:2.5rem">
+    <div class="sg-item">
+      <div class="sg-l">今天就能做（零代码）</div>
+      <div class="sg-v">
+        填写 SOUL.md + AGENTS.md<br>
+        激活 molin-xiaohongshu 技能<br>
+        在猪八戒上架服务包<br>
+        开设知识星球
+      </div>
+    </div>
+    <div class="sg-item">
+      <div class="sg-l">本周完成（少量配置）</div>
+      <div class="sg-v">
+        接通内容飞轮 relay 协议<br>
+        接入图片生成 API<br>
+        接入阿里云 TTS<br>
+        激活 ghost-os + karpathy-autoresearch<br>
+        claude-mem 接入记忆系统
+      </div>
+    </div>
+    <div class="sg-item">
+      <div class="sg-l">月内完成（需要开发）</div>
+      <div class="sg-v">
+        molib/__main__.py 统一 CLI<br>
+        闲鱼客服升级为 LLM 驱动<br>
+        CEO.py 移除关键词匹配<br>
+        三层记忆蒸馏架构<br>
+        MoneyPrinterTurbo 接入<br>
+        new：墨投交易子公司创建
+      </div>
+    </div>
+  </div>
+
+  <div class="sg">
+    <div class="sg-item">
+      <div class="sg-l">月收入目标（3个月后）</div>
+      <div class="sg-v">
+        闲鱼：¥3,000-5,000<br>
+        知识星球：¥3,000-8,000<br>
+        系统定制：¥5,000-10,000<br>
+        代运营：¥3,000-8,000<br>
+        <strong style="color:var(--gold2)">合计目标：¥15,000-30,000/月</strong>
+      </div>
+    </div>
+    <div class="sg-item">
+      <div class="sg-l">系统自动化程度目标</div>
+      <div class="sg-v">
+        内容生产：85%自动化（现在≈30%）<br>
+        客服回复：95%自动化（现在≈80%）<br>
+        情报扫描：100%自动化（现在≈70%）<br>
+        财务报表：100%自动化（现在≈0%）<br>
+        <strong style="color:var(--gold2)">你每天只需要2小时决策时间</strong>
+      </div>
+    </div>
+    <div class="sg-item">
+      <div class="sg-l">6个月后的系统形态</div>
+      <div class="sg-v">
+        23家子公司完全激活<br>
+        自学习系统持续进化<br>
+        3套变现渠道稳定运转<br>
+        台湾市场开始产生收入<br>
+        <strong style="color:var(--gold2)">技能商店 MVP 上线</strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="summary-foot">
+    系统最大的优势不是技术——而是你已经跑了11轮 GitHub 吸收、建立了真实运行的闲鱼自动化、设计了完整的5VP+22子公司架构。<br>
+    这些在国内做 AI 副业的人里，能做到这一步的不超过100人。接下来的工作是让这套系统的每一层都真正"通电"，<br>
+    然后把它变成可以销售的产品——因为你走过的这条路，对很多人来说是值钱的。<br><br>
+    墨麟 Hermes OS · 拓展方向全景图 v1.0 · 2026-05-07
+  </div>
+</div>
+
+</main>
+
+<footer class="foot">
+  墨麟OS · EXPANSION ROADMAP · v1.0 · 2026.05.07 · 老墨AI工作室内部文件
+</footer>
+
+</body>
+</html>

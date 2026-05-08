@@ -20,6 +20,8 @@ Hermes（大脑）通过 terminal（神经）调用本 CLI。
     python -m molib proxy <subcmd> [args]     # AI代理（9Router）
     python -m molib scrap <subcmd> [args]    # Scrapling抓取
     python -m molib sync <subcmd> [args]     # CocoIndex增量同步
+    python -m molib trading <subcmd> [args]  # 量化交易（墨投交易）
+    python -m molib plan <subcmd> [args]     # 规划工具（写任务计划）
 """
 
 import sys
@@ -101,6 +103,10 @@ def cmd_help(args: list[str]) -> dict:
         "sync run --pipeline NAME": "运行一次管道同步（增量catch-up）",
         "sync start --pipeline NAME": "启动管道后台持续同步",
         "sync stop --pipeline NAME": "停止管道后台同步",
+        "trading analyze --market-type crypto --symbol BTC/USDT": "市场分析（墨投交易）",
+        "trading backtest --strategy S --period 90d": "回测策略（墨投交易）",
+        "trading signal --symbol BTC/USDT --timeframe 1h": "生成交易信号（墨投交易）",
+        "trading research --ticker BTC --timeframe 1d": "研究报告（墨投交易）",
     }
     return {"commands": commands, "total": len(commands)}
 
@@ -360,6 +366,140 @@ def cmd_sync(args: list[str]) -> dict:
     return _sync(args)
 
 
+async def cmd_trading(args: list[str]) -> dict:
+    """量化交易命令 — analyze / backtest / signal / research"""
+    if not args:
+        return {"error": "子命令: analyze | backtest | signal | research"}
+
+    subcmd = args[0]
+    rest = args[1:]
+
+    # 解析通用参数
+    market_type = ""
+    symbol = ""
+    strategy = ""
+    period = ""
+    timeframe = ""
+    ticker = ""
+    pairs = []
+
+    i = 0
+    while i < len(rest):
+        if rest[i] == "--market-type" and i + 1 < len(rest):
+            market_type = rest[i + 1]
+            i += 2
+        elif rest[i] == "--symbol" and i + 1 < len(rest):
+            symbol = rest[i + 1]
+            i += 2
+        elif rest[i] == "--strategy" and i + 1 < len(rest):
+            strategy = rest[i + 1]
+            i += 2
+        elif rest[i] == "--period" and i + 1 < len(rest):
+            period = rest[i + 1]
+            i += 2
+        elif rest[i] == "--timeframe" and i + 1 < len(rest):
+            timeframe = rest[i + 1]
+            i += 2
+        elif rest[i] == "--ticker" and i + 1 < len(rest):
+            ticker = rest[i + 1]
+            i += 2
+        elif rest[i] == "--pairs" and i + 1 < len(rest):
+            pairs = [p.strip() for p in rest[i + 1].split(",")]
+            i += 2
+        else:
+            i += 1
+
+    from molib.agencies.workers.trading import Trading
+    from molib.agencies.workers.base import Task
+
+    if subcmd == "analyze":
+        task = Task(
+            task_id="cli",
+            task_type="analyze_market",
+            payload={"market_type": market_type or "crypto", "symbol": symbol or "BTC/USDT"},
+        )
+        worker = Trading()
+        result = await worker.execute(task)
+        return result.output
+
+    if subcmd == "backtest":
+        task = Task(
+            task_id="cli",
+            task_type="backtest",
+            payload={
+                "strategy": strategy or "SampleStrategy",
+                "period": period or "90d",
+                "pairs": pairs or ["BTC/USDT", "ETH/USDT"],
+            },
+        )
+        worker = Trading()
+        result = await worker.execute(task)
+        return result.output
+
+    if subcmd == "signal":
+        task = Task(
+            task_id="cli",
+            task_type="signal",
+            payload={"symbol": symbol or "BTC/USDT", "timeframe": timeframe or "1h"},
+        )
+        worker = Trading()
+        result = await worker.execute(task)
+        return result.output
+
+    if subcmd == "research":
+        task = Task(
+            task_id="cli",
+            task_type="research",
+            payload={"ticker": ticker or "BTC", "timeframe": timeframe or "1d"},
+        )
+        worker = Trading()
+        result = await worker.execute(task)
+        return result.output
+
+    return {"error": f"未知子命令: {subcmd}"}
+
+
+async def cmd_handoff(args: list[str]) -> dict:
+    """Handoff自动路由命令 — list / route / history"""
+    from molib.agencies.handoff_register import register_all_handoffs
+    from molib.agencies.handoff import HandoffManager, HandoffInputData, HandoffError
+
+    register_all_handoffs()
+
+    if not args or args[0] == "list":
+        return {"handoffs": HandoffManager.get_manifest()}
+
+    if args[0] == "route":
+        task_name = ""
+        if "--task" in args:
+            idx = args.index("--task")
+            task_name = args[idx + 1] if idx + 1 < len(args) else ""
+        elif len(args) > 1:
+            task_name = args[1]
+        if not task_name:
+            return {"error": "请指定任务名称: --task <名称> 或 route <名称>"}
+        result, record = HandoffManager.route(task_name, HandoffInputData())
+        if isinstance(result, HandoffError):
+            return {"status": "error", "error": result.message, "code": result.code.value}
+        return {"status": "ok", "worker": result.worker_id, "output": str(result.output)[:300]}
+
+    if args[0] == "history":
+        limit = 20
+        if "--limit" in args:
+            idx = args.index("--limit")
+            limit = int(args[idx + 1]) if idx + 1 < len(args) else 20
+        return {"history": HandoffManager.build_history(limit=limit)}
+
+    return {"error": f"未知子命令: {args[0]}，支持: list | route | history"}
+
+
+async def cmd_plan(args: list[str]) -> dict:
+    """规划工具 — 分解任务为结构化 TODO 列表"""
+    from molib.agencies.planning import main as plan_main
+
+    return plan_main(args)
+
+
 async def run(command: str, args: list[str]) -> dict:
     """分发命令到具体模块"""
     # 同步命令映射（直接返回 dict）
@@ -374,6 +514,9 @@ async def run(command: str, args: list[str]) -> dict:
         "video": cmd_video,
         "proxy": cmd_proxy,
         "scrap": cmd_scrap,
+        "trading": cmd_trading,
+        "handoff": cmd_handoff,
+        "plan": cmd_plan,
     }
 
     if command in sync_commands:

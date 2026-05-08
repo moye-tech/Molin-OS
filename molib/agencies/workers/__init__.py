@@ -22,6 +22,7 @@ from .legal import Legal
 from .knowledge import Knowledge
 from .data_analyst import DataAnalyst
 from .cocoindex_sync import CocoIndexSync
+from .trading import Trading
 from .scrapling_worker import ScraplingWorker
 
 def register_all():
@@ -46,6 +47,7 @@ def register_all():
     WorkerRegistry.register(Knowledge)
     WorkerRegistry.register(DataAnalyst)
     WorkerRegistry.register(CocoIndexSync)
+    WorkerRegistry.register(Trading)
     WorkerRegistry.register(ScraplingWorker)
 
 def get_worker(name: str) -> SubsidiaryWorker | None:

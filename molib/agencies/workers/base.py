@@ -1,15 +1,21 @@
 """墨域OS — 子公司Worker基类"""
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Generic, TypeVar
+
+T = TypeVar("T")
+
 
 @dataclass
-class Task:
+class Task(Generic[T]):
     task_id: str
     task_type: str
-    payload: dict
+    payload: T | dict = field(default_factory=dict)
     priority: str = "medium"
     requester: str = "ceo"
+    source_handoff: str = ""
+    """从哪个 handoff 发起的（用于追踪）"""
+
 
 @dataclass
 class WorkerResult:
