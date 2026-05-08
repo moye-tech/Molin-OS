@@ -29,9 +29,6 @@ from molib.management.vp_registry import get_all_vps, get_vp
 # ── 全链路可视化日志 ──
 from molib.ceo.task_logger import (
     should_push_log, push_card_async,
-    build_intent_card, build_risk_card, build_dag_card,
-    build_execution_card, build_quality_card, build_final_card,
-    build_rejected_card,
 )
 
 logger = logging.getLogger("molin.ceo.orchestrator")
@@ -123,8 +120,8 @@ class CEOOrchestrator:
         _push_log = should_push_log(intent)
         if _push_log:
             t1 = time.time()
-            card1 = build_intent_card(task_id, user_input, intent, t1 - start_time)
-            await push_card_async(card1)
+            _log_intent = intent
+            _log_elapsed_start = t1 - start_time
 
         # ── 步骤2: 风险评估 ──────────────────────────────────────
         risk: RiskAssessment = self.risk_engine.assess(intent)
@@ -133,22 +130,20 @@ class CEOOrchestrator:
             risk.risk_score, risk.requires_approval,
         )
 
-        # ── 全链路日志②: 风险评估 ──
-        if _push_log:
-            t2 = time.time()
-            card2 = build_risk_card(task_id, risk, t2 - start_time)
-            await push_card_async(card2)
-
         # ── 风险控制 ─────────────────────────────────────────────
         if risk.risk_score > 80:
             result = self._build_rejected_result(
                 task_id, intent, risk, start_time,
             )
             logger.warning("[CEO] ❌ 高风险拒绝: score=%.1f", risk.risk_score)
-            # ── 全链路日志⛔: 拒绝通知 ──
+            # ── 全链路日志⛔: 拒绝通知（单张汇总卡） ──
             if _push_log:
-                card_reject = build_rejected_card(task_id, intent, risk, time.time() - start_time)
-                await push_card_async(card_reject)
+                from molib.ceo.task_logger import build_summary_card
+                card = build_summary_card(
+                    task_id, user_input, intent, risk,
+                    elapsed=time.time() - start_time,
+                )
+                await push_card_async(card)
             self.sop_store.save(
                 task_id=task_id,
                 vp_used=[],
@@ -172,37 +167,16 @@ class CEOOrchestrator:
         )
         logger.info("[CEO] DAG分解: %d步 %d并行组",
                      len(dag.tasks), len(dag.parallel_groups))
-        logger.debug("[CEO] DAG详情:\\n%s",
-                      self.dag_engine.format_dag_string(dag))
-
-        # ── 全链路日志③: DAG任务分解 ──
-        if _push_log:
-            t3 = time.time()
-            card3 = build_dag_card(task_id, dag, t3 - start_time)
-            await push_card_async(card3)
 
         # ── 步骤4: 路由到VP并执行 ───────────────────────────────
         execution_result = await self._route_and_execute(
             intent, risk, context, budget, timeline, dag=dag,
         )
 
-        # ── 全链路日志④: VP调度与执行 ──
-        if _push_log:
-            t4 = time.time()
-            card4 = build_execution_card(task_id, execution_result, t4 - start_time)
-            await push_card_async(card4)
-
         # ── 步骤4.5: LLM 质量门控 ───────────────────────────────
-        # 对执行结果中的交付物做 QualityGate 评估
         quality_gate_result = await self._run_quality_gate(
             user_input, execution_result, intent,
         )
-
-        # ── 全链路日志⑤: 质量门控 ──
-        if _push_log:
-            t5 = time.time()
-            card5 = build_quality_card(task_id, quality_gate_result, t5 - start_time)
-            await push_card_async(card5)
 
         # ── 步骤5: 写入SOP ──────────────────────────────────────
         quality = quality_gate_result.get("score", 0.0)
@@ -223,7 +197,7 @@ class CEOOrchestrator:
             task_id, duration, quality, sop_id,
         )
 
-        # ── 全链路日志⑥: 最终产出汇总 ──
+        # ── 全链路日志: 单张汇总卡片（替代6张独立卡片） ──
         result = {
             "task_id": task_id,
             "intent": {
@@ -253,8 +227,16 @@ class CEOOrchestrator:
         }
 
         if _push_log:
-            card6 = build_final_card(task_id, result, duration)
-            await push_card_async(card6)
+            from molib.ceo.task_logger import build_summary_card
+            card = build_summary_card(
+                task_id, user_input, intent, risk,
+                dag=dag,
+                execution_result=execution_result,
+                quality_gate_result=quality_gate_result,
+                final_result=result,
+                elapsed=duration,
+            )
+            await push_card_async(card)
 
         return result
 
@@ -362,7 +344,13 @@ class CEOOrchestrator:
         # ── 无DAG：原有并行调度（兼容旧调用方） ──
         logger.info("[CEO] 使用传统并行VP调度 (%d个VP)", len(target_vps))
 
-        vp_results = []  # 旧调度分支初始化
+        # 🔧 修复：实际调度每个VP（而不是空列表）
+        vp_coros = []
+        for vp_name in target_vps:
+            vp_coros.append(
+                self._execute_vp(vp_name, task, context, subsidiaries)
+            )
+        vp_results = await asyncio.gather(*vp_coros, return_exceptions=True)
 
         for vp_name, vp_result in zip(target_vps, vp_results):
             if isinstance(vp_result, Exception):
