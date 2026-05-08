@@ -107,6 +107,9 @@ def cmd_help(args: list[str]) -> dict:
         "trading backtest --strategy S --period 90d": "回测策略（墨投交易）",
         "trading signal --symbol BTC/USDT --timeframe 1h": "生成交易信号（墨投交易）",
         "trading research --ticker BTC --timeframe 1d": "研究报告（墨投交易）",
+        "cost report": "API成本月度报告",
+        "cost alert": "检查成本预警",
+        "cost daily [N]": "最近N日成本趋势",
     }
     return {"commands": commands, "total": len(commands)}
 
@@ -459,6 +462,45 @@ async def cmd_trading(args: list[str]) -> dict:
     return {"error": f"未知子命令: {subcmd}"}
 
 
+async def cmd_cost(args: list[str]) -> dict:
+    """API成本追踪 — report / alert / daily / record"""
+    from molib.cost import report, check_alerts, get_daily_stats, record as cost_record
+
+    if not args or args[0] == "report":
+        stats = report()
+        return stats
+
+    if args[0] == "alert":
+        alerts = check_alerts()
+        return {"alerts": alerts, "healthy": len(alerts) == 0}
+
+    if args[0] == "daily":
+        days = int(args[1]) if len(args) > 1 else 7
+        trend = get_daily_stats(days=days)
+        return {"days": days, "trend": trend}
+
+    if args[0] == "record":
+        kwargs = {"model": "unknown", "input_tokens": 0, "output_tokens": 0, "images": 0, "task": ""}
+        i = 1
+        while i < len(args):
+            if args[i] == "--input" and i + 1 < len(args):
+                kwargs["input_tokens"] = int(args[i + 1]); i += 2
+            elif args[i] == "--output" and i + 1 < len(args):
+                kwargs["output_tokens"] = int(args[i + 1]); i += 2
+            elif args[i] == "--model" and i + 1 < len(args):
+                kwargs["model"] = args[i + 1]; i += 2
+            elif args[i] == "--task" and i + 1 < len(args):
+                kwargs["task"] = args[i + 1]; i += 2
+            elif args[i] == "--images" and i + 1 < len(args):
+                kwargs["images"] = int(args[i + 1]); i += 2
+            else:
+                i += 1
+        cost = cost_record(**kwargs)
+        return {"cost": cost, **kwargs}
+
+    return {"error": f"未知: {args[0]}，支持: report | alert | daily [N] | record"}
+
+
 async def cmd_handoff(args: list[str]) -> dict:
     """Handoff自动路由命令 — list / route / history"""
     from molib.agencies.handoff_register import register_all_handoffs
@@ -517,6 +559,7 @@ async def run(command: str, args: list[str]) -> dict:
         "trading": cmd_trading,
         "handoff": cmd_handoff,
         "plan": cmd_plan,
+        "cost": cmd_cost,
     }
 
     if command in sync_commands:

@@ -45,9 +45,7 @@ class SubsidiaryWorker(ABC):
                        model: str = "deepseek-v4-flash") -> str:
         """
         简便的 LLM 调用，供 Worker 实现使用。
-
-        调用 molib/ceo/llm_client.py 的 LLMClient。
-        如果导入失败或调用失败，返回空字符串。
+        自动记录成本到 cost.db。
         """
         try:
             from molib.ceo.llm_client import LLMClient
@@ -56,7 +54,18 @@ class SubsidiaryWorker(ABC):
             if system:
                 messages.append({"role": "system", "content": system})
             messages.append({"role": "user", "content": prompt})
-            return await client.chat(messages, model=model)
+            result = await client.chat(messages, model=model)
+            # 估算 token 并记成本
+            try:
+                from molib.cost import record
+                input_tokens = len(prompt) // 1  # 粗略估算
+                output_tokens = len(result) // 2
+                record(model=model, input_tokens=input_tokens,
+                       output_tokens=output_tokens,
+                       task=f"worker:{self.worker_id}")
+            except Exception:
+                pass
+            return result
         except Exception:
             return ""
 
