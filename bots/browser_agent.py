@@ -138,19 +138,130 @@ def build_llm() -> Any:
 
 
 # ── Browser 工厂 ──────────────────────────────────────
+import atexit
+import subprocess
+import urllib.request
+import json as _json
+import time
+from pathlib import Path
+
+# 全局 Chromium 进程/端口管理
+_CHROME_PROC: Any = None
+_CHROME_PORT: int | None = None
+
+
+def _find_chrome_path() -> Path:
+    """找到 playwright 安装的 Chromium 可执行文件。"""
+    candidates = [
+        Path.home() / ".cache/ms-playwright/chromium-1217/chrome-linux64/chrome",
+        Path.home() / ".cache/ms-playwright/chromium-*/chrome-linux64/chrome",
+        Path("/usr/bin/chromium"),
+        Path("/usr/bin/chromium-browser"),
+        Path("/usr/bin/google-chrome"),
+    ]
+    for c in candidates:
+        if c.exists():
+            return c
+    # glob 匹配版本号
+    import glob
+    matches = sorted(glob.glob(str(Path.home() / ".cache/ms-playwright/chromium-*/chrome-linux64/chrome")))
+    if matches:
+        return Path(matches[-1])
+    raise FileNotFoundError("未找到 Chromium 可执行文件。运行: playwright install chromium")
+
+
+def _start_chrome_cdp(headless: bool = True, port: int = 0) -> tuple[subprocess.Popen, int, str]:
+    """手动启动 Chromium 带 --remote-debugging-port，返回 (进程, 端口, CDP WebSocket URL)。"""
+    global _CHROME_PROC, _CHROME_PORT
+    
+    chrome_path = _find_chrome_path()
+    actual_port = _CHROME_PORT or (port if port else 9222)
+    
+    # 如果已有运行的 chrome 进程，直接复用
+    if _CHROME_PROC and _CHROME_PROC.poll() is None:
+        try:
+            resp = urllib.request.urlopen(f"http://127.0.0.1:{actual_port}/json/version", timeout=3)
+            data = _json.loads(resp.read().decode())
+            ws_url = data.get("webSocketDebuggerUrl", "")
+            if ws_url:
+                logger.info("♻️ 复用已有 Chrome 进程: port=%d", actual_port)
+                return _CHROME_PROC, actual_port, ws_url
+        except Exception:
+            logger.info("旧 Chrome 进程不可用，重新启动")
+            _kill_chrome()
+    
+    cmd = [
+        str(chrome_path),
+        "--headless" if headless else "",
+        f"--remote-debugging-port={actual_port}",
+        "--no-sandbox",
+        "--disable-gpu",
+        "--disable-dev-shm-usage",
+        "--disable-setuid-sandbox",
+        "--no-first-run",
+        "--disable-extensions",
+    ]
+    cmd = [c for c in cmd if c]  # 去掉空字符串
+    
+    logger.info("🚀 启动 Chrome (CDP port=%d): %s", actual_port, chrome_path.name)
+    proc = subprocess.Popen(
+        cmd,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    
+    # 等待 CDP 就绪
+    for attempt in range(20):
+        time.sleep(0.5)
+        try:
+            resp = urllib.request.urlopen(f"http://127.0.0.1:{actual_port}/json/version", timeout=3)
+            data = _json.loads(resp.read().decode())
+            ws_url = data.get("webSocketDebuggerUrl", "")
+            if ws_url:
+                _CHROME_PROC = proc
+                _CHROME_PORT = actual_port
+                atexit.register(_kill_chrome)
+                logger.info("✅ Chrome 就绪: %s", ws_url[:60])
+                return proc, actual_port, ws_url
+        except Exception:
+            continue
+    
+    proc.kill()
+    raise RuntimeError(f"Chrome 启动超时 (port={actual_port})")
+
+
+def _kill_chrome():
+    """清理 Chrome 进程。"""
+    global _CHROME_PROC
+    if _CHROME_PROC and _CHROME_PROC.poll() is None:
+        try:
+            _CHROME_PROC.terminate()
+            _CHROME_PROC.wait(timeout=5)
+        except Exception:
+            _CHROME_PROC.kill()
+        _CHROME_PROC = None
+
+
 def build_browser(headless: bool = True, proxy: str | None = None) -> Any:
+    """构造 browser-use BrowserSession 实例。
+    
+    绕过 browser-use v0.12.6 BrowserSession.start() 事件总线超时bug。
+    方案：手动启动 Chromium + --remote-debugging-port → 获取 CDP URL → 传入 BrowserSession。
+    BrowserSession 收到 cdp_url 后直接 connect()，不走内部 LaunchEvent → Watchdog 路径。
     """
-    构造 browser-use Browser 实例。
-
-    在 browser-use v0.12.6 中，Browser 类可直接从 browser_use 导入
-    （通过延迟加载机制），其构造参数直接传给底层 playwright。
-    """
-    from browser_use import Browser  # noqa: PLC0415
-
-    kwargs: dict[str, Any] = {"headless": headless}
+    _, _, cdp_url = _start_chrome_cdp(headless=headless)
+    logger.info("🔗 连接 CDP: %s", cdp_url[:60])
+    
+    from browser_use.browser.session import BrowserSession  # type: ignore  # noqa: PLC0415
+    
+    kwargs: dict[str, Any] = {
+        "cdp_url": cdp_url,
+        "headless": headless,
+    }
     if proxy:
         kwargs["proxy"] = {"server": proxy}
-    return Browser(**kwargs)
+    session = BrowserSession(**kwargs)
+    return session
 
 
 # ── 结果数据模型 ──────────────────────────────────────
@@ -248,7 +359,8 @@ def browser_agent(
             agent_kwargs["save_conversation_path"] = save_conversation
             agent_kwargs["generate_gif"] = True
         if browser is not None:
-            agent_kwargs["browser"] = browser
+            # browser 现在是 BrowserSession 实例（通过 CDP 连接）
+            agent_kwargs["browser_session"] = browser
 
         agent = Agent(**agent_kwargs)
 
