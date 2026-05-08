@@ -312,6 +312,89 @@ class FeishuCardSender:
         )
         return r.json()
 
+    # ── feishu-cli 集成 ────────────────────────────────────────────
+
+    @staticmethod
+    def send_via_cli(chat_id: str, text: str) -> dict:
+        """通过 feishu-cli 发送文本消息（优先走 CLI）"""
+        import subprocess, json
+        try:
+            r = subprocess.run(
+                ["feishu-cli", "msg", "send",
+                 "--receive-id", chat_id,
+                 "--receive-id-type", "chat_id",
+                 "--text", text,
+                 "-o", "json"],
+                capture_output=True, text=True, timeout=15,
+            )
+            if r.returncode == 0:
+                return json.loads(r.stdout)
+            return {"error": r.stderr[:200]}
+        except Exception as e:
+            return {"error": str(e)}
+
+    @staticmethod
+    def send_card_via_cli(chat_id: str, card_dict: dict) -> dict:
+        """通过 feishu-cli 发送原生 interactive 卡片"""
+        import subprocess, json, tempfile
+        try:
+            # feishu-cli 的 --content-file 只需 card JSON（不含外层 msg_type）
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+                json.dump(card_dict, f, ensure_ascii=False)
+                fpath = f.name
+            r = subprocess.run(
+                ["feishu-cli", "msg", "send",
+                 "--receive-id", chat_id,
+                 "--receive-id-type", "chat_id",
+                 "--msg-type", "interactive",
+                 "--content-file", fpath,
+                 "-o", "json"],
+                capture_output=True, text=True, timeout=15,
+            )
+            import os; os.unlink(fpath)
+            if r.returncode == 0:
+                return json.loads(r.stdout)
+            return {"error": r.stderr[:300]}
+        except Exception as e:
+            return {"error": str(e)}
+
+    @staticmethod
+    def doc_create(title: str, content_path: str = "") -> dict:
+        """通过 feishu-cli 创建文档或导入 Markdown"""
+        import subprocess, json
+        try:
+            if content_path:
+                r = subprocess.run(
+                    ["feishu-cli", "doc", "import", content_path,
+                     "--title", title, "--upload-images", "-o", "json"],
+                    capture_output=True, text=True, timeout=60,
+                )
+            else:
+                r = subprocess.run(
+                    ["feishu-cli", "doc", "create", "--title", title, "-o", "json"],
+                    capture_output=True, text=True, timeout=15,
+                )
+            if r.returncode == 0:
+                return json.loads(r.stdout)
+            return {"error": r.stderr[:300]}
+        except Exception as e:
+            return {"error": str(e)}
+
+    @staticmethod
+    def bitable_create(name: str) -> dict:
+        """通过 feishu-cli 创建多维表格"""
+        import subprocess, json
+        try:
+            r = subprocess.run(
+                ["feishu-cli", "bitable", "create", name, "--json"],
+                capture_output=True, text=True, timeout=15,
+            )
+            if r.returncode == 0:
+                return json.loads(r.stdout)
+            return {"error": r.stderr[:300]}
+        except Exception as e:
+            return {"error": str(e)}
+
     @classmethod
     def send_status_card(cls, chat_id: str, title: str = "", status_items: list[tuple[str, str]] | None = None, alerts: list[str] | None = None, actions: list[str] | None = None) -> dict:
         """一键发送状态概览卡片"""
