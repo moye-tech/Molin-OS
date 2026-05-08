@@ -14,7 +14,7 @@ setup(
     version="5.0.0",
     author="moye-tech",
     author_email="fengye940708@gmail.com",
-    description="墨麟OS — AI一人公司操作系统 (6层·290技能·25Worker·¥52K/月)",
+    description="墨麟OS — AI一人公司操作系统 (6层·492技能·22Worker·¥52K/月)",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/moye-tech/Molin-OS",

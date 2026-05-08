@@ -101,7 +101,7 @@ python -m molib skill-store install --package xxx
 python -m molib skill-store list
 ```
 
-## 25家 Worker 与 22家子公司映射
+## 22家 Worker 与 20家子公司映射
 
 ### VP 营销（5家）
 | 统一名称 | Worker 文件 | 核心能力 | 所属技能 |
@@ -147,7 +147,7 @@ python -m molib skill-store list
 | 墨脑知识 | knowledge.py | 知识管理、RAG、长期记忆 | molin-memory, supermemory, gitnexus |
 | 墨测数据 | data_analyst.py | 数据分析、测试、质量 | molin-data-analytics, molin-vizro |
 
-### 专项预置（3家 — 非标准22家，专用领域）
+### 专项预置（2家 — 非标准20家，专用领域）
 | Worker | 核心能力 | 说明 |
 |:-------|:---------|:-----|
 | trading.py | 量化交易策略·信号·回测 | 已激活，CLI: `python -m molib trading` |

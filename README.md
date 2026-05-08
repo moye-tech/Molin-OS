@@ -8,15 +8,15 @@
 # Molin OS — AI 一人公司操作系统
 
 <p align="center">
-  <strong>6 层架构 · 290 项技能 · 25 个 Worker · 22 家营收子系统</strong><br>
+  <strong>6 层架构 · 492 项技能 · 22 个 Worker · 20 家营收子系统</strong><br>
   一个人就是一个集团
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/python-3.12+-00b894?style=flat-square&logo=python" alt="Python">
   <img src="https://img.shields.io/badge/license-MIT-00b894?style=flat-square" alt="License">
-  <img src="https://img.shields.io/badge/skills-290-success?style=flat-square" alt="Skills">
-  <img src="https://img.shields.io/badge/workers-25-success?style=flat-square" alt="Workers">
+  <img src="https://img.shields.io/badge/skills-492-success?style=flat-square" alt="Skills">
+  <img src="https://img.shields.io/badge/workers-22-success?style=flat-square" alt="Workers">
   <img src="https://img.shields.io/badge/status-v5.0-blueviolet?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/absorbed-27%20projects-10b981?style=flat-square" alt="Absorbed">
   <img src="https://img.shields.io/badge/revenue-%C2%A552K%2Fmonth-ff6b6b?style=flat-square" alt="Revenue">
@@ -26,7 +26,7 @@
 
 ## 概述
 
-**Molin OS** 是一个人用一台服务器即可运营的 AI 公司操作系统。系统包含 22 个垂直营收子系统（墨笔文创、墨域私域、墨码开发等），每个子系统有专属 Worker 执行文件和 Hermes 技能库。Hermes Agent 作为 CEO 大脑，通过统一的 CLI 入口调动所有子系统。系统采用**零空转设计**——有任务才消耗 token。
+**Molin OS** 是一个人用一台服务器即可运营的 AI 公司操作系统。系统包含 20 个垂直营收子系统（墨笔文创、墨域私域、墨码开发等），每个子系统有专属 Worker 执行文件和 Hermes 技能库。Hermes Agent 作为 CEO 大脑，通过统一的 CLI 入口调动所有子系统。系统采用**零空转设计**——有任务才消耗 token。
 
 - **仓库**: [github.com/moye-tech/Molin-OS](https://github.com/moye-tech/Molin-OS)
 - **许可**: MIT License © 2026 Moye Tech
@@ -55,7 +55,7 @@
 └──────────────────┬──────────────────────────────┘
                    │  决策流
     ┌──────────────┼─────────────────────┐
-    │ L1 营收子系统 (22 家)               │
+    │ L1 营收子系统 (20 家)               │
     │ ┌─ 营销(5) ──┐ ┌─ 运营(4) ────┐  │
     │ │ 墨笔·墨韵· │ │ 墨域·墨声·     │  │
     │ │ 墨图·墨播· │ │ 墨链·墨学       │  │
@@ -82,9 +82,9 @@
 
 | 指标 | 数值 |
 |:----|:----:|
-| 自主研发技能 | 290 个 SKILL.md |
-| Worker 文件 | 25 个（`molib/agencies/workers/`） |
-| 营收子系统 | 22 家（5 营销 + 4 运营 + 4 技术 + 1 财务 + 3 战略 + 3 共同 + 2 预置） |
+| 自主研发技能 | 492 个 SKILL.md |
+| Worker 文件 | 22 个（`molib/agencies/workers/`） |
+| 营收子系统 | 20 家（5 营销 + 4 运营 + 4 技术 + 1 财务 + 3 战略 + 3 共同） |
 | 已吸收开源项目 | 27 个（~520K⭐） |
 | Handoff 自动路由 | 16 家子系统已注册 |
 | CLI 命令 | 25+ 统一入口 |
@@ -217,7 +217,7 @@ Molin-OS/
 │   │   ├── handoff.py            # Handoff 自动路由
 │   │   ├── handoff_register.py   # 16 家 Worker 注册
 │   │   ├── planning.py           # 规划分解引擎
-│   │   └── workers/              # 25 个 Worker 文件
+│   │   └── workers/              # 22 个 Worker 文件
 │   ├── shared/                   # L3 共享能力层
 │   │   ├── ai/                   # LLM 客户端·视觉·Browser Agent
 │   │   ├── analysis/             # 分析·评价·预测引擎
@@ -237,7 +237,7 @@ Molin-OS/
 ├── relay/                        # 飞轮接力数据
 ├── cron/jobs.yaml                # 8 个定时作业
 ├── tests/                        # 6 个测试模块
-├── skills/                       # 290 个 SKILL.md
+├── skills/                       # 492 个 SKILL.md
 ├── setup.py                      # pip 安装
 ├── requirements.txt              # Python 依赖
 ├── setup.sh                      # 一键部署
