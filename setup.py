@@ -17,7 +17,7 @@ setup(
     description="墨麟OS — AI一人公司操作系统 (6层·290技能·25Worker·¥52K/月)",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/moye-tech/-Hermes-OS",
+    url="https://github.com/moye-tech/Molin-OS",
     packages=find_packages(include=["molib", "molib.*", "molin", "molin.*"]),
     classifiers=[
         "Development Status :: 4 - Beta",

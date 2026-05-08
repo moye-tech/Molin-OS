@@ -70,7 +70,7 @@
 |:-:|:-----|:------|
 | 38 | hermes-agent | ✅ 正在用的就是这个系统 |
 | 39 | molin-ai-intelligent-system | ✅ 用户自己的项目，已参考 |
-| 40 | -Hermes-OS | ✅ 已完全集成 |
+| 40 | Molin-OS | ✅ 已完全集成 |
 | 41 | moye-tech.github.io | 个人页面 |
 | 42 | Edu | 用户自己的项目 |
 | 43 | claude-code / ClaudeCode | Claude Code CLI，Hermes已封装 |

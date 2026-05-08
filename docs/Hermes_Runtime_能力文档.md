@@ -103,8 +103,8 @@ Hermes Agent（运行时）
 pip install hermes-agent  # 或使用官方安装脚本
 
 # 2. 克隆 Hermes OS 仓库
-git clone https://github.com/moye-tech/-Hermes-OS.git
-cd -Hermes-OS
+git clone https://github.com/moye-tech/Molin-OS.git
+cd Molin-OS
 
 # 3. 同步技能到 Hermes
 bash tools/sync-skills.sh  # 将 skills/ 复制到 ~/.hermes/skills/

@@ -40,7 +40,7 @@ cd <repo> && git remote -v
 Key repos to look for:
 - `moye-tech/claude-code` — Reverse-engineered Claude Code CLI
 - `moye-tech/molin-ai-intelligent-system` — 墨麟 AI 智能系统架构参考
-- `moye-tech/-Hermes-OS` — Hermes OS 墨麟增强层
+- `moye-tech/Molin-OS` — Molin OS 墨麟AI一人公司操作系统
 - Any other `moye-tech/*` repos
 
 ### Phase 2: Map Each Repo's Structure
@@ -84,7 +84,7 @@ find integrations/ -maxdepth 2 -name "*.py" | sort
 ls hermes_fusion/ strategy/ sop/ external/
 ```
 
-For **Hermes-OS** repos:
+For **Molin-OS** repos:
 ```bash
 # Python modules
 find molin/ -name "*.py" | sort

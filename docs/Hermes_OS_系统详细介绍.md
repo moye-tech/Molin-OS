@@ -1,7 +1,7 @@
 # 墨麟 Hermes OS — 系统详细介绍
 
 > 生成于 2026-05-04 · 基于当前运行中的系统状态
-> GitHub: [moye-tech/-Hermes-OS](https://github.com/moye-tech/-Hermes-OS)
+> GitHub: [moye-tech/Molin-OS](https://github.com/moye-tech/Molin-OS)
 
 ---
 
@@ -185,8 +185,8 @@ Layer 3: 墨麟 Hermes OS（技能体系 + 定时作业）
 pip install hermes-agent
 
 # 2. 克隆仓库
-git clone https://github.com/moye-tech/-Hermes-OS.git
-cd -Hermes-OS
+git clone https://github.com/moye-tech/Molin-OS.git
+cd Molin-OS
 
 # 3. 同步技能
 bash tools/sync-skills.sh
