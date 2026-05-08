@@ -1,4 +1,4 @@
-"""墨域OS — FastAPI主入口（L1/L2/L3 整合）
+"""墨麟OS — FastAPI主入口（L1/L2/L3 整合）
 """
 import json, os, sys
 from pathlib import Path
@@ -27,7 +27,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="墨域OS", version="v1.0", lifespan=lifespan)
+app = FastAPI(title="墨麟OS", version="v1.0", lifespan=lifespan)
 
 
 class TaskRequest(BaseModel):

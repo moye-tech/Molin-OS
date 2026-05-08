@@ -1,5 +1,5 @@
 """
-墨域OS — L1 CEO编排器
+墨麟OS — L1 CEO编排器
 =======================
 完整工作流：
 1. IntentRouter.analyze() — 意图分析

@@ -1,5 +1,5 @@
 """
-墨域OS — 数据备份脚本
+墨麟OS — 数据备份脚本
 ====================
 备份路径：
   ~/hermes-os/config/     — 配置文件（28K）
@@ -139,7 +139,7 @@ def _cleanup():
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="墨域OS数据备份")
+    parser = argparse.ArgumentParser(description="墨麟OS数据备份")
     parser.add_argument("--list", action="store_true", help="列出备份快照")
     parser.add_argument("--clean", action="store_true", help="清理过期备份")
     return parser.parse_args()

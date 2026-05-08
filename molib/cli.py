@@ -1,4 +1,4 @@
-"""墨域OS — CLI入口
+"""墨麟OS — CLI入口
 一键运行整个一人公司操作系统
 
 用法:
@@ -26,7 +26,7 @@ async def cmd_run(text: str):
     register_all()
 
     print(f"\n{'═'*50}")
-    print(f"  墨域OS — 任务执行")
+    print(f"  墨麟OS — 任务执行")
     print(f"{'═'*50}")
     print(f"  输入: {text}\n")
 
@@ -98,7 +98,7 @@ def cmd_vps():
 
     vps = get_all_vps()
     print(f"\n{'═'*50}")
-    print(f"  墨域OS — VP管理层 ({len(vps)}位)")
+    print(f"  墨麟OS — VP管理层 ({len(vps)}位)")
     print(f"{'═'*50}")
 
     for vp in vps:
@@ -115,7 +115,7 @@ def cmd_workers():
     workers = list_workers()
 
     print(f"\n{'═'*50}")
-    print(f"  墨域OS — 子公司 ({len(workers)}家)")
+    print(f"  墨麟OS — 子公司 ({len(workers)}家)")
     print(f"{'═'*50}")
 
     # 按VP分组
@@ -141,7 +141,7 @@ def cmd_workers():
 def cmd_health():
     """系统健康检查"""
     print(f"\n{'═'*50}")
-    print(f"  墨域OS — 系统健康检查")
+    print(f"  墨麟OS — 系统健康检查")
     print(f"{'═'*50}")
 
     checks = {}

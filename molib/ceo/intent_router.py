@@ -1,5 +1,5 @@
 """
-墨域OS — L1 CEO意图路由器 (合并版)
+墨麟OS — L1 CEO意图路由器 (合并版)
 ======================================
 整合关键词路由 + LLM语义路由 + 缓存 + 问候拦截 的四层架构。
 
@@ -510,7 +510,7 @@ class IntentRouter:
 
         profile_text = "\n".join(profile_lines)
 
-        system_prompt = f"""你是墨域OS的CEO意图分析员。分析用户输入，判断应该调度哪些子公司。
+        system_prompt = f"""你是墨麟OS的CEO意图分析员。分析用户输入，判断应该调度哪些子公司。
 
 子公司能力清单：
 {profile_text}

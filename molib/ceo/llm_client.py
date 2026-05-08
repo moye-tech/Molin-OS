@@ -1,5 +1,5 @@
 """
-墨域OS — LLM Client 包装器
+墨麟OS — LLM Client 包装器
 ============================
 对接 DeepSeek API（直接 HTTP 调用），供 PhaseExecutor 和 QualityGate 使用。
 

@@ -1,4 +1,4 @@
-"""molib.shared — 墨域OS共享能力层
+"""molib.shared — 墨麟OS共享能力层
 
 13个子包的统一导出入口。各子包可按需导入：
   from molib.shared.agent import Seed

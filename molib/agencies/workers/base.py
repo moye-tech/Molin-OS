@@ -1,4 +1,4 @@
-"""墨域OS — 子公司Worker基类"""
+"""墨麟OS — 子公司Worker基类"""
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Generic, Optional, TypeVar

@@ -1,5 +1,5 @@
 """
-墨域OS — 飞书原生 Interactive 卡片构建器 & 发送器
+墨麟OS — 飞书原生 Interactive 卡片构建器 & 发送器
 =================================================
 生成飞书 Open API msg_type: interactive 格式的卡片 JSON，
 并通过飞书 Open API 直接发送（独立于 Hermes 的发送管道）。
@@ -148,7 +148,7 @@ def build_status_card(title: str, status_items: list[tuple[str, str]], alerts: l
         card.add_hr()
         card.add_section("🎯 建议行动", actions)
     card.add_hr()
-    card.add_note(f"墨域OS · {_timestamp()}")
+    card.add_note(f"墨麟OS · {_timestamp()}")
     return card.build()
 
 
@@ -186,7 +186,7 @@ def build_daily_briefing_card(date: str, stats: dict[str, Any], highlights: list
     if warnings:
         card.add_hr()
         card.add_section("⚠️ 需关注", warnings)
-    card.add_note(f"墨域OS CEO引擎 · {_timestamp()}")
+    card.add_note(f"墨麟OS CEO引擎 · {_timestamp()}")
     return card.build()
 
 
@@ -198,7 +198,7 @@ def build_report_card(report_type: str, content: str, meta: dict[str, str] | Non
         card.add_hr()
         for k, v in meta.items():
             card.add_field(k, v)
-    card.add_note(f"墨域OS · {_timestamp()}")
+    card.add_note(f"墨麟OS · {_timestamp()}")
     return card.build()
 
 
@@ -211,7 +211,7 @@ def build_task_card(task_id: str, description: str, status: str, assignee: str =
     card.add_fields_row([("状态", status), ("优先级", priority)])
     if assignee:
         card.add_field("👤 负责人", assignee)
-    card.add_note(f"墨域OS · {_timestamp()}")
+    card.add_note(f"墨麟OS · {_timestamp()}")
     return card.build()
 
 
@@ -225,7 +225,7 @@ def build_simple_card(title: str, lines: list[str], color: str = BLUE) -> dict:
             card.add_div(f"**{line[3:]}**")
         else:
             card.add_div(line)
-    card.add_note(f"墨域OS · {_timestamp()}")
+    card.add_note(f"墨麟OS · {_timestamp()}")
     return card.build()
 
 
@@ -457,17 +457,27 @@ def feishu_cli_available() -> bool:
 
 
 def feishu_send_card(card_dict: dict, chat_id: str = None) -> dict:
-    """用 feishu-cli 发送原生 interactive 卡片（解决文本噪声问题）"""
+    """用 feishu-cli 发送原生 interactive 卡片（解决文本噪声问题）
+    
+    参数:
+        card_dict: 卡片 JSON dict
+        chat_id: 目标群 ID（默认: oc_94c87f141e118b68c2da9852bf2f3bda 墨麟自动化控制台）
+    
+    返回:
+        {"success": bool, "output": str}
+    """
     import subprocess, json, tempfile
     if chat_id is None:
-        chat_id = os.environ.get("FEISHU_CHAT_ID", "")
+        chat_id = "oc_94c87f141e118b68c2da9852bf2f3bda"
     card_json = json.dumps(card_dict, ensure_ascii=False)
     with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
         f.write(card_json)
         card_file = f.name
     try:
         r = subprocess.run(
-            ["feishu-cli", "msg", "send", "--chat-id", chat_id,
+            ["feishu-cli", "msg", "send",
+             "--receive-id-type", "chat_id",
+             "--receive-id", chat_id,
              "--msg-type", "interactive", "--content-file", card_file],
             capture_output=True, text=True, timeout=15)
         return {"success": r.returncode == 0, "output": r.stdout or r.stderr}

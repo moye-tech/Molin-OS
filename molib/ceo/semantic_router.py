@@ -1,5 +1,5 @@
 """
-墨域OS — L2 CEO语义路由引擎
+墨麟OS — L2 CEO语义路由引擎
 =====================================
 将意图路由从"关键词匹配"升级为"LLM语义理解+历史缓存"。
 
@@ -325,7 +325,7 @@ class SemanticRouter:
 
         profile_text = "\n".join(profile_lines)
 
-        system_prompt = f"""你是墨域OS的CEO意图分析员。分析用户输入，判断应该调度哪些子公司。
+        system_prompt = f"""你是墨麟OS的CEO意图分析员。分析用户输入，判断应该调度哪些子公司。
 
 子公司能力清单：
 {profile_text}

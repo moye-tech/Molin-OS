@@ -1,5 +1,5 @@
 """
-墨域OS — Phase1+Phase2 两阶段执行器 + LLM 质量门控
+墨麟OS — Phase1+Phase2 两阶段执行器 + LLM 质量门控
 =====================================================
 废弃"直接让LLM编内容"的模式，改为：
 
@@ -154,7 +154,7 @@ class Phase1Executor:
         )
 
         prompt = (
-            f"你是墨域OS的执行规划员。根据任务描述和交付标准，规划需要哪些工具。\n\n"
+            f"你是墨麟OS的执行规划员。根据任务描述和交付标准，规划需要哪些工具。\n\n"
             f"任务描述: {input_data.task_description}\n"
             f"交付标准: {input_data.deliverable_spec}\n\n"
             f"可用工具:\n{tools_desc}\n\n"
@@ -302,7 +302,7 @@ class Phase2Executor:
 
         # 启用 reasoning_effort 做复杂决策
         system_prompt = (
-            f"你是墨域OS的{sector['description']}专家。\n\n"
+            f"你是墨麟OS的{sector['description']}专家。\n\n"
             f"交付标准:\n{input_data.deliverable_spec}\n\n"
             f"质量要求:\n{criteria_text}\n\n"
             f"可用的原始素材:\n{materials_text}\n\n"

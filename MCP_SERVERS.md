@@ -1,4 +1,4 @@
-# 墨域OS · MCP 服务器配置中心
+# 墨麟OS · MCP 服务器配置中心
 
 本文档列出系统中注册的所有 MCP (Model Context Protocol) 服务器，
 作为 Agent 能力外挂的标准化接口。
@@ -68,4 +68,4 @@ tail -f ~/.hermes/logs/mcp-*.log
 
 ---
 
-*更新于 2026-05-06 — 对应墨域OS v1.0*
+*更新于 2026-05-06 — 对应墨麟OS v1.0*

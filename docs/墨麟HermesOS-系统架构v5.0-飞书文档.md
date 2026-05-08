@@ -328,7 +328,7 @@
 ### 8.1 代码结构
 
 ```
-molib/                          # 墨域OS Python 代码库
+molib/                          # 墨麟OS Python 代码库
 ├── cli.py                      # CLI入口: python3 -m molib.cli
 ├── dashboard.py                # 零依赖运营大盘
 │

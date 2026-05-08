@@ -1,4 +1,4 @@
-"""墨域OS — 子公司Worker注册表"""
+"""墨麟OS — 子公司Worker注册表"""
 from .base import SubsidiaryWorker, WorkerRegistry, Task, WorkerResult
 
 from .content_writer import ContentWriter
