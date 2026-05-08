@@ -20,6 +20,11 @@ from molib.ceo.intent_router import IntentRouter, IntentResult
 from molib.ceo.risk_engine import RiskEngine, RiskAssessment
 from molib.ceo.sop_store import SOPStore
 from molib.ceo.dag_engine import DAGEngine, DAGResult
+from molib.ceo.phase_executor import (
+    Phase2Executor, QualityGate,
+    Phase2Input,
+)
+from molib.ceo.llm_client import LLMClient
 from molib.management.vp_registry import get_all_vps, get_vp
 
 logger = logging.getLogger("molin.ceo.orchestrator")
@@ -37,6 +42,7 @@ class CEOOrchestrator:
         self,
         use_worker_system: bool = True,
         sop_store: SOPStore | None = None,
+        llm_client: LLMClient | None = None,
     ):
         self.intent_router = IntentRouter()
         self.risk_engine = RiskEngine()
@@ -44,6 +50,11 @@ class CEOOrchestrator:
         self.sop_store = sop_store or SOPStore()
         self._vps: list | None = None  # 懒加载
         self.use_worker_system = use_worker_system
+
+        # ── LLM Client（供 Phase Executor & QualityGate 使用） ──
+        self.llm_client = llm_client or LLMClient()
+        self.phase2_executor = Phase2Executor(self.llm_client)
+        self.quality_gate = QualityGate(self.llm_client)
 
     @property
     def vps(self):
@@ -145,8 +156,14 @@ class CEOOrchestrator:
             intent, risk, context, budget, timeline, dag=dag,
         )
 
-        # ── 步骤4: 写入SOP ──────────────────────────────────────
-        quality = execution_result.get("quality_summary", {}).get("avg_score", 0.0)
+        # ── 步骤4.5: LLM 质量门控 ───────────────────────────────
+        # 对执行结果中的交付物做 QualityGate 评估
+        quality_gate_result = await self._run_quality_gate(
+            user_input, execution_result, intent,
+        )
+
+        # ── 步骤5: 写入SOP ──────────────────────────────────────
+        quality = quality_gate_result.get("score", 0.0)
         duration = time.time() - start_time
         sop_id = self.sop_store.save(
             task_id=task_id,
@@ -185,6 +202,7 @@ class CEOOrchestrator:
                 "privacy_risk": risk.privacy_risk,
             },
             "execution": execution_result,
+            "quality_gate": quality_gate_result,
             "dag": execution_result.get("dag_summary"),
             "sop_record_id": sop_id,
             "duration": round(duration, 3),
@@ -491,6 +509,7 @@ class CEOOrchestrator:
                 "flags": risk.flags,
             },
             "execution": None,
+            "quality_gate": None,
             "duration": round(time.time() - start_time, 3),
             "sop_record_id": None,
             "note": "因风险评分超过阈值自动拒绝",
@@ -517,6 +536,72 @@ class CEOOrchestrator:
 
         avg = sum(scores) / len(scores) if scores else 0.0
         return avg, passed, total
+
+    # ═══════════════════════════════════════════════════════════════
+    # LLM 质量门控
+    # ═══════════════════════════════════════════════════════════════
+
+    async def _run_quality_gate(
+        self,
+        user_input: str,
+        execution_result: dict,
+        intent: IntentResult,
+    ) -> dict:
+        """
+        对执行结果运行 LLM QualityGate。
+
+        从执行结果中提取交付物（details/result字段），
+        用 Phase2Executor 的 QualityGate 做 1-10 打分。
+        """
+        # 提取交付物内容
+        deliverables = []
+        for detail in execution_result.get("results", []):
+            for sub in detail.get("details", []):
+                text = sub.get("result", {})
+                if isinstance(text, dict):
+                    text = str(text.get("output", ""))
+                if isinstance(text, str) and len(text) > 50:
+                    deliverables.append(text)
+
+        if not deliverables:
+            # 无交付物可评估，使用内置的质量评分
+            qs = execution_result.get("quality_summary", {})
+            return {
+                "score": qs.get("avg_score", 0.0),
+                "passed": qs.get("passed_count", 0) > 0,
+                "issues": ["无交付物内容，使用内置评分"],
+                "model_used": "none",
+            }
+
+        # 只评估第一个主要交付物（避免过多token消耗）
+        primary = deliverables[0][:2000]
+        subsidiary = intent.target_subsidiaries[0] if intent.target_subsidiaries else "default"
+
+        try:
+            result = await self.quality_gate.evaluate(
+                task_description=user_input,
+                deliverable=primary,
+                subsidiary=subsidiary,
+            )
+            logger.info(
+                "[QualityGate] 评估完成: score=%d/10 passed=%s model=%s",
+                result.score, result.passed, result.model_used,
+            )
+            return {
+                "score": result.score,
+                "passed": result.passed,
+                "issues": result.issues,
+                "improvements": result.improvement_suggestions,
+                "model_used": result.model_used,
+            }
+        except Exception as e:
+            logger.error("[QualityGate] 评估异常: %s", e)
+            return {
+                "score": 0.0,
+                "passed": False,
+                "issues": [f"评估异常: {e}"],
+                "model_used": "none",
+            }
 
     # ── 便捷方法 ──────────────────────────────────────────────────
 

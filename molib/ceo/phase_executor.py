@@ -170,7 +170,7 @@ class Phase1Executor:
             f"- 最多规划3个工具，按执行顺序排列"
         )
 
-        response = self._llm.chat([
+        response = await self._llm.chat([
             {"role": "system", "content": "你是一个严谨的执行规划员。只输出JSON。"},
             {"role": "user", "content": prompt},
         ], model="deepseek-v4-flash")
@@ -313,7 +313,7 @@ class Phase2Executor:
             f"4. 交付物应附带一段使用说明"
         )
 
-        response = self._llm.chat([
+        response = await self._llm.chat([
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": f"任务: {input_data.task_description}"},
         ], model=model)
@@ -399,7 +399,7 @@ class QualityGate:
             f"通过线: >= {pass_threshold}"
         )
 
-        response = self._llm.chat([
+        response = await self._llm.chat([
             {"role": "system", "content": "你是一个严格的评审员。评分必须客观，不偏袒。"},
             {"role": "user", "content": prompt},
         ], model=model)

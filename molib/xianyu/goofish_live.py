@@ -190,7 +190,15 @@ class XianyuLive:
             msg["body"][0]["content"]["custom"]["data"] = image_base64
         elif msg_type == "audio":
             # TODO: handle audio message
-            logger.error(f"不支持的消息类型: {msg_type}")
+            # 需要 ASR 管线：下载音频 → Whisper/ASR 转文本 → 自动回复
+            # 实现步骤：
+            # 1. 从 msg["body"][0]["content"]["data"] 提取音频 URL
+            # 2. 下载音频文件到临时目录
+            # 3. 调用 Whisper API（百炼/本地）识别文字
+            # 4. 将识别文本传给 AI 生成回复
+            # 5. 用 send_text_message() 回复
+            # 优先级：P3 — 当前闲鱼消息 99% 为文本，音频占比极小
+            logger.warning(f"音频消息暂不支持 (msg_id={msg_id})")
             return
         else:
             logger.error(f"不支持的消息类型: {msg_type}")
