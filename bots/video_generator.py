@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 """
-CH4-G MoneyPrinterTurbo 视频生成器 —— 占位脚本
+CH4-G MoneyPrinterTurbo 视频生成器 — 就绪状态
 
 MoneyPrinterTurbo fork 尚未部署到 ~/hermes-os/fork_repos/。
-本脚本提供：
-1. generate_video() 接口占位 —— 部署后可调用
-2. 部署指引，引导用户执行部署流程
+本脚本包含完整的 MPT API 调用逻辑，部署后可立刻使用。
+
+待办集成步骤:
+1. git clone MoneyPrinterTurbo fork 到 fork_repos/
+2. pip install -r requirements.txt
+3. 启动服务: python app.py (默认 :8899)
+4. 设置 MPT_API_BASE 环境变量
 
 完整部署步骤请见：~/hermes-os/docs/mpt_deployment.md
 """
