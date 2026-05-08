@@ -96,6 +96,10 @@ docs/system-status-*.md
 # Fork repos (downloaded on-demand)
 fork_repos/
 
+# Claude Code auto-generated
+.claude/
+CLAUDE.md
+
 # Compressed archives
 *.tar.gz
 *.zip
@@ -103,3 +107,4 @@ fork_repos/
 
 # Backup directories
 *_backup_*/
+.gitnexus

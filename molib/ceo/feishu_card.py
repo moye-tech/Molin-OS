@@ -312,6 +312,41 @@ class FeishuCardSender:
         )
         return r.json()
 
+    def send_post(self, chat_id: str, title: str, content_lines: list[str], receive_id_type: str = "chat_id") -> dict:
+        """发送富文本 post 消息
+        content_lines: 文本行列表，自动转为飞书富文本格式
+        """
+        import requests, re
+        token = self._get_token()
+        
+        post_content = []
+        for line in content_lines:
+            if not line.strip():
+                post_content.append([{"tag": "text", "text": " "}])
+                continue
+            stripped = line.strip()
+            if stripped.startswith("```"):
+                continue
+            if stripped.startswith("---"):
+                post_content.append([{"tag": "text", "text": "─────────────────────"}])
+            else:
+                post_content.append([{"tag": "text", "text": stripped}])
+        
+        content = json.dumps({
+            "zh_cn": {
+                "title": title,
+                "content": post_content
+            }
+        }, ensure_ascii=False)
+        
+        r = requests.post(
+            f"{self.API_BASE}/im/v1/messages?receive_id_type={receive_id_type}",
+            headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+            json={"receive_id": chat_id, "msg_type": "post", "content": content},
+            timeout=15,
+        )
+        return r.json()
+
     # ── feishu-cli 集成 ────────────────────────────────────────────
 
     @staticmethod

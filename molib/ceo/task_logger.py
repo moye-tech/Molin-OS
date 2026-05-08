@@ -56,8 +56,11 @@ def build_summary_card(
     quality_gate_result: dict | None = None,
     final_result: dict | None = None,
     elapsed: float = 0,
+    report_url: str = "",
 ) -> dict:
-    """单张汇总卡片：包含全部6阶段信息"""
+    """单张汇总卡片：包含全部6阶段信息
+    report_url: 可选，点击'查看完整报告'按钮跳转的链接
+    """
     
     intent_risk_icon = {
         "low": "🟢", "medium": "🟡", "high": "🟠", "critical": "🔴",
@@ -180,6 +183,10 @@ def build_summary_card(
         sop_id = final_result.get("sop_record_id")
         if sop_id:
             card.add_field("📦 SOP记录", f"`{sop_id}`")
+    
+    # ── 可选：查看完整报告按钮 ──
+    if report_url:
+        card.add_button("📄 查看完整报告", url=report_url, type_="primary")
     
     card.add_hr()
     card.add_note(f"墨麟OS CEO引擎 · {_timestamp()}" + (f" · 总耗时 {elapsed:.2f}s" if elapsed else ""))

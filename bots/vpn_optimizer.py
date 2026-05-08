@@ -70,7 +70,8 @@ SECURE_PROXY_TYPES = {"Shadowsocks", "Vmess", "Vless", "Trojan", "Hysteria2", "H
 INSECURE_PROXY_TYPES = {"Http", "Socks", "Compatible"}
 
 # AI 组名（注意包含 emoji 和零宽空格）
-AI_GROUP_NAME = "🤖 ‍AI"
+# AI 组实际名: "🤖 \u200dAI" (emoji+空格+ZWJ+字母)
+AI_GROUP_NAME = "🤖 \u200dAI"
 
 # ─── 日志 ───────────────────────────────────────────────────────────────
 
@@ -282,39 +283,48 @@ def switch_ai_group(node_name: str) -> bool:
     注意 AI 组的成员是子组（🇸🇬 新加坡、🇺🇸 美国等），
     因此需要切换对应的 👆🏻 指定子组。
     """
+    """将 🤖 AI 组切换到指定节点指定的对应子组。"""
     # 解析节点所属的国家组
     # 节点名格式: "🇸🇬 新加坡 | SGP"、"🇸🇬 新加坡 | SGP 2"
-    # 对应子组名: "👆🏻🇸🇬 新加坡"
-    country_match = re.match(r"([\U0001F1E6-\U0001F1FF]{2})(?:\s*)([\u4e00-\u9fff]+)", node_name)
+    # 对应子组名: "👆🏻🇸🇬 \u200d新加坡"（含零宽空格）
+    country_match = re.match(r"([\U0001F1E6-\U0001F1FF]{2})\s*([\u4e00-\u9fff]+)", node_name)
     if not country_match:
-        log.warning(f"无法从节点名解析国家: {node_name}")
-        return False
+        log.warning(f"无法从节点名解析国家: {node_name}，尝试直接切换 AI 组")
+        return _switch_group_direct(AI_GROUP_NAME, node_name)
 
     flag = country_match.group(1)
     country = country_match.group(2)
 
-    # AI 组期望的是子组名如 "👆🏻🇸🇬 新加坡"
-    target_group = f"👆🏻{flag} {country}"
-
-    # 先切换对应国家的 👆🏻 组到该节点
+    # 先获取当前代理列表，找对应子组
     proxies = get_all_proxies()
     groups = proxies["groups"]
 
-    if target_group not in groups:
-        log.warning(f"目标组 {target_group} 不存在，尝试直接切换 AI 组")
-        # 尝试直接切换 AI 组到该节点
+    # 构造可能的目标组名（含零宽空格的各种可能）
+    candidates = [
+        f"👆🏻{flag} \u200d{country}",  # 👆🏻🇸🇬 ‍新加坡（标准格式）
+        f"👆🏻{flag} {country}",         # 👆🏻🇸🇬 新加坡
+        f"👆🏻{flag}",                      # 仅旗+👆🏻
+    ]
+    target_group = None
+    for c in candidates:
+        if c in groups:
+            target_group = c
+            break
+
+    if not target_group:
+        log.warning(f"未找到 {flag}{country} 的对应子组，尝试直接切换 AI 组")
         return _switch_group_direct(AI_GROUP_NAME, node_name)
 
-    # 切换 👆🏻🇸🇬 新加坡 组到指定节点
+    # 切换对应国家的 👆🏻 组到该节点
     log.info(f"切换 {target_group} → {node_name[:30]}")
     success = clash_api_put(f"/proxies/{url_encode_node(target_group)}", {"name": node_name})
     if not success:
         log.error(f"切换 {target_group} 失败")
         return False
 
-    # 然后确认 AI 组是否已指向该 👆🏻 组
-    ai_group = groups.get(AI_GROUP_NAME, {})
-    if ai_group.get("now") != target_group:
+    # 确认 AI 组已指向该 👆🏻 组
+    ai_now = groups.get(AI_GROUP_NAME, {}).get("now")
+    if ai_now != target_group:
         log.info(f"切换 {AI_GROUP_NAME} → {target_group}")
         success = clash_api_put(f"/proxies/{url_encode_node(AI_GROUP_NAME)}", {"name": target_group})
         if not success:
