@@ -127,7 +127,7 @@ class CEOOrchestrator:
             await push_card_async(card1)
 
         # ── 步骤2: 风险评估 ──────────────────────────────────────
-        risk: RiskAssessment = await self.risk_engine.assess(intent)
+        risk: RiskAssessment = self.risk_engine.assess(intent)
         logger.info(
             "[CEO] 风险评估: score=%.1f requires_approval=%s",
             risk.risk_score, risk.requires_approval,
@@ -361,6 +361,8 @@ class CEOOrchestrator:
 
         # ── 无DAG：原有并行调度（兼容旧调用方） ──
         logger.info("[CEO] 使用传统并行VP调度 (%d个VP)", len(target_vps))
+
+        vp_results = []  # 旧调度分支初始化
 
         for vp_name, vp_result in zip(target_vps, vp_results):
             if isinstance(vp_result, Exception):

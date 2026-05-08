@@ -34,7 +34,7 @@ CONSOLE_CHAT_ID = "oc_94c87f141e118b68c2da9852bf2f3bda"
 
 # ── 条件判断 ──────────────────────────────────────────────────────────
 
-SIMPLE_THRESHOLD = 30  # complexity_score < 30 视为简单任务，不推送
+SIMPLE_THRESHOLD = 25  # complexity_score >= 25 时推送（小红书分析复杂度25刚好触发）
 
 
 def should_push_log(intent: Any) -> bool:
@@ -309,8 +309,11 @@ def build_final_card(
     card = CardBuilder(f"{status_emoji} CEO任务完成 · {task_id[:8]}", BLUE)
 
     # 概要行
+    execution_data = result.get("execution", {}) or {}
+    vps_list = execution_data.get("vps_used", [])
+    first_vp = vps_list[0].get("name", "?") if vps_list else "(无)"
     card.add_fields_row([
-        ("📝 输入摘要", (result.get("execution", {}) or {}).get("vps_used", [{"name": "?"}])[0].get("name", "?") if status != "rejected" else "高风险拒绝"),
+        ("📝 输入摘要", first_vp if status != "rejected" else "高风险拒绝"),
         ("⏱️ 总耗时", f"{result.get('duration', elapsed):.2f}s"),
     ])
 
