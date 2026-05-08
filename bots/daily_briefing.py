@@ -272,7 +272,62 @@ def main():
         f.write(briefing)
     print(f"[📝] 简报日志已保存: {log_path}")
     print(f"[✓] 简报生成完成，可直接复制发布至飞书或邮件。")
-
+    
+    # ── 可选飞书推送 ─────────────────────────────────
+    try:
+        from molib.ceo.feishu_card import feishu_send_card, build_daily_briefing_card
+        
+        # 提取核心数据
+        hot_cats = intel.get("hot_categories", [])
+        top_notes = intel.get("top_notes", [])
+        suggestions = intel.get("suggestions", [])
+        github_hot = intel.get("github_hot", [])
+        weibo_summary = intel.get("weibo_summary", "")
+        
+        # 构建 stats
+        stats = {}
+        if hot_cats:
+            hottest = max(hot_cats, key=lambda x: x.get("heat", 0))
+            stats["🔥 最热品类"] = f"{hottest.get('category','')} ({hottest.get('heat',0)})"
+            stats["📊 品类数"] = f"{len(hot_cats)}个"
+        if top_notes:
+            stats["🏆 爆款数"] = f"{len(top_notes)}篇"
+        if github_hot:
+            stats["🐙 GitHub"] = f"{len(github_hot)}个项目"
+        stats["📡 数据状态"] = "✅ 实时" if "placeholder" not in intel.get("source", "") else "⚠️ 占位"
+        
+        # 构建 highlights
+        highlights = []
+        if top_notes:
+            for n in top_notes[:3]:
+                highlights.append(f"🔥 {n.get('title','')[:30]} — ❤️{n.get('likes',0)} ({n.get('category','')})")
+        if hot_cats:
+            for c in hot_cats[:2]:
+                highlights.append(f"📈 {c.get('category','')} 热度{c.get('heat',0)} · 收藏率{c.get('collect_ratio',0)}%")
+        
+        # 构建 warnings
+        warnings = []
+        if "placeholder" in intel.get("source", ""):
+            warnings.append("⚠️ 情报数据为占位数据，未从真实数据源采集")
+        if not github_hot:
+            warnings.append("📡 GitHub趋势数据为空")
+        if suggestions:
+            top_sug = suggestions[0]
+            warnings.append(f"💡 {top_sug.get('category','')}: {top_sug.get('action','')} — {top_sug.get('owner','')}")
+        
+        card = build_daily_briefing_card(
+            date=now.strftime("%Y-%m-%d"),
+            stats=stats,
+            highlights=highlights,
+            warnings=warnings,
+            color="blue"
+        )
+        feishu_send_card(card)
+        print(f"[✅ 飞书推送] 简报卡片已发送")
+    except ImportError:
+        print(f"[ℹ️ 飞书推送] molib.ceo.feishu_card 不可用，跳过")
+    except Exception as e:
+        print(f"[⚠️ 飞书推送] 发送失败: {e}")
 
 if __name__ == "__main__":
     main()

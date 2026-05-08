@@ -428,6 +428,50 @@ def main():
     with open(relay_path, 'w') as f:
         json.dump(relay_data, f, ensure_ascii=False, indent=2)
     print(f"[🔄 飞轮接力] relay/intelligence_morning.json 已写入")
+    
+    # ── 可选飞书推送 ─────────────────────────────────
+    try:
+        from molib.ceo.feishu_card import feishu_send_card, build_report_card
+        
+        # 构建摘要文本
+        weibo_ai = len(weibo_data.get('ai_related', []))
+        xhs_cats = [kw for kw, notes in xhs_data.items() if notes]
+        hot_cats = [f"{XHS_CATEGORY_MAP.get(kw, (kw,'',''))[0]}: {analysis['category_heat'].get(kw,{}).get('total_likes',0)}赞" 
+                     for kw in XHS_SEARCH_KEYWORDS if analysis['category_heat'].get(kw)][:5]
+        
+        summary_lines = [
+            f"**数据源**: 微博({weibo_data.get('total',0)}条·AI{weibo_ai}条) | 小红书({len(xhs_cats)}品类) | GitHub({len(github_data)}项目)",
+            "",
+            "**品类热力**:",
+        ]
+        for line in hot_cats:
+            summary_lines.append(f"· {line}")
+        
+        if analysis.get('suggestions'):
+            summary_lines.append("")
+            summary_lines.append(f"**选题建议({len(analysis['suggestions'])}条)**:")
+            for s in analysis['suggestions'][:3]:
+                summary_lines.append(f"· {s['category']} → {s['action']}")
+        
+        summary_text = "\n".join(summary_lines)
+        
+        card = build_report_card(
+            report_type="📡 每日AI热点日报",
+            content=summary_text,
+            meta={
+                "⏰ 采集时间": now.strftime("%H:%M"),
+                "🎯 总品类": str(len(hot_cats)),
+                "🤖 AI热搜": f"{weibo_ai}条",
+                "💡 选题": f"{len(analysis.get('suggestions',[]))}条",
+            },
+            color="purple"
+        )
+        feishu_send_card(card)
+        print(f"[✅ 飞书推送] 日报卡片已发送")
+    except ImportError:
+        print(f"[ℹ️ 飞书推送] molib.ceo.feishu_card 不可用，跳过")
+    except Exception as e:
+        print(f"[⚠️ 飞书推送] 发送失败: {e}")
 
 if __name__ == "__main__":
     main()

@@ -89,7 +89,7 @@ class ManagerAgent(ABC):
         name: str,
         subsidiary_configs: list[dict],
         quality_gate: float = 70.0,
-        escalation_model: str = "gpt-4o",
+        escalation_model: str = "deepseek-v4-pro",
     ):
         self.name = name
         self.quality_gate = quality_gate
@@ -251,7 +251,7 @@ class VPMarketing(ManagerAgent):
             name="VP营销",
             subsidiary_configs=subsidiary_configs,
             quality_gate=70.0,
-            escalation_model="gpt-4o",
+            escalation_model="deepseek-v4-pro",
         )
 
     async def dispatch_task(self, task: dict, context: dict) -> list[dict]:
@@ -305,16 +305,16 @@ class VPOps(ManagerAgent):
     def __init__(self, subsidiary_configs: list[dict] | None = None):
         if subsidiary_configs is None:
             subsidiary_configs = [
-                {"name": "墨域", "model": "gpt-4o"},
+                {"name": "墨域", "model": "deepseek-v4-pro"},
                 {"name": "墨声客服", "model": "claude-3-haiku"},
-                {"name": "墨链", "model": "gpt-4o"},
+                {"name": "墨链", "model": "deepseek-v4-pro"},
                 {"name": "墨学", "model": "claude-3-sonnet"},
             ]
         super().__init__(
             name="VP运营",
             subsidiary_configs=subsidiary_configs,
             quality_gate=70.0,
-            escalation_model="gpt-4o",
+            escalation_model="deepseek-v4-pro",
         )
 
     async def dispatch_task(self, task: dict, context: dict) -> list[dict]:
@@ -365,7 +365,7 @@ class VPTech(ManagerAgent):
         if subsidiary_configs is None:
             subsidiary_configs = [
                 {"name": "墨码", "model": "claude-3-opus"},
-                {"name": "墨维", "model": "gpt-4o"},
+                {"name": "墨维", "model": "deepseek-v4-pro"},
                 {"name": "墨安", "model": "claude-3-haiku"},
                 {"name": "墨梦", "model": "claude-3-opus"},
             ]
@@ -423,7 +423,7 @@ class VPFinance(ManagerAgent):
     def __init__(self, subsidiary_configs: list[dict] | None = None):
         if subsidiary_configs is None:
             subsidiary_configs = [
-                {"name": "墨算", "model": "gpt-4o"},
+                {"name": "墨算", "model": "deepseek-v4-pro"},
             ]
         super().__init__(
             name="VP财务",
@@ -480,7 +480,7 @@ class VPStrategy(ManagerAgent):
         if subsidiary_configs is None:
             subsidiary_configs = [
                 {"name": "墨商", "model": "claude-3-opus"},
-                {"name": "墨海", "model": "gpt-4o"},
+                {"name": "墨海", "model": "deepseek-v4-pro"},
                 {"name": "墨研", "model": "claude-3-sonnet"},
             ]
         super().__init__(

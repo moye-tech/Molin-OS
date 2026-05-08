@@ -404,7 +404,44 @@ def main():
     with open(log_path, 'w', encoding='utf-8') as f:
         json.dump(output, f, ensure_ascii=False, indent=2)
     print(f"[📝] 日志已保存: {log_path}")
-
+    
+    # ── 可选飞书推送 ─────────────────────────────────
+    try:
+        from molib.ceo.feishu_card import feishu_send_card, build_report_card
+        
+        # 构建摘要
+        plan_lines = []
+        for item in items:
+            stars = "⭐" * item.get("priority", 0)
+            plan_lines.append(
+                f"· {stars} **{item.get('title','')[:30]}** → {item.get('platform','?')} @ {item.get('time_slot','?')} | {item.get('cta','?')}"
+            )
+        
+        summary_lines = [
+            f"**{analysis.get('summary','')}**",
+            "",
+            "**分发明细**:",
+        ]
+        summary_lines.extend(plan_lines)
+        summary_text = "\n".join(summary_lines)
+        
+        card = build_report_card(
+            report_type="📋 飞轮第三棒·分发策略",
+            content=summary_text,
+            meta={
+                "⏰ 评估时间": now.strftime("%H:%M"),
+                "📄 总篇数": f"{analysis.get('total_items',0)}篇",
+                "🔝 高优先级": f"{analysis.get('priority_distribution',{}).get('high',0)}篇",
+                "⏳ 时间窗口": ", ".join(sorted(analysis.get('time_slots',{}).keys())[:3]),
+            },
+            color="indigo"
+        )
+        feishu_send_card(card)
+        print(f"[✅ 飞书推送] 分发策略卡片已发送")
+    except ImportError:
+        print(f"[ℹ️ 飞书推送] molib.ceo.feishu_card 不可用，跳过")
+    except Exception as e:
+        print(f"[⚠️ 飞书推送] 发送失败: {e}")
 
 if __name__ == "__main__":
     main()

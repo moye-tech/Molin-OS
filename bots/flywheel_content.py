@@ -567,7 +567,42 @@ def main():
     with open(log_path, 'w', encoding='utf-8') as f:
         json.dump(output, f, ensure_ascii=False, indent=2)
     print(f"[📝] 日志已保存: {log_path}")
-
+    
+    # ── 可选飞书推送 ─────────────────────────────────
+    try:
+        from molib.ceo.feishu_card import feishu_send_card, build_report_card
+        
+        # 构建摘要
+        draft_titles = [f"· {d.get('title','')[:35]}" for d in drafts]
+        
+        summary_lines = [
+            f"**共生成 {len(drafts)} 篇内容，适配 {drafts[0].get('platform','xhs') if drafts else 'xhs'} 平台**",
+            "",
+            "**内容列表**:",
+        ]
+        summary_lines.extend(draft_titles)
+        summary_lines.append("")
+        summary_lines.append(f"**策略摘要**: {analysis.get('summary','')[:200]}")
+        
+        summary_text = "\n".join(summary_lines)
+        
+        card = build_report_card(
+            report_type="✏️ 飞轮第二棒·内容草稿生成",
+            content=summary_text,
+            meta={
+                "⏰ 生成时间": now.strftime("%H:%M"),
+                "📄 内容数量": f"{len(drafts)}篇",
+                "📂 品类": analysis.get('top_categories', '未知')[:30],
+                "🎯 策略": analysis.get('strategies', '常规')[:20],
+            },
+            color="blue"
+        )
+        feishu_send_card(card)
+        print(f"[✅ 飞书推送] 内容生成卡片已发送")
+    except ImportError:
+        print(f"[ℹ️ 飞书推送] molib.ceo.feishu_card 不可用，跳过")
+    except Exception as e:
+        print(f"[⚠️ 飞书推送] 发送失败: {e}")
 
 if __name__ == "__main__":
     main()
