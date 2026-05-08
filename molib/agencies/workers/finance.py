@@ -1,8 +1,10 @@
-"""墨算财务 Worker — 记账、预算、成本控制
+"""墨算财务 Worker — 记账、预算、成本控制、股票分析
 
 所属: VP财务
 """
+
 from .base import SubsidiaryWorker, Task, WorkerResult
+from molib.shared.finance.stock_engine import StockPipeline, Pipeline, Stage, TaskQueue
 
 class Finance(SubsidiaryWorker):
     worker_id = "finance"
@@ -17,6 +19,9 @@ class Finance(SubsidiaryWorker):
             "收支记录与分类统计",
             "预算管理与超支预警",
             "成本优化建议与模型路由降级分析",
+            "股票分析（来自 daily_stock_analysis 34K⭐引擎）",
+            "Pipeline阶段隔离降级编排",
+            "多渠道通知广播",
         ]
 
     @staticmethod
@@ -29,9 +34,45 @@ class Finance(SubsidiaryWorker):
 
     async def execute(self, task: Task, context: dict | None = None) -> WorkerResult:
         try:
-            period = task.payload.get("period", "本月")
-            revenue = task.payload.get("revenue", 0)
-            api_costs = task.payload.get("api_costs", 0)
+            task_type = task.task_type
+            task_payload = task.payload or {}
+
+            # ── 股票分析分支 ────────────────────────────────────────
+            if task_type == "stock_analyze":
+                symbol = task_payload.get("symbol", "AAPL")
+                engine = StockPipeline()
+                result = engine.analyze(symbol)
+                return WorkerResult(
+                    task_id=task.task_id,
+                    worker_id=self.worker_id,
+                    status="success",
+                    output={
+                        "type": "stock_analysis",
+                        "symbol": symbol,
+                        "pipeline_result": result,
+                        "source": "stock_engine:daily_stock_analysis",
+                    },
+                )
+
+            # ── Pipeline测试分支 ────────────────────────────────────
+            if task_type == "pipeline_test":
+                p = Pipeline()
+                p.add_stage(
+                    Stage("stage1", lambda ctx: {"data": ctx.get("input", "") + "_processed"},
+                           is_critical=False)
+                )
+                ctx = p.run({"input": "test"})
+                return WorkerResult(
+                    task_id=task.task_id,
+                    worker_id=self.worker_id,
+                    status="success",
+                    output={"type": "pipeline_test", "context": ctx, "source": "stock_engine"},
+                )
+
+            # ── 财务分析分支（原有逻辑） ──────────────────────────────
+            period = task_payload.get("period", "本月")
+            revenue = task_payload.get("revenue", 0)
+            api_costs = task_payload.get("api_costs", 0)
             tool_costs = task.payload.get("tool_costs", 0)
             total_costs = task.payload.get("total_costs", 0)
 
