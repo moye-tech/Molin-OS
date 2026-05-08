@@ -194,12 +194,23 @@ def _start_chrome_cdp(headless: bool = True, port: int = 0) -> tuple[subprocess.
         str(chrome_path),
         "--headless" if headless else "",
         f"--remote-debugging-port={actual_port}",
+        # ── 反检测参数 ─────────────────────────────────────
         "--no-sandbox",
         "--disable-gpu",
         "--disable-dev-shm-usage",
         "--disable-setuid-sandbox",
         "--no-first-run",
-        "--disable-extensions",
+        "--disable-blink-features=AutomationControlled",  # 隐藏 WebDriver 标志
+        "--disable-features=ChromeWhatsNewUI,ChromeCleanupTrigger",
+        "--ignore-certificate-errors",
+        # ── 伪装成真实浏览器 ──────────────────────────────
+        "--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+        "--window-size=1920,1080",
+        "--start-maximized",
+        "--disable-sync",
+        "--no-default-browser-check",
+        "--disable-breakpad",
+        "--mute-audio",
     ]
     cmd = [c for c in cmd if c]  # 去掉空字符串
     
