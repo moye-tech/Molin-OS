@@ -17,6 +17,23 @@ class ShortVideo(SubsidiaryWorker):
     description = "短视频脚本生成 + MPT/Pixelle双引擎合成"
     oneliner = "从脚本到成片，一个命令完成"
 
+    @staticmethod
+    def get_capabilities() -> list[str]:
+        return [
+            "短视频脚本自动生成",
+            "MoneyPrinterTurbo 模板视频合成",
+            "Pixelle-Video AI创意视频合成",
+            "多引擎视频渲染管理",
+        ]
+
+    @staticmethod
+    def get_metadata() -> dict:
+        return {
+            "name": "墨播短视频",
+            "vp": "营销",
+            "description": "短视频脚本生成 + MPT/Pixelle双引擎合成",
+        }
+
     async def execute(self, task: Task, context: dict | None = None) -> WorkerResult:
         try:
             topic = task.payload.get("topic", "未指定")

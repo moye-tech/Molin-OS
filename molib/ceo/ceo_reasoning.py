@@ -1,15 +1,22 @@
 """
 墨域OS — CEO 意图推理引擎
 ============================
-废弃关键词/语义缓存/LLM分类路由，改为纯 LLM 推理的多轮对话引擎。
+⚠️ DEPRECATED — 此文件已废弃，不再使用。
 
-工作方式：
-1. 用户输入 → CEO 基于子公司能力画像进行 LLM 推理
-2. 推理结果有三种可能：
-   a. "clarify" — 信息不足，需要追问用户更多细节
-   b. "dispatch" — 可确定意图，输出 dispatch_plan（包含子公司和交付物规格）
-   c. "chat" — 纯聊天/问候，无需调度
-3. 澄清追问和调度结果都会写入 session 上下文，支持多轮逐步收窄
+弃用原因：
+- 多轮对话LLM推理已被 IntentRouter 的四层架构替代
+- IntentRouter 整合了问候拦截(L0) + 缓存(L1) + LLM语义(L2) + 关键词(L3)
+- ceo_reasoning.py 的 CEOAction/Session 管理已不再需要
+
+替代方案：
+    from molib.ceo.intent_router import IntentRouter, IntentResult
+    router = IntentRouter(llm_client)
+    result = await router.analyze("用户输入")
+
+此文件保留仅作参考，不会被任何代码导入（除 ceo.py 兼容层外）。
+ceo.py 已重写为直接使用 IntentRouter。
+
+废弃日期: 2026-05-08
 """
 
 import json

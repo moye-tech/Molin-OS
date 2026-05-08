@@ -1,11 +1,32 @@
-"""墨笔文创 Worker"""
+"""墨笔文创 Worker — 文字内容创作、文案、公众号、博客
+
+所属: VP营销
+技能: molin-xiaohongshu, copywriting, content-strategy
+"""
 from .base import SubsidiaryWorker, Task, WorkerResult
 
 class ContentWriter(SubsidiaryWorker):
     worker_id = "content_writer"
     worker_name = "墨笔文创"
-    description = "批量创作SEO文章"
-    oneliner = "批量创作SEO文章"
+    description = "文字内容创作、文案、公众号、博客"
+    oneliner = "文字内容创作、文案、公众号、博客"
+
+    @staticmethod
+    def get_capabilities() -> list[str]:
+        return [
+            "生成小红书/公众号/博客文章",
+            "SEO 关键词优化与内容策略",
+            "多风格文案创作（专业/亲和/幽默）",
+            "批量内容生产与草稿管理",
+        ]
+
+    @staticmethod
+    def get_metadata() -> dict:
+        return {
+            "name": "墨笔文创",
+            "vp": "营销",
+            "description": "文字内容创作、文案、公众号、博客",
+        }
 
     async def execute(self, task: Task, context: dict | None = None) -> WorkerResult:
         try:

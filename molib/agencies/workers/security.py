@@ -1,11 +1,32 @@
-"""墨安安全 Worker"""
+"""墨安安全 Worker — 代码审计、安全评估
+
+所属: VP技术
+技能: red-teaming, ag-vulnerability-scanner
+"""
 from .base import SubsidiaryWorker, Task, WorkerResult
 
 class Security(SubsidiaryWorker):
     worker_id = "security"
     worker_name = "墨安安全"
-    description = "API密钥扫描与审计"
-    oneliner = "API密钥扫描与审计"
+    description = "代码审计、安全评估"
+    oneliner = "代码审计、安全评估"
+
+    @staticmethod
+    def get_capabilities() -> list[str]:
+        return [
+            "API密钥与敏感信息扫描",
+            "代码安全审计与漏洞检测",
+            "依赖包漏洞检查",
+            "合规检查（GDPR/数据本地化）",
+        ]
+
+    @staticmethod
+    def get_metadata() -> dict:
+        return {
+            "name": "墨安安全",
+            "vp": "技术",
+            "description": "代码审计、安全评估",
+        }
 
     async def execute(self, task: Task, context: dict | None = None) -> WorkerResult:
         try:

@@ -1,11 +1,31 @@
-"""墨算财务 Worker"""
+"""墨算财务 Worker — 记账、预算、成本控制
+
+所属: VP财务
+"""
 from .base import SubsidiaryWorker, Task, WorkerResult
 
 class Finance(SubsidiaryWorker):
     worker_id = "finance"
     worker_name = "墨算财务"
-    description = "API成本追踪与月报"
-    oneliner = "API成本追踪与月报"
+    description = "记账、预算、成本控制"
+    oneliner = "记账、预算、成本控制"
+
+    @staticmethod
+    def get_capabilities() -> list[str]:
+        return [
+            "API成本追踪与月报生成",
+            "收支记录与分类统计",
+            "预算管理与超支预警",
+            "成本优化建议与模型路由降级分析",
+        ]
+
+    @staticmethod
+    def get_metadata() -> dict:
+        return {
+            "name": "墨算财务",
+            "vp": "财务",
+            "description": "记账、预算、成本控制",
+        }
 
     async def execute(self, task: Task, context: dict | None = None) -> WorkerResult:
         try:

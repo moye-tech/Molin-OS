@@ -1,11 +1,32 @@
-"""墨测数据 Worker"""
+"""墨测数据 Worker — 数据分析、测试、质量
+
+所属: 共同服务
+技能: molin-data-analytics, molin-vizro
+"""
 from .base import SubsidiaryWorker, Task, WorkerResult
 
 class DataAnalyst(SubsidiaryWorker):
     worker_id = "data_analyst"
     worker_name = "墨测数据"
-    description = "数据汇总与增长归因"
-    oneliner = "数据汇总与增长归因"
+    description = "数据分析、测试、质量"
+    oneliner = "数据分析、测试、质量"
+
+    @staticmethod
+    def get_capabilities() -> list[str]:
+        return [
+            "多维度数据汇总与趋势分析",
+            "增长归因与转化漏斗分析",
+            "数据可视化看板生成",
+            "自动化测试与质量报告",
+        ]
+
+    @staticmethod
+    def get_metadata() -> dict:
+        return {
+            "name": "墨测数据",
+            "vp": "共同服务",
+            "description": "数据分析、测试、质量",
+        }
 
     async def execute(self, task: Task, context: dict | None = None) -> WorkerResult:
         try:

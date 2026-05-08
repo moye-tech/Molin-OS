@@ -1,11 +1,32 @@
-"""墨商BD Worker"""
+"""墨商BD Worker — 商务拓展、合作洽谈
+
+所属: VP战略
+技能: molin-bd-scanner, agent-sales-deal-strategist
+"""
 from .base import SubsidiaryWorker, Task, WorkerResult
 
 class Bd(SubsidiaryWorker):
     worker_id = "bd"
     worker_name = "墨商BD"
-    description = "合作提案与客户识别"
-    oneliner = "合作提案与客户识别"
+    description = "商务拓展、合作洽谈"
+    oneliner = "商务拓展、合作洽谈"
+
+    @staticmethod
+    def get_capabilities() -> list[str]:
+        return [
+            "客户识别与线索评估",
+            "合作方案自动生成",
+            "报价与合同条款建议",
+            "客户关系管理与跟进",
+        ]
+
+    @staticmethod
+    def get_metadata() -> dict:
+        return {
+            "name": "墨商BD",
+            "vp": "战略",
+            "description": "商务拓展、合作洽谈",
+        }
 
     async def execute(self, task: Task, context: dict | None = None) -> WorkerResult:
         try:

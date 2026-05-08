@@ -345,6 +345,23 @@ class AutoDream(SubsidiaryWorker):
     description = "记忆整合与战略复盘 + 记忆蒸馏(dream_distill/reflect/consolidate)"
     oneliner = "记忆整合、战略复盘与记忆蒸馏"
 
+    @staticmethod
+    def get_capabilities() -> list[str]:
+        return [
+            "工作记忆→情节记忆蒸馏（dream_distill）",
+            "任务日志→经验教训提取（dream_reflect）",
+            "跨Session语义记忆固化（dream_consolidate）",
+            "高频失败模式识别与策略优化建议",
+        ]
+
+    @staticmethod
+    def get_metadata() -> dict:
+        return {
+            "name": "墨梦AutoDream",
+            "vp": "技术",
+            "description": "记忆整合与战略复盘 + 记忆蒸馏(dream_distill/reflect/consolidate)",
+        }
+
     async def execute(self, task: Task, context: dict | None = None) -> WorkerResult:
         try:
             week = task.payload.get("week", "本周")

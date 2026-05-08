@@ -1,11 +1,32 @@
-"""墨图设计 Worker"""
+"""墨图设计 Worker — 图片/UI/封面/视觉设计
+
+所属: VP营销
+技能: molin-design, excalidraw, pixel-art
+"""
 from .base import SubsidiaryWorker, Task, WorkerResult
 
 class Designer(SubsidiaryWorker):
     worker_id = "designer"
     worker_name = "墨图设计"
-    description = "封面图与UI视觉设计"
-    oneliner = "封面图与UI视觉设计"
+    description = "图片/UI/封面/视觉设计"
+    oneliner = "图片/UI/封面/视觉设计"
+
+    @staticmethod
+    def get_capabilities() -> list[str]:
+        return [
+            "封面图与海报设计",
+            "UI界面视觉设计",
+            "多风格输出（商务/卡通/插画）",
+            "批量化图片生成与排版",
+        ]
+
+    @staticmethod
+    def get_metadata() -> dict:
+        return {
+            "name": "墨图设计",
+            "vp": "营销",
+            "description": "图片/UI/封面/视觉设计",
+        }
 
     async def execute(self, task: Task, context: dict | None = None) -> WorkerResult:
         try:

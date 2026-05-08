@@ -1,11 +1,32 @@
-"""墨律法务 Worker"""
+"""墨律法务 Worker — 合同审查、合规、风险评估
+
+所属: 共同服务
+技能: molin-legal
+"""
 from .base import SubsidiaryWorker, Task, WorkerResult
 
 class Legal(SubsidiaryWorker):
     worker_id = "legal"
     worker_name = "墨律法务"
-    description = "合同审查与合规提示"
-    oneliner = "合同审查与合规提示"
+    description = "合同审查、合规、风险评估"
+    oneliner = "合同审查、合规、风险评估"
+
+    @staticmethod
+    def get_capabilities() -> list[str]:
+        return [
+            "合同条款审查与风险评估",
+            "合规检查（GDPR/数据保护等）",
+            "法律文书模板管理",
+            "风险等级分类与建议",
+        ]
+
+    @staticmethod
+    def get_metadata() -> dict:
+        return {
+            "name": "墨律法务",
+            "vp": "共同服务",
+            "description": "合同审查、合规、风险评估",
+        }
 
     async def execute(self, task: Task, context: dict | None = None) -> WorkerResult:
         try:

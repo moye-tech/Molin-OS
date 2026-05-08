@@ -7,6 +7,23 @@ class Knowledge(SubsidiaryWorker):
     description = "知识库RAG与SOP管理 | 知识图谱构建"
     oneliner = "知识库知识图谱SOP"
 
+    @staticmethod
+    def get_capabilities() -> list[str]:
+        return [
+            "知识库RAG检索与问答",
+            "SOP标准操作流程管理",
+            "代码知识图谱自动构建",
+            "概念图谱与知识关联分析",
+        ]
+
+    @staticmethod
+    def get_metadata() -> dict:
+        return {
+            "name": "墨脑知识",
+            "vp": "共同服务",
+            "description": "知识库RAG与SOP管理 | 知识图谱构建",
+        }
+
     async def execute(self, task: Task, context: dict | None = None) -> WorkerResult:
         try:
             action = task.payload.get("action", "query")

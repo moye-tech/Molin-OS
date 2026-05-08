@@ -1,11 +1,32 @@
-"""墨韵IP Worker"""
+"""墨韵IP Worker — IP衍生、商标、版权、品牌管理
+
+所属: VP营销
+技能: ai-taste-quality
+"""
 from .base import SubsidiaryWorker, Task, WorkerResult
 
 class IpManager(SubsidiaryWorker):
     worker_id = "ip_manager"
     worker_name = "墨韵IP"
-    description = "IP人设打造与授权管理"
-    oneliner = "IP人设打造与授权管理"
+    description = "IP衍生、商标、版权、品牌管理"
+    oneliner = "IP衍生、商标、版权、品牌管理"
+
+    @staticmethod
+    def get_capabilities() -> list[str]:
+        return [
+            "IP人设打造与角色设计",
+            "商标与版权管理",
+            "品牌授权方案制定",
+            "IP视觉风格统一管控",
+        ]
+
+    @staticmethod
+    def get_metadata() -> dict:
+        return {
+            "name": "墨韵IP",
+            "vp": "营销",
+            "description": "IP衍生、商标、版权、品牌管理",
+        }
 
     async def execute(self, task: Task, context: dict | None = None) -> WorkerResult:
         try:

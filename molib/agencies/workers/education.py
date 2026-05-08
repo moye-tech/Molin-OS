@@ -7,6 +7,23 @@ class Education(SubsidiaryWorker):
     description = "课程设计与知识付费 | 多Agent互动课堂"
     oneliner = "课程设计知识付费课堂"
 
+    @staticmethod
+    def get_capabilities() -> list[str]:
+        return [
+            "课程大纲与学习路径设计",
+            "多Agent互动课堂编排",
+            "辩论式教学场景搭建",
+            "知识付费定价策略建议",
+        ]
+
+    @staticmethod
+    def get_metadata() -> dict:
+        return {
+            "name": "墨学教育",
+            "vp": "运营",
+            "description": "课程设计与知识付费 | 多Agent互动课堂",
+        }
+
     async def execute(self, task: Task, context: dict | None = None) -> WorkerResult:
         try:
             action = task.payload.get("action", "course_design")

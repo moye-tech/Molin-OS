@@ -1,11 +1,32 @@
-"""墨声配音 Worker"""
+"""墨声配音 Worker — AI语音合成、播客制作
+
+所属: VP营销
+技能: molin-audio-engine, songwriting
+"""
 from .base import SubsidiaryWorker, Task, WorkerResult
 
 class VoiceActor(SubsidiaryWorker):
     worker_id = "voice_actor"
     worker_name = "墨声配音"
-    description = "TTS配音与音频生产"
-    oneliner = "TTS配音与音频生产"
+    description = "AI语音合成、播客制作"
+    oneliner = "AI语音合成、播客制作"
+
+    @staticmethod
+    def get_capabilities() -> list[str]:
+        return [
+            "多音色文本转语音（TTS）",
+            "多语言配音（中/英/日等）",
+            "播客与有声书制作",
+            "音频参数调节（语速/音调/情感）",
+        ]
+
+    @staticmethod
+    def get_metadata() -> dict:
+        return {
+            "name": "墨声配音",
+            "vp": "营销",
+            "description": "AI语音合成、播客制作",
+        }
 
     async def execute(self, task: Task, context: dict | None = None) -> WorkerResult:
         try:

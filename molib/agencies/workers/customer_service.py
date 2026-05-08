@@ -1,11 +1,32 @@
-"""墨声客服 Worker"""
+"""墨声客服 Worker — 自动化客服（消息检测→回复）
+
+所属: VP运营
+技能: molin-customer-service, xianyu-automation
+"""
 from .base import SubsidiaryWorker, Task, WorkerResult
 
 class CustomerService(SubsidiaryWorker):
     worker_id = "customer_service"
     worker_name = "墨声客服"
-    description = "多平台客服统一回复"
-    oneliner = "多平台客服统一回复"
+    description = "自动化客服（消息检测→回复）"
+    oneliner = "自动化客服（消息检测→回复）"
+
+    @staticmethod
+    def get_capabilities() -> list[str]:
+        return [
+            "多平台消息自动检测与收集",
+            "AI智能回复生成",
+            "人工转接与工单管理",
+            "常见问题知识库匹配",
+        ]
+
+    @staticmethod
+    def get_metadata() -> dict:
+        return {
+            "name": "墨声客服",
+            "vp": "运营",
+            "description": "自动化客服（消息检测→回复）",
+        }
 
     async def execute(self, task: Task, context: dict | None = None) -> WorkerResult:
         try:
