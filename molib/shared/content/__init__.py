@@ -5,5 +5,9 @@
 from .seo_tool import SEOTool
 from .social_writer import SocialWriter
 from .video_script import VideoScriptTool
+from .rubric import ContentRubricEngine, RubricScore, RubricDimension, BlindPrediction
 
-__all__ = ["SEOTool", "SocialWriter", "VideoScriptTool"]
+__all__ = [
+    "SEOTool", "SocialWriter", "VideoScriptTool",
+    "ContentRubricEngine", "RubricScore", "RubricDimension", "BlindPrediction",
+]
