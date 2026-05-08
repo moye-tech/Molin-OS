@@ -1,232 +1,360 @@
 """
-墨域OS — 飞书消息卡片构建器
-================================
-基于 feishu-message-formatter skill 的纯文本卡片格式，
-生成结构化、分级透明的飞书消息。
+墨域OS — 飞书原生 Interactive 卡片构建器 & 发送器
+=================================================
+生成飞书 Open API msg_type: interactive 格式的卡片 JSON，
+并通过飞书 Open API 直接发送（独立于 Hermes 的发送管道）。
 
-所有对外发送给尹建业的消息都应经过此模块格式化。
+两种使用方式：
+    1. 生成卡片 JSON：CardBuilder().build() → 由 Hermes send_message 或自定义管道发送
+    2. 直接发送：FeishuCardSender().send_card(card_dict, chat_id) → 独立发送
+
+飞书卡片规范: https://open.feishu.cn/document/uAjLw4CM/ukzMukzMukzM/feishu-cards/card-components
 """
 
 import json
+import logging
+import os
+import time
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
-
-def card_header(title: str, subtitle: str = "", emoji: str = "") -> str:
-    """生成卡片标题行"""
-    lines = []
-    if emoji:
-        lines.append(f"{emoji} {title}")
-    else:
-        lines.append(f"━━━ {title} ━━━")
-    if subtitle:
-        lines.append(f"  {subtitle}")
-    lines.append("")
-    return "\n".join(lines)
+logger = logging.getLogger("molin.ceo.feishu_card")
 
 
-def card_divider() -> str:
-    """分隔线"""
-    return "─" * 30 + "\n"
+# ── 颜色模板常量 ─────────────────────────────────────
+BLUE = "blue"
+WATARI = "watari"
+INDIGO = "indigo"
+PURPLE = "purple"
+RED = "red"
+ORANGE = "orange"
+YELLOW = "yellow"
+GREEN = "green"
+TURQUOISE = "turquoise"
+GREY = "grey"
 
 
-def card_kv(key: str, value: str, indent: int = 0) -> str:
-    """键值对行"""
-    prefix = "  " * indent
-    return f"{prefix}{key}: {value}\n"
+# ── 内部辅助 ────────────────────────────────────────
 
 
-def card_section(title: str, items: list[str]) -> str:
-    """带标题的区块"""
-    lines = [f"▸ {title}", ""]
-    for item in items:
-        lines.append(f"  • {item}")
-    lines.append("")
-    return "\n".join(lines)
+def _timestamp() -> str:
+    return datetime.now().strftime("%Y-%m-%d %H:%M")
 
 
-def card_table(headers: list[str], rows: list[list[str]]) -> str:
-    """简单表格（纯文本对齐）"""
-    if not rows:
-        return ""
-    # 计算每列最大宽度
-    col_widths = [len(h) for h in headers]
-    for row in rows:
-        for i, cell in enumerate(row):
-            if i < len(col_widths):
-                col_widths[i] = max(col_widths[i], len(cell))
-
-    lines = []
-    # 表头
-    header_line = " | ".join(h.ljust(col_widths[i]) for i, h in enumerate(headers))
-    lines.append(header_line)
-    # 分隔
-    lines.append("-+-".join("-" * w for w in col_widths))
-    # 行
-    for row in rows:
-        line = " | ".join(
-            (row[i] if i < len(row) else "").ljust(col_widths[i])
-            for i in range(len(headers))
-        )
-        lines.append(line)
-
-    return "\n".join(lines) + "\n\n"
+def _header(title: str, color: str = BLUE) -> dict:
+    return {"title": {"tag": "plain_text", "content": title}, "template": color}
 
 
-def card_footer(
-    timestamp: str = "",
-    source: str = "墨域OS",
-    status: str = "",
-) -> str:
-    """底部信息"""
-    parts = []
-    if timestamp:
-        parts.append(timestamp)
-    if source:
-        parts.append(f"来自 {source}")
-    if status:
-        parts.append(f"状态: {status}")
-    return f"· {' · '.join(parts)}\n"
+def _md(content: str) -> dict:
+    return {"tag": "lark_md", "content": content}
 
 
-def build_system_status_card(
-    title: str,
-    status_items: list[tuple[str, str]],
-    alerts: list[str] | None = None,
-    actions: list[str] | None = None,
-) -> str:
-    """
-    构建系统状态概览卡片。
-
-    参数:
-        title: 卡片标题
-        status_items: [(标签, 值), ...]
-        alerts: 告警列表
-        actions: 建议行动列表
-
-    返回: 格式化文本
-    """
-    lines = [card_header(title, emoji="📊")]
-
-    for label, value in status_items:
-        lines.append(card_kv(label, value))
-
-    if alerts:
-        lines.append("")
-        lines.append(card_section("⚠️ 需关注", alerts))
-
-    if actions:
-        lines.append("")
-        lines.append(card_section("🎯 建议行动", actions))
-
-    lines.append(card_divider())
-    lines.append(card_footer(timestamp=datetime.now().strftime("%Y-%m-%d %H:%M")))
-
-    return "".join(lines)
+def _div(content: str) -> dict:
+    return {"tag": "div", "text": _md(content)}
 
 
-def build_daily_briefing_card(
-    date: str,
-    stats: dict[str, Any],
-    highlights: list[str],
-    warnings: list[str] | None = None,
-) -> str:
-    """
-    构建每日简报卡片。
-
-    参数:
-        date: 日期字符串
-        stats: {类别: 数值} 字典
-        highlights: 今日亮点列表
-        warnings: 需关注事项列表
-
-    返回: 格式化文本
-    """
-    lines = [card_header(f"CEO 每日简报 · {date}", emoji="☀️")]
-
-    if stats:
-        lines.append("📈 系统状态")
-        for key, value in stats.items():
-            lines.append(card_kv(key, str(value)))
-        lines.append("")
-
-    if highlights:
-        lines.append(card_section("✨ 亮点", highlights))
-
-    if warnings:
-        lines.append(card_section("⚠️ 需关注", warnings))
-
-    lines.append(card_divider())
-    lines.append(card_footer(source="CEO引擎"))
-
-    return "".join(lines)
+def _row(fields: list[dict]) -> dict:
+    return {"tag": "column_set", "flex_mode": "none", "background_style": "default", "columns": fields}
 
 
-def build_report_card(
-    report_type: str,
-    content: str,
-    meta: dict[str, str] | None = None,
-) -> str:
-    """
-    构建报告型卡片（财务、情报分析等）。
-
-    参数:
-        report_type: 报告类型
-        content: 正文
-        meta: 元数据键值对
-    """
-    lines = [card_header(report_type, emoji="📋"), ""]
-    lines.append(content)
-    lines.append("")
-    if meta:
-        for key, value in meta.items():
-            lines.append(card_kv(key, value))
-    lines.append("")
-    lines.append(card_divider())
-    lines.append(card_footer())
-    return "".join(lines)
-
-
-def build_task_card(
-    task_id: str,
-    description: str,
-    status: str,
-    assignee: str = "",
-    priority: str = "medium",
-) -> str:
-    """
-    构建任务卡片。
-
-    状态颜色映射: completed=✅, in_progress=🔄, pending=⏳, blocked=🚫
-    """
-    status_icons = {
-        "completed": "✅",
-        "in_progress": "🔄",
-        "pending": "⏳",
-        "blocked": "🚫",
-        "cancelled": "❌",
+def _field(key: str, value: str, width: str = "weighted", weight: int = 1) -> dict:
+    return {
+        "tag": "column",
+        "width": width,
+        "weight": weight,
+        "vertical_align": "top",
+        "elements": [
+            {"tag": "div", "text": {"tag": "lark_md", "content": f"**{key}**"}},
+            {"tag": "div", "text": {"tag": "lark_md", "content": value}},
+        ],
     }
-    icon = status_icons.get(status, "📋")
 
-    lines = [card_header(f"{icon} 任务 {task_id}"), ""]
-    lines.append(f"  {description}\n")
-    lines.append(f"  状态: {status}")
+
+def _hr() -> dict:
+    return {"tag": "hr"}
+
+
+def _note(text: str) -> dict:
+    return {"tag": "note", "text": {"tag": "plain_text", "content": text}}
+
+
+# ── 卡片构建器 ─────────────────────────────────────
+
+
+class CardBuilder:
+    """飞书卡片构建器基类"""
+
+    def __init__(self, title: str, color: str = BLUE):
+        self.title = title
+        self.color = color
+        self.elements: list[dict] = []
+
+    def add_div(self, content: str) -> "CardBuilder":
+        self.elements.append(_div(content))
+        return self
+
+    def add_hr(self) -> "CardBuilder":
+        self.elements.append(_hr())
+        return self
+
+    def add_field(self, key: str, value: str) -> "CardBuilder":
+        self.elements.append({"tag": "div", "text": {"tag": "lark_md", "content": f"**{key}**  {value}"}})
+        return self
+
+    def add_fields_row(self, fields: list[tuple[str, str]]) -> "CardBuilder":
+        """添加行内多列字段（最多4列）"""
+        columns = [_field(k, v) for k, v in fields]
+        self.elements.append(_row(columns))
+        return self
+
+    def add_section(self, title: str, items: list[str]) -> "CardBuilder":
+        self.elements.append(_div(f"**{title}**"))
+        for item in items:
+            self.elements.append(_div(f"· {item}"))
+        return self
+
+    def add_button(self, text: str, url: str = "", type_: str = "default") -> "CardBuilder":
+        btn: dict[str, Any] = {"tag": "action", "actions": [{"tag": "button", "text": {"tag": "plain_text", "content": text}, "type": type_}]}
+        if url:
+            btn["actions"][0]["url"] = url
+        self.elements.append(btn)
+        return self
+
+    def add_note(self, text: str) -> "CardBuilder":
+        self.elements.append(_note(text))
+        return self
+
+    def build(self) -> dict:
+        return {"config": {"wide_screen_mode": True}, "header": _header(self.title, self.color), "elements": self.elements}
+
+    def build_json(self) -> str:
+        return json.dumps(self.build(), ensure_ascii=False)
+
+
+# ── 专用卡片工厂 ────────────────────────────────────
+
+
+def build_status_card(title: str, status_items: list[tuple[str, str]], alerts: list[str] | None = None, actions: list[str] | None = None, color: str = INDIGO) -> dict:
+    """系统状态概览卡片"""
+    card = CardBuilder(title, color)
+    card.add_fields_row(status_items[:4])
+    for k, v in status_items[4:]:
+        card.add_field(k, v)
+    if alerts:
+        card.add_hr()
+        card.add_section("⚠️ 需关注", alerts)
+    if actions:
+        card.add_hr()
+        card.add_section("🎯 建议行动", actions)
+    card.add_hr()
+    card.add_note(f"墨域OS · {_timestamp()}")
+    return card.build()
+
+
+def build_approval_card(task_id: str, description: str, risk_score: float, risk_reason: str, intent_type: str, target_vps: list[str], target_subsidiaries: list[str] | None = None, budget_estimate: float = 0.0) -> dict:
+    """审批卡片（带风险颜色）"""
+    color = RED if risk_score > 80 else (ORANGE if risk_score > 60 else BLUE)
+    risk_icon = "🔴" if risk_score > 80 else "🟡"
+    card = CardBuilder(f"{risk_icon} Plan Mode — 需要你审批", color)
+    card.add_field("📋 任务", description or "（无描述）")
+    card.add_fields_row([("风险评分", f"{risk_score:.1f}/100"), ("意图类型", intent_type)])
+    card.add_field("⚠️ 风险原因", risk_reason[:200])
+    card.add_field("🎯 目标 VP", ", ".join(target_vps) if target_vps else "未指定")
+    if target_subsidiaries:
+        card.add_field("🏢 目标子公司", ", ".join(target_subsidiaries))
+    if budget_estimate > 0:
+        card.add_field("💰 预算估算", f"¥{budget_estimate:.0f}")
+    card.add_field("🔑 任务 ID", f"`{task_id}`")
+    card.add_hr()
+    card.add_div(f"✅ 回复 **批准 {task_id}** 或 **拒绝 {task_id} [原因]**")
+    card.add_note("此消息由墨麟OS PlanMode 引擎自动发送")
+    return card.build()
+
+
+def build_daily_briefing_card(date: str, stats: dict[str, Any], highlights: list[str], warnings: list[str] | None = None, color: str = BLUE) -> dict:
+    """每日简报卡片"""
+    card = CardBuilder(f"☀️ CEO 每日简报 · {date}", color)
+    if stats:
+        items = list(stats.items())
+        card.add_fields_row(items[:4])
+        for k, v in items[4:]:
+            card.add_field(k, str(v))
+    if highlights:
+        card.add_hr()
+        card.add_section("✨ 亮点", highlights)
+    if warnings:
+        card.add_hr()
+        card.add_section("⚠️ 需关注", warnings)
+    card.add_note(f"墨域OS CEO引擎 · {_timestamp()}")
+    return card.build()
+
+
+def build_report_card(report_type: str, content: str, meta: dict[str, str] | None = None, color: str = PURPLE) -> dict:
+    """报告型卡片"""
+    card = CardBuilder(f"📋 {report_type}", color)
+    card.add_div(content)
+    if meta:
+        card.add_hr()
+        for k, v in meta.items():
+            card.add_field(k, v)
+    card.add_note(f"墨域OS · {_timestamp()}")
+    return card.build()
+
+
+def build_task_card(task_id: str, description: str, status: str, assignee: str = "", priority: str = "medium", color: str = BLUE) -> dict:
+    """任务状态卡片"""
+    icons = {"completed": "✅", "in_progress": "🔄", "pending": "⏳", "blocked": "🚫", "cancelled": "❌"}
+    icon = icons.get(status, "📋")
+    card = CardBuilder(f"{icon} 任务 {task_id}", color)
+    card.add_field("📋 描述", description)
+    card.add_fields_row([("状态", status), ("优先级", priority)])
     if assignee:
-        lines.append(f"  负责人: {assignee}")
-    lines.append(f"  优先级: {priority}")
-    lines.append("")
-    lines.append(card_divider())
-    lines.append(card_footer())
+        card.add_field("👤 负责人", assignee)
+    card.add_note(f"墨域OS · {_timestamp()}")
+    return card.build()
 
-    return "".join(lines)
 
+def build_simple_card(title: str, lines: list[str], color: str = BLUE) -> dict:
+    """简易卡片：传入行列表，自动识别分割线和加粗"""
+    card = CardBuilder(title, color)
+    for line in lines:
+        if line.startswith("---"):
+            card.add_hr()
+        elif line.startswith("## "):
+            card.add_div(f"**{line[3:]}**")
+        else:
+            card.add_div(line)
+    card.add_note(f"墨域OS · {_timestamp()}")
+    return card.build()
+
+
+# ── 消息封装 ─────────────────────────────────────────
+
+
+def card_payload(card_dict: dict) -> dict:
+    """将卡片嵌入飞书 interactive 消息格式"""
+    return {"msg_type": "interactive", "content": json.dumps(card_dict, ensure_ascii=False)}
+
+
+# ── 独立发送器 ───────────────────────────────────────
+
+
+class FeishuCardSender:
+    """通过飞书 Open API 直接发送互动卡片（独立发送器）
+
+    用法:
+        sender = FeishuCardSender()
+        sender.send_card(card_dict, chat_id="oc_xxx")
+    """
+
+    API_BASE = "https://open.feishu.cn/open-apis"
+
+    def __init__(self):
+        self._token: str | None = None
+        self._token_expire: float = 0.0
+        self.app_id = ""
+        self.app_secret = ""
+        self._load_credentials()
+
+    def _load_credentials(self):
+        env_paths = [Path.home() / ".hermes" / ".env", Path.cwd() / ".env"]
+        for path in env_paths:
+            if path.exists():
+                for line in path.read_text().splitlines():
+                    line = line.strip()
+                    if line.startswith("FEISHU_APP_ID="):
+                        self.app_id = line.split("=", 1)[1].strip().strip('"').strip("'")
+                    elif line.startswith("FEISHU_APP_SECRET="):
+                        self.app_secret = line.split("=", 1)[1].strip().strip('"').strip("'")
+        self.app_id = os.environ.get("FEISHU_APP_ID", self.app_id)
+        self.app_secret = os.environ.get("FEISHU_APP_SECRET", self.app_secret)
+        if not self.app_id or not self.app_secret:
+            logger.warning("FeishuCardSender: 未配置 FEISHU_APP_ID / FEISHU_APP_SECRET")
+
+    def _get_token(self) -> str:
+        if self._token and time.time() < self._token_expire:
+            return self._token
+        import requests
+        r = requests.post(f"{self.API_BASE}/auth/v3/tenant_access_token/internal", json={"app_id": self.app_id, "app_secret": self.app_secret}, timeout=10)
+        data = r.json()
+        if data.get("code") != 0:
+            raise RuntimeError(f"飞书 token 获取失败: {data}")
+        self._token = data["tenant_access_token"]
+        self._token_expire = time.time() + data.get("expire", 7200)
+        return self._token
+
+    def send_card(self, card_dict: dict, chat_id: str, receive_id_type: str = "chat_id") -> dict:
+        """发送互动卡片到指定会话"""
+        import requests
+        token = self._get_token()
+        payload = card_payload(card_dict)
+        r = requests.post(
+            f"{self.API_BASE}/im/v1/messages?receive_id_type={receive_id_type}",
+            headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+            json={"receive_id": chat_id, "msg_type": payload["msg_type"], "content": payload["content"]},
+            timeout=10,
+        )
+        result = r.json()
+        if result.get("code") != 0:
+            logger.error("飞书卡片发送失败: %s", result)
+        return result
+
+    def send_text(self, chat_id: str, text: str, receive_id_type: str = "chat_id") -> dict:
+        """发送纯文本消息（备用）"""
+        import requests
+        token = self._get_token()
+        r = requests.post(
+            f"{self.API_BASE}/im/v1/messages?receive_id_type={receive_id_type}",
+            headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+            json={"receive_id": chat_id, "msg_type": "text", "content": json.dumps({"text": text}, ensure_ascii=False)},
+            timeout=10,
+        )
+        return r.json()
+
+    @classmethod
+    def send_status_card(cls, chat_id: str, title: str = "", status_items: list[tuple[str, str]] | None = None, alerts: list[str] | None = None, actions: list[str] | None = None) -> dict:
+        """一键发送状态概览卡片"""
+        sender = cls()
+        card = build_status_card(title=title or "系统状态概览", status_items=status_items or [], alerts=alerts, actions=actions)
+        return sender.send_card(card, chat_id)
+
+
+# ── 兼容层：Hermes send_message 降级路径 ──────────────
+
+
+def card_to_text(card_dict: dict) -> str:
+    """将卡片字典转为纯文本（供 Hermes send_message 降级使用）"""
+    title = card_dict.get("header", {}).get("title", {}).get("content", "")
+    lines = [f"━━━ {title} ━━━", ""]
+    for el in card_dict.get("elements", []):
+        tag = el.get("tag")
+        if tag == "div":
+            lines.append(el.get("text", {}).get("content", ""))
+        elif tag == "hr":
+            lines.append("───")
+        elif tag == "column_set":
+            for col in el.get("columns", []):
+                vals = [e.get("text", {}).get("content", "").replace("**", "") for e in col.get("elements", [])]
+                lines.append(" | ".join(vals))
+        elif tag == "note":
+            lines.append(el.get("text", {}).get("content", ""))
+        elif tag == "action":
+            for act in el.get("actions", []):
+                lines.append(f"[ {act.get('text', {}).get('content', '')} ]")
+    return "\n".join(lines)
+
+
+# ── 测试 ─────────────────────────────────────────────
 
 if __name__ == "__main__":
-    # 测试输出
-    test_card = build_system_status_card(
-        title="系统状态测试",
-        status_items=[("SKILL 总数", "492"), ("Worker", "20"), ("状态", "正常")],
-        alerts=["无"],
-        actions=["继续执行整改计划"],
-    )
-    print(test_card)
+    card = build_status_card("✅ 测试", [("SKILL", "336"), ("Worker", "22"), ("状态", "正常")], ["无"], ["继续"])
+    print(json.dumps(card, ensure_ascii=False, indent=2))
+    print("\n--- 纯文本 ---")
+    print(card_to_text(card))
+
+    sender = FeishuCardSender()
+    if sender.app_id:
+        print(f"\n✅ 飞书凭证已配置: {sender.app_id[:12]}...")
+    else:
+        print("\n⚠️ 未配置飞书凭证（仅卡片构建器模式可用）")

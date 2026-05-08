@@ -4,7 +4,7 @@
 蓝图概念代码化。
 
 当 RiskEngine 评分 > 60 时自动触发 Plan Mode，
-通过 Hermes send_message 向飞书推送结构化审批卡片，
+通过飞书 Open API 推送原生互动审批卡片，
 包含：风险评分、详情、批准/拒绝决策。
 
 用法:
@@ -12,9 +12,9 @@
     await plan.request_approval(task_id, risk_assessment, intent_result)
 
 依赖:
-    - Hermes Agent 的 send_message 工具（运行时注入）
     - risk_engine.RiskAssessment
     - intent_router.IntentResult
+    - FeishuCardSender（通过 feishu_card 模块）
 """
 
 import json
@@ -22,6 +22,8 @@ import logging
 import time
 from dataclasses import dataclass, field
 from typing import Any, Callable
+
+from .feishu_card import FeishuCardSender, build_approval_card, card_payload
 
 logger = logging.getLogger("molin.ceo.plan_mode")
 
@@ -63,10 +65,16 @@ class PlanMode:
         self._pending: dict[str, ApprovalRequest] = {}
         self._history: list[ApprovalRequest] = []
         self._message_sender: Callable | None = None
+        self._sender: FeishuCardSender | None = None
+        self._notify_chat_id: str = "oc_16b4568be8c63c198b2cd6c4d3d11b85"
 
     def set_message_sender(self, sender: Callable):
-        """设置消息发送函数（由运行时注入 Hermes 的 send_message）"""
+        """设置消息发送函数（兼容旧接口，使用 FeishuCardSender 代替）"""
         self._message_sender = sender
+
+    def set_notify_chat_id(self, chat_id: str):
+        """设置飞书会话 ID"""
+        self._notify_chat_id = chat_id
 
     def needs_approval(self, risk_score: float) -> bool:
         """判断是否需要审批"""
@@ -87,8 +95,8 @@ class PlanMode:
         """
         发起审批请求。
 
-        当 send_message 可用时推送飞书卡片；
-        否则返回待审批状态，由外部轮询。
+        通过 FeishuCardSender 向飞书推送原生 interactive 审批卡片；
+        如果发送器初始化失败，降级为 Hermes send_message 纯文本。
 
         返回:
             ApprovalRequest — status 可能为:
@@ -110,24 +118,48 @@ class PlanMode:
         )
         self._pending[task_id] = request
 
-        # 构建审批卡片文本
+        # 构建审批卡片
         card_text = self._build_card(request)
         logger.info("[PlanMode] 发起审批请求: task=%s risk=%.1f", task_id, risk_score)
 
-        # 尝试推送飞书
-        if self._message_sender:
+        # 尝试通过 FeishuCardSender 发送原生卡片
+        feishu_sent = False
+        try:
+            sender = FeishuCardSender()
+            if sender.app_id:
+                card_dict = build_approval_card(
+                    task_id=request.task_id,
+                    description=request.description or "（无描述）",
+                    risk_score=request.risk_score,
+                    risk_reason=request.risk_reason[:200],
+                    intent_type=request.intent_type,
+                    target_vps=request.target_vps or [],
+                    target_subsidiaries=request.target_subsidiaries,
+                    budget_estimate=request.budget_estimate,
+                )
+                result = sender.send_card(card_dict, self._notify_chat_id)
+                if result.get("code") == 0:
+                    feishu_sent = True
+                    logger.info("[PlanMode] ✅ 原生审批卡片已推送到飞书: %s", task_id)
+                else:
+                    logger.warning("[PlanMode] ⚠️ 飞书卡片发送返回异常: %s", result)
+            else:
+                logger.warning("[PlanMode] ⚠️ 未配置飞书凭证，降级到文本")
+        except Exception as e:
+            logger.warning("[PlanMode] ⚠️ 飞书卡片发送异常: %s (降级到文本)", e)
+
+        # 降级：通过 Hermes send_message 发送纯文本
+        if not feishu_sent and self._message_sender:
             try:
                 await self._message_sender(
-                    target="origin",  # 推送到当前对话
+                    target="origin",
                     message=card_text,
                 )
-                logger.info("[PlanMode] ✅ 审批卡片已推送到飞书: %s", task_id)
+                logger.info("[PlanMode] ✅ 审批文本已推送到飞书: %s", task_id)
             except Exception as e:
-                logger.warning("[PlanMode] ⚠️ 飞书推送失败: %s (任务将等待)", e)
-        else:
-            logger.info(
-                "[PlanMode] ⚠️ 未配置消息发送器，审批请求已记录: %s", task_id
-            )
+                logger.warning("[PlanMode] ⚠️ 飞书文本推送失败: %s (任务将等待)", e)
+        elif not feishu_sent:
+            logger.info("[PlanMode] ⚠️ 未配置消息发送器，审批请求已记录: %s", task_id)
 
         return request
 
@@ -174,32 +206,20 @@ class PlanMode:
         )[:limit]
 
     def _build_card(self, request: ApprovalRequest) -> str:
-        """构建飞书审批卡片文本"""
-        risk_icon = "🔴" if request.risk_score > 80 else "🟡"
-        budget_str = f"¥{request.budget_estimate:.0f}" if request.budget_estimate > 0 else "未指定"
+        """构建审批卡片纯文本（供 Hermes send_message 降级使用）"""
+        from .feishu_card import card_to_text
 
-        lines = [
-            f"{risk_icon} **Plan Mode — 需要你的审批**",
-            "",
-            f"**任务描述:** {request.description or '（无描述）'}",
-            f"**风险评分:** {request.risk_score:.1f}/100",
-            f"**风险原因:** {request.risk_reason[:200]}",
-            f"**意图类型:** {request.intent_type}",
-            f"**目标VP:** {', '.join(request.target_vps) if request.target_vps else '未指定'}",
-        ]
-        if request.target_subsidiaries:
-            lines.append(f"**目标子公司:** {', '.join(request.target_subsidiaries)}")
-
-        lines.extend([
-            f"**预算估算:** {budget_str}",
-            f"**任务ID:** `{request.task_id}`",
-            "",
-            "---",
-            "✅ 回复 `批准 {task_id}` 或 `拒绝 {task_id} [原因]`",
-            "",
-            "*此消息由墨麟OS PlanMode引擎自动发送*",
-        ])
-        return "\n".join(lines)
+        card_dict = build_approval_card(
+            task_id=request.task_id,
+            description=request.description or "（无描述）",
+            risk_score=request.risk_score,
+            risk_reason=request.risk_reason[:200],
+            intent_type=request.intent_type,
+            target_vps=request.target_vps or [],
+            target_subsidiaries=request.target_subsidiaries,
+            budget_estimate=request.budget_estimate,
+        )
+        return card_to_text(card_dict)
 
     def parse_response(self, text: str) -> tuple[str, str, str] | None:
         """

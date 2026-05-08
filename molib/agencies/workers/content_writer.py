@@ -33,17 +33,69 @@ class ContentWriter(SubsidiaryWorker):
             topic = task.payload.get("topic", "未指定主题")
             count = task.payload.get("count", 1)
             style = task.payload.get("style", "专业科普")
-            results = []
-            for i in range(count):
-                results.append({
-                    "title": "{0}深度解析（第{1}篇）".format(topic, i+1),
-                    "word_count": 2000,
+            platform = task.payload.get("platform", "公众号")
+            keywords = task.payload.get("keywords", [])
+            word_count = task.payload.get("word_count", 1500)
+
+            # LLM 生成真实内容
+            system = (
+                "你是墨笔文创——墨麟AI集团旗下的专业内容创作子公司。"
+                "你的专长是中文内容创作：包括小红书种草文案、公众号深度文章、"
+                "博客技术文章、SEO优化文案等。你精通多风格写作（专业科普/亲和日常/幽默段子/营销软文），"
+                "熟悉中文互联网的内容调性和传播规律。"
+                "请根据用户的需求生成高质量、结构化的文章内容。"
+            )
+            prompt = (
+                f"请为以下主题创作一篇{platform}风格的文章：\n\n"
+                f"主题：{topic}\n"
+                f"风格：{style}\n"
+                f"目标字数：{word_count}字左右\n"
+                f"关键词：{', '.join(keywords) if keywords else '无特定'}\n\n"
+                f"请输出JSON格式，包含：title（文章标题）, content（完整文章正文，含Markdown格式）, "
+                f"outline（大纲列表）, summary（一句话摘要）, word_count（实际字数）, tags（3-5个标签）"
+            )
+
+            result = await self.llm_chat_json(prompt, system=system)
+            if result:
+                articles = [{
+                    "title": result.get("title", f"{topic}深度解析"),
+                    "content": result.get("content", ""),
+                    "outline": result.get("outline", []),
+                    "summary": result.get("summary", ""),
+                    "word_count": result.get("word_count", word_count),
                     "style": style,
-                    "keywords": task.payload.get("keywords", []),
-                    "outline": ["## 引言", "## {0}的背景".format(topic), "## 核心分析", "## 结论"],
-                    "status": "draft_generated"
-                })
-            output = {"articles": results, "count": count, "topic": topic}
+                    "tags": result.get("tags", []),
+                    "status": "draft_generated",
+                }]
+                # 如果需要多篇，让LLM再生成
+                for i in range(1, count):
+                    extra_prompt = prompt + f"\n\n这是第{i+1}篇，请换一个不同的角度和标题来创作。"
+                    extra = await self.llm_chat_json(extra_prompt, system=system)
+                    if extra:
+                        articles.append({
+                            "title": extra.get("title", f"{topic}多角度分析（第{i+1}篇）"),
+                            "content": extra.get("content", ""),
+                            "outline": extra.get("outline", []),
+                            "summary": extra.get("summary", ""),
+                            "word_count": extra.get("word_count", word_count),
+                            "style": style,
+                            "tags": extra.get("tags", []),
+                            "status": "draft_generated",
+                        })
+                output = {"articles": articles, "count": count, "topic": topic, "platform": platform, "source": "llm"}
+            else:
+                # fallback: 原有 mock 输出
+                results = []
+                for i in range(count):
+                    results.append({
+                        "title": "{0}深度解析（第{1}篇）".format(topic, i+1),
+                        "word_count": 2000,
+                        "style": style,
+                        "keywords": keywords,
+                        "outline": ["## 引言", "## {0}的背景".format(topic), "## 核心分析", "## 结论"],
+                        "status": "draft_generated"
+                    })
+                output = {"articles": results, "count": count, "topic": topic, "platform": platform, "source": "mock"}
             return WorkerResult(
                 task_id=task.task_id,
                 worker_id=self.worker_id,

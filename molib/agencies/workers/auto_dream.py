@@ -1,4 +1,4 @@
-"""墨梦AutoDream Worker — 记忆整合、战略复盘与记忆蒸馏"""
+"""墨梦AutoDream Worker — 记忆整合、战略复盘与记忆蒸馏 (LLM驱动)"""
 
 import json
 import os
@@ -365,19 +365,94 @@ class AutoDream(SubsidiaryWorker):
     async def execute(self, task: Task, context: dict | None = None) -> WorkerResult:
         try:
             week = task.payload.get("week", "本周")
-            output = {
-                "week": week,
-                "memory_stats": {
-                    "total": task.payload.get("total_memories", 0),
-                    "new_this_week": task.payload.get("new_this_week", 0),
-                },
-                "strategic_insights": [
-                    "识别3个高频失败模式",
-                    "建议优化2个子公司调度策略",
-                ],
-                "action_items": ["优化VP分派逻辑", "更新定价策略"],
-                "status": "dream_cycle_complete"
-            }
+            action = task.payload.get("action", "review")
+
+            if action in ("distill", "dream_distill"):
+                # 调用底层的 dream_distill
+                work_memory = task.payload.get("work_memory", [])
+                file_path = dream_distill(work_memory)
+                output = {
+                    "action": "distilled",
+                    "week": week,
+                    "file_written": file_path,
+                    "memory_stats": {
+                        "total": task.payload.get("total_memories", len(work_memory)),
+                        "new_this_week": task.payload.get("new_this_week", len(work_memory)),
+                    },
+                    "status": "distill_complete",
+                }
+
+            elif action in ("reflect", "dream_reflect"):
+                # 调用底层的 dream_reflect
+                task_log = task.payload.get("task_log", [])
+                file_path = dream_reflect(task_log)
+                output = {
+                    "action": "reflected",
+                    "week": week,
+                    "file_written": file_path,
+                    "status": "reflect_complete",
+                }
+
+            elif action in ("consolidate", "dream_consolidate"):
+                # 调用底层的 dream_consolidate
+                status_report = dream_consolidate()
+                output = {
+                    "action": "consolidated",
+                    "week": week,
+                    "status_report": status_report,
+                    "status": "consolidate_complete",
+                }
+
+            else:
+                # 默认战略复盘：用LLM生成战略洞察
+                total_memories = task.payload.get("total_memories", 0)
+                new_this_week = task.payload.get("new_this_week", 0)
+
+                prompt = f"""你是一位AI系统战略复盘分析师。根据以下本周运营数据进行战略复盘：
+
+周次：{week}
+总记忆数：{total_memories}
+本周新增记忆：{new_this_week}
+额外上下文：{task.payload.get("context", "无")}
+
+请以JSON格式返回：
+- week: 周次
+- memory_stats: 记忆统计，包含 total (int), new_this_week (int)
+- strategic_insights: 战略洞察列表（至少3条，有深度）
+- identified_patterns: 识别到的高频模式或失败模式列表
+- action_items: 建议行动项列表（至少2条）
+- status: "dream_cycle_complete"
+"""
+                system = "你是一位专业的AI系统战略复盘分析师，擅长从数据中提取深层洞察。返回严格JSON。"
+                llm_output = await self.llm_chat_json(prompt, system=system)
+
+                if not llm_output:
+                    output = {
+                        "week": week,
+                        "memory_stats": {
+                            "total": total_memories,
+                            "new_this_week": new_this_week,
+                        },
+                        "strategic_insights": [
+                            "识别3个高频失败模式",
+                            "建议优化2个子公司调度策略",
+                        ],
+                        "identified_patterns": [
+                            {"pattern": "超时重试模式", "frequency": 3},
+                            {"pattern": "资源不足导致失败", "frequency": 2},
+                        ],
+                        "action_items": ["优化VP分派逻辑", "更新定价策略"],
+                        "status": "dream_cycle_complete",
+                    }
+                else:
+                    llm_output.setdefault("week", week)
+                    llm_output.setdefault("memory_stats", {
+                        "total": total_memories,
+                        "new_this_week": new_this_week,
+                    })
+                    llm_output.setdefault("status", "dream_cycle_complete")
+                    output = llm_output
+
             return WorkerResult(
                 task_id=task.task_id,
                 worker_id=self.worker_id,

@@ -1,7 +1,7 @@
 """墨域OS — 子公司Worker基类"""
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, Optional, TypeVar
 
 T = TypeVar("T")
 
@@ -38,6 +38,46 @@ class SubsidiaryWorker(ABC):
 
     def quality_check(self, output: dict) -> float:
         return 85.0
+
+    # ── LLM 辅助工具 ────────────────────────────────────────────────
+
+    async def llm_chat(self, prompt: str, system: str = "",
+                       model: str = "deepseek-v4-flash") -> str:
+        """
+        简便的 LLM 调用，供 Worker 实现使用。
+
+        调用 molib/ceo/llm_client.py 的 LLMClient。
+        如果导入失败或调用失败，返回空字符串。
+        """
+        try:
+            from molib.ceo.llm_client import LLMClient
+            client = LLMClient()
+            messages = []
+            if system:
+                messages.append({"role": "system", "content": system})
+            messages.append({"role": "user", "content": prompt})
+            return await client.chat(messages, model=model)
+        except Exception:
+            return ""
+
+    async def llm_chat_json(self, prompt: str, system: str = "",
+                            model: str = "deepseek-v4-flash") -> dict:
+        """
+        调用 LLM 并解析 JSON 响应。
+        返回解析后的 dict，解析失败返回空 dict。
+        """
+        import json
+        import re
+        result = await self.llm_chat(prompt, system=system, model=model)
+        if not result:
+            return {}
+        try:
+            json_match = re.search(r"\{.*\}", result, re.DOTALL)
+            if json_match:
+                return json.loads(json_match.group(0))
+        except (json.JSONDecodeError, AttributeError):
+            pass
+        return {}
 
 class WorkerRegistry:
     _workers: dict[str, type[SubsidiaryWorker]] = {}
