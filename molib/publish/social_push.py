@@ -9,14 +9,18 @@
 - 微信公众号
 - 掘金
 - X/Twitter
-- 闲鱼
+- 闲鱼 — 支持 xianyu_helper 真实发布（如可用）
 
-基于 social-push (jihe520, 405★) 架构设计.
+基于 social-push (jihe520, 405 star) 架构设计。
 """
 
 import logging
+import os
+import subprocess
+import sys
 from datetime import datetime
 from enum import Enum
+from pathlib import Path
 from typing import Optional
 
 logger = logging.getLogger("molin.publish")
@@ -50,7 +54,7 @@ PLATFORM_CONFIG = {
     Platform.WEIBO: {
         "name": "微博",
         "content_types": ["图文", "视频"],
-        "max_title_len": 0,  # 微博无标题
+        "max_title_len": 0,
         "max_body_len": 2000,
         "schedule_support": True,
     },
@@ -83,6 +87,75 @@ PLATFORM_CONFIG = {
         "schedule_support": False,
     },
 }
+
+
+# ── 闲鱼发布适配器 ──────────────────────────────────────────────
+
+XIANYU_HELPER_PATH = Path.home() / "xianyu_agent" / "xianyu_helper.py"
+
+
+def _xianyu_helper_available() -> bool:
+    """检测 xianyu_helper 是否可导入"""
+    return XIANYU_HELPER_PATH.exists()
+
+
+def _publish_to_xianyu(title: str, desc: str, price: float = 199,
+                       category: str = "文档代写") -> dict:
+    """
+    通过 xianyu_helper 真实发布到闲鱼。
+    检测可用性，不可用时返回 mock 结果 + 启动说明。
+    """
+    if not _xianyu_helper_available():
+        return {
+            "status": "adapter_unavailable",
+            "platform": "xianyu",
+            "message": "xianyu_helper 不可用",
+            "setup": (
+                f"安装 xianyu_helper:\n"
+                f"  cd ~/xianyu_agent\n"
+                f"  pip install -r requirements.txt --break-system-packages\n"
+                f"  然后运行: python3.12 xianyu_helper.py\n"
+            ),
+        }
+
+    try:
+        # 将 xianyu_agent 加入 path 并导入
+        sys.path.insert(0, str(XIANYU_HELPER_PATH.parent))
+        import xianyu_helper as xy_mod
+
+        # 调用发布
+        if hasattr(xy_mod, "publish_item"):
+            result = xy_mod.publish_item(title=title, desc=desc, price=price, category=category)
+            return {
+                "status": "published",
+                "platform": "xianyu",
+                "title": title,
+                "result": str(result)[:500],
+                "published_at": datetime.now().isoformat(),
+            }
+        elif hasattr(xy_mod, "auto_publish"):
+            result = xy_mod.auto_publish(product_type=category, price=price, keywords=title)
+            return {
+                "status": "published",
+                "platform": "xianyu",
+                "title": title,
+                "result": str(result)[:500],
+                "published_at": datetime.now().isoformat(),
+            }
+        else:
+            return {
+                "status": "adapter_missing_function",
+                "platform": "xianyu",
+                "message": "未找到 publish_item/auto_publish 函数",
+                "available_functions": [f for f in dir(xy_mod) if not f.startswith("_")],
+            }
+    except Exception as e:
+        return {
+            "status": "adapter_error",
+            "platform": "xianyu",
+            "error": str(e),
+            "message": f"调用 xianyu_helper 失败: {e}",
+        }
 
 
 class Content:
@@ -120,7 +193,20 @@ class SocialPush:
         if not valid:
             return {"status": "rejected", "reason": msg}
 
-        # 在实际部署中，这里调用各平台API
+        # ── 闲鱼走真实 xianyu_helper 发布 ──
+        if content.platform == Platform.XIANYU:
+            result = _publish_to_xianyu(
+                title=content.title,
+                desc=content.body,
+                price=content.tags[0] if content.tags and content.tags[0].lstrip("$").isdigit() else 199,
+                category=content.tags[1] if len(content.tags) > 1 else "文档代写",
+            )
+            content.status = result.get("status", "published")
+            self.publish_log.append(result)
+            logger.info("发布到闲鱼: %s (status=%s)", content.title[:30], result.get("status"))
+            return result
+
+        # ── 其他平台走 mock（待对接真实 API） ──
         result = {
             "platform": content.platform.value,
             "platform_name": PLATFORM_CONFIG[content.platform]["name"],
@@ -133,7 +219,7 @@ class SocialPush:
 
         content.status = "published"
         self.publish_log.append(result)
-        logger.info(f"发布到{result['platform_name']}: {content.title[:30]}")
+        logger.info("发布到%s: %s", result["platform_name"], content.title[:30])
         return result
 
     def cross_post(self, content: Content, platforms: list[Platform]) -> list[dict]:
@@ -161,7 +247,11 @@ publisher = SocialPush()
 
 def publish(platform: str = ""):
     """CLI入口"""
-    print("📡 多平台发布引擎就绪")
+    print("  多平台发布引擎就绪")
     print(f"   支持平台: {', '.join(p.name for p in PLATFORM_CONFIG)}")
+    if _xianyu_helper_available():
+        print("   闲鱼: xianyu_helper 可用，支持真实发布")
+    else:
+        print("   闲鱼: xianyu_helper 未安装（将返回 mock）")
     print(f"   目标平台: {platform or '全部'}")
     return {"status": "ready", "platforms": len(PLATFORM_CONFIG)}

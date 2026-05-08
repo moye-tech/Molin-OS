@@ -152,7 +152,9 @@ def generate_placeholder_intel() -> dict:
 
 
 # ============================================================
-# 内容草稿生成模块 (AI模拟)
+# 内容草稿生成模块
+# 实际部署时取消注释下方 LLMClient 调用，替换 print() 草稿输出
+# 参考: molib/ceo/llm_client.py — async def simple_chat(prompt, system, model)
 # ============================================================
 
 def generate_content_drafts(intel: dict) -> list:

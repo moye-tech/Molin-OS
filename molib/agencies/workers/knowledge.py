@@ -28,6 +28,7 @@ class Knowledge(SubsidiaryWorker):
         try:
             action = task.payload.get("action", "query")
             query = task.payload.get("query", "")
+            namespace = task.payload.get("namespace")
 
             if action == "build_knowledge_graph":
                 from ...shared.knowledge.knowledge_grapher import KnowledgeGrapher
@@ -53,14 +54,32 @@ class Knowledge(SubsidiaryWorker):
                     "json": grapher.export_json(graph),
                     "status": "graph_built"
                 }
+            elif action in ("index", "index_text"):
+                from ...shared.knowledge.rag_engine import RAGEngine
+                engine = RAGEngine()
+                text = task.payload.get("text", "")
+                metadata = task.payload.get("metadata", {})
+                ns = task.payload.get("namespace", query)
+                if text:
+                    engine.index_text(text, metadata=metadata, namespace=ns or query)
+                    output = {"action": "indexed", "text_len": len(text), "namespace": ns or query, "status": "indexed"}
+                else:
+                    output = {"action": "indexed", "status": "skipped", "reason": "text为空"}
+            elif action in ("stats", "status"):
+                from ...shared.knowledge.rag_engine import RAGEngine
+                engine = RAGEngine()
+                output = engine.stats()
+                output["action"] = "stats"
             else:
+                # 默认 query：调 RAGEngine 语义搜索
+                from ...shared.knowledge.rag_engine import RAGEngine
+                engine = RAGEngine()
+                top_k = task.payload.get("top_k", 5)
+                results = engine.search(query, top_k=top_k, namespace=namespace)
                 output = {
                     "query": query,
-                    "results": [
-                        {"title": "关于{}的FAQ".format(query), "relevance": 0.95},
-                        {"title": "{}操作SOP".format(query), "relevance": 0.88},
-                    ],
-                    "sop_count": task.payload.get("total_sops", 0),
+                    "results": results,
+                    "total": len(results),
                     "status": "knowledge_retrieved"
                 }
             return WorkerResult(
