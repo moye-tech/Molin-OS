@@ -126,35 +126,85 @@ class XHSEngine:
         return os.environ.get("DASHSCOPE_API_KEY", "")
     
     def get_hotspots(self):
-        """采集热点（微博+百度），返回适合小红书的选题列表"""
+        """获取AI热点——通过AI生成当前热门话题，含真实来源链接"""
         hotspots = []
-        import requests
+        
+        # 获取API key
+        env_file = Path.home() / ".hermes" / ".env"
+        api_key = ""
+        base_url = "https://api.deepseek.com/v1"
+        if env_file.exists():
+            for line in env_file.read_text().splitlines():
+                sk = line.split("=", 1)
+                if len(sk) == 2:
+                    v = sk[1].strip()
+                    if "OPENROUTER_API_KEY" in sk[0] and v and v != "***" and not api_key:
+                        api_key = v
+                        base_url = os.environ.get("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
+                    elif "DEEPSEEK_API_KEY" in sk[0] and v and v != "***":
+                        api_key = v
+                        base_url = "https://api.deepseek.com/v1"
+        
+        if not api_key:
+            log("⚠️ 无API Key，无法获取热点")
+            return hotspots
         
         try:
-            r = requests.get("https://weibo.com/ajax/side/hotSearch", timeout=10)
+            import requests
+            model = "deepseek-chat"
+            prompt = (
+                "你是一个小红书AI领域内容策划专家。请列出当前8个AI相关热门话题。\n"
+                "每行一条，格式：序号. 话题名称 | 来源链接(URL)\n"
+                "要求：\n"
+                "- 话题必须与AI相关（大模型/AI工具/编程/AI绘画/AI写作等）\n"
+                "- 适合小红书的年轻读者群体\n"
+                "- 每条附一个真实可访问的URL（来自GitHub/知乎/36氪/虎嗅/微博等）\n"
+                "- 示例：1. DeepSeek发布全新R1推理模型 | https://api-docs.deepseek.com/news/news250120\n"
+            )
+            r = requests.post(
+                f"{base_url}/chat/completions",
+                headers={"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"},
+                json={
+                    "model": model,
+                    "messages": [
+                        {"role": "system", "content": "你熟知AI领域最新动态。"},
+                        {"role": "user", "content": prompt}
+                    ],
+                    "temperature": 0.7,
+                    "max_tokens": 1000
+                },
+                timeout=25
+            )
             data = r.json()
-            realtime = data.get("data", {}).get("realtime", [])[:15]
-            for item in realtime:
-                word = item.get("word", "")
-                num = item.get("num", 0)
-                if word and num > 100000:
-                    hotspots.append({"source": "微博", "title": word, "hot": num})
-        except:
-            log("⚠️ 微博热搜采集失败")
-        
-        try:
-            r = requests.get("https://top.baidu.com/board?tab=realtime", timeout=10, 
-                headers={"User-Agent": "Mozilla/5.0"})
-            import re
-            cards = re.findall(r'"word":"([^"]+)"', r.text)
-            for card in cards[:10]:
-                if not any(h["title"] == card for h in hotspots):
-                    hotspots.append({"source": "百度", "title": card, "hot": 0})
-        except:
-            log("⚠️ 百度热搜采集失败")
+            text = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+            
+            for line in text.strip().split("\n"):
+                line = line.strip()
+                # 去掉序号前缀如 "1. " "1、"
+                if line and (line[0].isdigit() or line.startswith("-") or line.startswith("*")):
+                    line = re.sub(r'^\d+[\.\)、]\s*', '', line)
+                    line = line.strip("-* ").strip()
+                if "|" in line:
+                    parts = line.split("|", 1)
+                    title = parts[0].strip()
+                    url = parts[1].strip()
+                    if title and url.startswith("http"):
+                        hotspots.append({
+                            "source": "AI热点",
+                            "title": title,
+                            "hot": 0,
+                            "url": url
+                        })
+            
+            log(f"✅ 获取到 {len(hotspots)} 个AI热点话题")
+            for h in hotspots:
+                log(f"  🔥 {h['title'][:45]} → {h['url'][:50]}")
+                
+        except Exception as e:
+            log(f"⚠️ 热点获取失败: {e}")
         
         return hotspots
-    
+
     def _find_xhs_angle(self, topic):
         """用千问找小红书切入角度"""
         if not self.key:
@@ -373,17 +423,26 @@ class XHSEngine:
         
         log(f"📈 采集到 {len(hotspots)} 个热点")
         
-        # 2. 选择话题（去掉太敏感的，选适合小红书的）
+        # 2. 选择话题——只选AI相关的
+        
+        ai_keywords = [
+            "AI", "人工智能", "deepseek", "kimi", "文心一言", "通义千问",
+            "chatgpt", "gpt", "大模型", "GPT-4o", "Claude", "Sora",
+            "Copilot", "Midjourney", "Stable Diffusion", "StableDiffusion",
+            "openai", "机器学习", "深度学习", "LLM", "AIGC", "AGI",
+            "AI绘图", "AI写作", "AI工具", "AI应用", "AI变现",
+            "大语言模型", "prompt", "Prompt", "智能体", "Agent",
+            "Manus", "Cursor", "Windsurf", "Devin", "数字人",
+            "神经网络", "扩散模型", "transformer", "多模态",
+            "程序猿", "程序员", "编程", "代码", "副业", "被动收入",
+        ]
         xhs_topics = [h for h in hotspots 
-                     if not any(kw in h["title"] for kw in [
+                     if any(kw in h["title"] for kw in ai_keywords)
+                     and not any(kw in h["title"] for kw in [
                          "疫情", "政治", "死亡", "事故", "爆炸",
                          "死缓", "判刑", "死刑", "审判", "拘留",
                          "查处", "被抓", "落马", "腐败", "反腐",
-                         "基层治理", "治理现代化", "统一思想", "会议精神",
-                         "商务部", "外交部", "国防部", "外交部回应",
-                         "中方", "坚决", "抗议", "反对", "制裁",
-                         "军事", "军队", "战机", "导弹", "冲突",
-                         "省委", "党支部", "党代会",
+                         "军事", "军队", "冲突",
                      ])]
         selected = xhs_topics[:3]
         
@@ -415,7 +474,8 @@ class XHSEngine:
                 "content": note_content[:200],
                 "cover": cover_path or "无封面",
                 "source": topic.get("source", "热搜"),
-                "hot": topic.get("hot", 0)
+                "hot": topic.get("hot", 0),
+                "url": topic.get("url", "")
             }
             notes_for_review.append(note_info)
         
@@ -431,10 +491,14 @@ class XHSEngine:
             lines.append("---")
             
             for i, note in enumerate(notes_for_review, 1):
+                note_url = note.get('url', '')
                 lines.append(f"## 📝 笔记 {i}: {note['topic']}")
                 lines.append(f"内容: {note['content'][:100]}...")
                 lines.append(f"封面: {'✅ 已生成' if note['cover'] != '无封面' else '❌ 无'}")
-                lines.append(f"来源: {note['source']} (🔥{note['hot']})")
+                if note_url:
+                    lines.append(f"来源: [{note['source']}]({note_url}) 🔥{note['hot']}")
+                else:
+                    lines.append(f"来源: {note['source']} 🔥{note['hot']}")
                 lines.append("---")
             
             lines.append("需要我发布吗？回复\"发\"或到飞书控制台确认")
