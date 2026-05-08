@@ -1,6 +1,7 @@
 """
 墨麟OS (Molin OS) — Python包安装配置
-28实体 · 339技能 · 22营收子公司 · 5VP管理层
+6层架构 · 290技能 · 25家Worker · 22营收子公司 · 5VP管理层
+每月营收目标 ¥52,000 · 零空转 · 完整可部署
 """
 
 from setuptools import setup, find_packages
@@ -13,7 +14,7 @@ setup(
     version="5.0.0",
     author="moye-tech",
     author_email="fengye940708@gmail.com",
-    description="墨麟OS — AI一人公司操作系统 (28实体·339技能·¥52K/月)",
+    description="墨麟OS — AI一人公司操作系统 (6层·290技能·25Worker·¥52K/月)",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/moye-tech/-Hermes-OS",

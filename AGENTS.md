@@ -4,6 +4,8 @@
 本文件在每次会话启动时注入系统提示。
 它描述公司的执行模型、子公司-Worker 映射、常用 CLI 命令和治理规则。
 所有名字与 company.toml 和 Worker 文件名严格对齐。
+
+最新更新: 2026-05-06 — v5.0 全面同步
 -->
 
 # 墨麟 AI 集团 · 项目上下文
@@ -80,18 +82,26 @@ python -m molib order status --order-id xxx
 # 数据（墨测数据）
 python -m molib data analyze --file xxx.csv
 
-# 交易（墨投交易 — 新增）
+# 交易（墨投交易）
 python -m molib trading signal --symbol BTC/USDT
 python -m molib trading analyze --market-type crypto --symbol BTC/USDT
 python -m molib trading research --ticker BTC
 
 # Handoff自动路由
-python -m molib handoff list                     # 查看所有可用handoff
+python -m molib handoff list                     # 查看所有可用Worker
 python -m molib handoff route --task "内容创作"  # 自动路由到匹配Worker
 python -m molib handoff history                  # 查看handoff执行历史
+
+# 规划分解
+python -m molib plan create --title "..." --description "..."
+python -m molib plan decompose --plan-id xxx
+
+# 技能商店安装器
+python -m molib skill-store install --package xxx
+python -m molib skill-store list
 ```
 
-## 22家子公司与 Worker 文件映射
+## 25家 Worker 与 22家子公司映射
 
 ### VP 营销（5家）
 | 统一名称 | Worker 文件 | 核心能力 | 所属技能 |
@@ -118,13 +128,10 @@ python -m molib handoff history                  # 查看handoff执行历史
 | 墨安安全 | security.py | 代码审计、安全评估 | red-teaming, ag-vulnerability-scanner |
 | 墨梦AutoDream | auto_dream.py | AI自动化实验、快速原型 | deep-dream-memory, self-learning-loop |
 
-### VP 财务（2家）
+### VP 财务（1家）
 | 统一名称 | Worker 文件 | 核心能力 |
 |---------|------------|---------|
 | 墨算财务 | finance.py | 记账、预算、成本控制 |
-| 墨投交易 | trading.py（新增）| 量化交易策略研究、回测、信号生成 |
-|
-> **墨投交易（trading.py）** 已创建并激活，支持 `python -m molib trading` CLI 命令（信号生成、市场分析、研究、回测）。trading Worker 位于 `~/hermes-os/molib/agencies/workers/trading.py`，已注册到 WorkerRegistry。molin-trading + molin-trading-agents 技能已标记为 ✅ 已激活。
 
 ### VP 战略（3家）
 | 统一名称 | Worker 文件 | 核心能力 | 所属技能 |
@@ -140,49 +147,66 @@ python -m molib handoff history                  # 查看handoff执行历史
 | 墨脑知识 | knowledge.py | 知识管理、RAG、长期记忆 | molin-memory, supermemory, gitnexus |
 | 墨测数据 | data_analyst.py | 数据分析、测试、质量 | molin-data-analytics, molin-vizro |
 
-## 休眠技能索引（已安装但未激活 — 按优先级排列）
+### 专项预置（3家 — 非标准22家，专用领域）
+| Worker | 核心能力 | 说明 |
+|:-------|:---------|:-----|
+| trading.py | 量化交易策略·信号·回测 | 已激活，CLI: `python -m molib trading` |
+| scrapling_worker.py | 网页抓取·数据采集 | 吸收自 Scrapling |
+| router9.py | 网络流量·多路路由 | 吸收自 9router |
 
-以下技能存在于 skills/ 目录但尚未在 AGENTS.md/SOUL.md 中注册。当任务触及对应领域时，应先加载这些技能：
+## Handoff 自动路由
 
-### 优先级 1 — 本周激活
-| 技能 | 对应子公司 | 能做什么 |
-|------|-----------|---------|
-| **ghost-os** | 墨维运维 | 本机 GUI 自动化：浏览器/文件/截图自动化，无头服务器操作 |
-| **karpathy-autoresearch** | 墨研竞情 | 自主科研Agent：自动搜索+分析+总结的完整研究管线 |
-| **cli-anything** | 墨码开发 | 把任意软件变CLI：Hermes通过终端控制所有工具 |
+16家子公司已注册Handoff，支持全自动任务路由：
 
-### 优先级 2 — 月内激活
-| 技能 | 对应子公司 | 能做什么 |
-|------|-----------|---------|
-| **molin-trading + molin-trading-agents** ✅ 已激活 | 墨投交易（trading.py 已创建） | 量化交易Agent：多角度金融分析+策略研究 |
-| **molin-mcp-server** | 墨维运维 | 将高频子公司能力暴露为 MCP 工具 |
-| **beeai-workflow-engine** | 墨梦AutoDream | Schema驱动的工作流引擎，复杂流程编排 |
-| **cocoindex-incremental-engine** | 墨脑知识 | 持久增量计算引擎，长期记忆的高效更新 |
+```python
+# Python 调用
+from molib.agencies.handoff import HandoffManager
+result = HandoffManager.route("帮我写一篇小红书文案", input_data)
 
-### 优先级 3 — 长期/备用
-| 技能 | 说明 |
-|------|------|
-| **molin-health-assistant** | 健康数据分析（与一人公司主线不直接相关）|
-| **smart-home / openhue** | 智能家居控制（与一人公司主线不相关）|
-| **pokemon-player** | AI自动玩游戏（纯娱乐）|
+# CLI 调用
+python -m molib handoff route --task "帮我做数据分析"
+```
+
+支持：内容创作、设计、开发、运维、安全、CRM、客服、数据、交易、BD、财务、法务、教育、情报、出海、知识管理 共16个领域。
+路由失败时自动降级返回，不会抛出异常。
+
+## 规划分解
+
+```python
+from molib.agencies.planning import PlanningTool
+
+pt = PlanningTool()
+task = pt.decompose_task("开发一个AI封面生成器", ["墨图设计", "墨码开发", "墨维运维"])
+# 返回 {tasks: [...], dependencies: {...}, total_duration: "..."}
+
+# CLI
+python -m molib plan decompose --plan-id xxx
+```
 
 ## 飞轮管线（内容自动化链）
 
-系统每日自动运行的飞轮管线，三棒通过 relay/ 目录接力：
+系统每日自动运行的飞轮管线，三棒全自动通过 relay/ 目录接力：
 
 ```
-08:00 墨研竞情 → daily_hot_report.py 扫描情报 → relay/intelligence_morning.json
-09:00 墨笔文创 → 读情报+写内容 → relay/content_flywheel.json
-10:00 墨播短视频 → 读内容+脚本化 → relay/short_video_task.json
-10:00 墨测数据 → 记录分发指标 → relay/analytics_daily.json
-17:00 CEO复盘 → 汇总全天产出 → relay/daily_review.json
+🕐 08:00  第一棒：情报采集 (墨研竞情)
+   daily_hot_report.py → relay/intelligence_morning.json
+
+🕐 09:00  第二棒：内容生成 (墨笔文创)
+   flywheel_content.py ← intelligence_morning.json → relay/content_flywheel.json
+
+🕐 09:30  第三棒：分发策略 (墨测数据)
+   flywheel_distribute.py ← content_flywheel.json → relay/distribution_plan.json
+
+🕐 10:00  简报推送 (墨研竞情)
+   daily_briefing.py ← intelligence_morning.json → relay/briefing_daily.md
 ```
 
-飞轮接力的关键规则：
+飞轮接力关键规则：
 1. 每棒必须先检查 relay/ 中是否有上一棒的文件
-2. 如果有，读取作为输入
-3. 如果没有，用上次可用数据或跳过该环节
-4. 完成自己的产出后，写入 relay/ 供下一棒使用
+2. 如果没有，用上次可用数据或跳过该环节
+3. 文件格式必须严格对齐（intelligence_morning.json → content_flywheel.json → distribution_plan.json）
+4. 所有脚本使用纯Python标准库，零外部依赖
+5. 日志备份至 ~/.hermes/daily_reports/
 
 ## 记忆系统文件位置
 
@@ -191,48 +215,31 @@ python -m molib handoff history                  # 查看handoff执行历史
 ~/.hermes/memory/vector_memory.db  # 结构化记忆（SQLite）
 ~/.hermes/dream/                   # 墨梦AutoDream的记忆蒸馏产出
 ~/.hermes/daily_reports/           # 每日数据报表存档
+~/.hermes/memory/long_term/        # claude-mem 长期记忆
+~/.hermes/events/                  # FileEventBus 事件
 ~/.hermes/os/                      # Hermes Agent 系统文件
-~/hermes-os/docs/expansion-roadmap.html  # 拓展全景图（系统升级路线图）
+~/.hermes/plugins/claude-mem/      # claude-mem 插件
+~/hermes-os/docs/                  # 系统文档
 ```
-
-## claude-mem 自动触发规则
-
-claude-mem 插件安装在 `~/.hermes/plugins/claude-mem/`，在以下情况必须手动触发记忆捕捉：
-
-1. **复杂任务完成**（5+ 工具调用）→ 运行 `python ~/.hermes/plugins/claude-mem/trigger.py`
-2. **做出重要决策** → 运行 `python ~/.hermes/plugins/claude-mem/trigger.py`
-3. **发现新知识/可复用工作流** → 运行 `python ~/.hermes/plugins/claude-mem/trigger.py`
-4. **用户纠正了你的做法** → 先运行 trigger.py 捕捉纠正，再考虑更新对应 SKILL.md
-
-简易触发方式（直接用 Python 调用 API）:
-```python
-from plugins.claude_mem import capture_session
-result = capture_session(messages=[...], session_id="当前会话ID", output_dir="~/.hermes/memory/long_term/")
-```
-
-trigger.py 自动读取 `~/.hermes/events/` 下最新的事件文件作为输入，
-输出写入 `~/.hermes/memory/long_term/`。也可手动指定事件文件：
 
 ## 系统关键文件位置
 
 ```
 ~/.hermes/os/                             # Hermes Agent 系统
-~/hermes-os/                              # Hermes OS 工作目录
-~/hermes-os/SOUL.md                       # CEO 认知框架（本文件）
+~/hermes-os/                              # 工作目录
+~/hermes-os/SOUL.md                       # CEO 认知框架（灵魂文件）
 ~/hermes-os/AGENTS.md                     # 公司上下文（本文件）
 ~/hermes-os/config/company.toml           # 子公司映射（唯一配置源）
-~/hermes-os/molib/                        # Python 执行包
+~/hermes-os/molib/                        # Python 执行包（129文件）
 ~/hermes-os/molib/__main__.py             # CLI 统一入口
-~/hermes-os/molib/agencies/workers/       # 所有 Worker 执行文件
-~/hermes-os/cron/jobs.yaml                # 定时作业
-~/hermes-os/relay/                        # cron 产出文件（飞轮接力）
-~/hermes-os/bots/                         # 机器人脚本
-~/hermes-os/bots/xianyu_bot.py            # 闲鱼 WebSocket 机器人
-~/hermes-os/bots/xhs_bot.py               # 小红书机器人
-~/hermes-os/bots/daily_hot_report.py      # 每日热点日报脚本
-~/hermes-os/docs/                         # 文档
-~/.codex/auth.json                        # Codex auth（GPT Image 2 用）
-~/.hermes/events/                         # FileEventBus 事件
+~/hermes-os/molib/ceo/                    # CEO引擎（10模块）
+~/hermes-os/molib/agencies/               # 执行层（handoff/planning/workers）
+~/hermes-os/molib/shared/                 # 共享层（AI/分析/内容/知识/发布/存储）
+~/hermes-os/bots/                         # 24个机器人脚本
+~/hermes-os/business/                     # 9个商业化方案
+~/hermes-os/cron/jobs.yaml                # 8个定时作业
+~/hermes-os/relay/                        # 飞轮接力数据
+~/hermes-os/docs/                         # 27个系统文档
 ```
 
 ## 预算参考
@@ -241,9 +248,21 @@ trigger.py 自动读取 `~/.hermes/events/` 下最新的事件文件作为输入
 - LLM：DeepSeek via OpenRouter（flash 级简单任务，pro 级复杂分析）
 - 视觉：通义千问 qwen3-vl-plus（百炼 API）
 - 视频：HappyHorse-1.0-T2V（百炼 API）
-- GPT Image 2：通过你的 ChatGPT 免费额度（走 codex CLI/auth.json）
+- 生图：千问百炼 qwen-image-2.0-pro
+- GPT Image 2：通过你 ChatGPT 免费额度（codex CLI/auth.json）
 
-## 拓展路线图参考
+## Cron 作业清单
 
-完整的42项行动清单和9个拓展方向在 `~/hermes-os/docs/expansion-roadmap.html`。
-当用户说"按路线图升级系统"时，加载该文档并按优先级执行。
+默认全部暂停（零空转）：
+
+| 时间 | 作业 | 功能 |
+|:---:|:-----|:-----|
+| 08:00 | 墨思情报银行 | 扫描博客/arXiv/MiroFish → 情报日报 |
+| 09:00 | 墨迹内容工厂 | 情报→AI生成3篇内容 |
+| 09:00 | CEO每日简报 | 汇总状态推送到你 |
+| 10:00 | 墨增增长引擎 | SEO优化·增长分析 |
+| 10:00 | 每日治理合规 | 审计+合规检查 |
+| 12:00 | 系统状态快照 | 汇总产出+运营快照 |
+| 15/45分 | 闲鱼消息检测 | 新消息AI自动回复 |
+| 周五10:00 | 自学习进化 | GitHub扫描+技能更新 |
+
