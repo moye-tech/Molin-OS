@@ -1,23 +1,23 @@
 <!--
   Molin OS — README
-  Version: 5.0
+  Version: 5.0.1
   Repository: https://github.com/moye-tech/Molin-OS
-  Last updated: 2026-05-06
+  Last updated: 2026-05-09
 -->
 
-# Molin OS — AI 一人公司操作系统
+# 墨麟OS — AI 一人公司操作系统
 
 <p align="center">
-  <strong>6 层架构 · 492 项技能 · 22 个 Worker · 20 家营收子系统</strong><br>
+  <strong>6 层架构 · 290+ 项技能 · 20 家子公司 · 26 个 Worker</strong><br>
   一个人就是一个集团
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/python-3.12+-00b894?style=flat-square&logo=python" alt="Python">
   <img src="https://img.shields.io/badge/license-MIT-00b894?style=flat-square" alt="License">
-  <img src="https://img.shields.io/badge/skills-492-success?style=flat-square" alt="Skills">
-  <img src="https://img.shields.io/badge/workers-22-success?style=flat-square" alt="Workers">
-  <img src="https://img.shields.io/badge/status-v5.0-blueviolet?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/skills-290%2B-success?style=flat-square" alt="Skills">
+  <img src="https://img.shields.io/badge/workers-26-success?style=flat-square" alt="Workers">
+  <img src="https://img.shields.io/badge/status-v5.0.1-blueviolet?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/absorbed-27%20projects-10b981?style=flat-square" alt="Absorbed">
   <img src="https://img.shields.io/badge/revenue-%C2%A552K%2Fmonth-ff6b6b?style=flat-square" alt="Revenue">
 </p>
@@ -26,7 +26,12 @@
 
 ## 概述
 
-**Molin OS** 是一个人用一台服务器即可运营的 AI 公司操作系统。系统包含 20 个垂直营收子系统（墨笔文创、墨域私域、墨码开发等），每个子系统有专属 Worker 执行文件和 Hermes 技能库。Hermes Agent 作为 CEO 大脑，通过统一的 CLI 入口调动所有子系统。系统采用**零空转设计**——有任务才消耗 token。
+**墨麟OS (Molin OS)** 是一个人用一台服务器即可运营的 AI 一人公司操作系统。系统包含 20 个垂直子公司（墨笔文创、墨域私域、墨码开发等），每个子公司有专属 Worker 执行文件和 Hermes 技能库。Hermes Agent 作为 CEO 大脑，通过统一 CLI 入口调动所有子系统。
+
+核心设计原则：
+- **零空转** — 有任务才消耗 token，无任务时系统静止
+- **治理驱动** — 5 级审批体系（L0 自动 → L4 绝对禁止），AI 不碰现金
+- **数据持久化** — 所有成本/状态/记忆通过 SQLite 持久化，重启不丢失
 
 - **仓库**: [github.com/moye-tech/Molin-OS](https://github.com/moye-tech/Molin-OS)
 - **许可**: MIT License © 2026 Moye Tech
@@ -34,28 +39,29 @@
 ## 目录
 
 - [架构](#架构)
+- [治理体系](#治理体系)
 - [核心指标](#核心指标)
 - [快速部署](#快速部署)
 - [CLI 入口](#cli-入口)
 - [子系统一览](#子系统一览)
 - [系统模块](#系统模块)
+- [基础设施](#基础设施)
+- [卡片系统](#卡片系统)
 - [已吸收项目](#已吸收项目)
 - [定时作业](#定时作业)
-- [拓展路线图](#拓展路线图)
 
 ## 架构
 
 ```
 创始人（你）
     │
-┌── L0 中枢 ──────────────────────────────────────┐
-│  CEO 引擎 (Hermes Agent)                         │
-│  意图路由 · 风险引擎 · SOP 存储 · 治理规则       │
-│  L0 自动执行 / L1 通知 / L2 审批 / L3 不碰现金   │
+┌── L0 认知中枢 ──────────────────────────────────┐
+│  SOUL.md(人格) · AGENTS.md(手册)                │
+│  governance.yaml(唯一治理源) · IntentProcessor   │
 └──────────────────┬──────────────────────────────┘
                    │  决策流
     ┌──────────────┼─────────────────────┐
-    │ L1 营收子系统 (20 家)               │
+    │ L1-L2 执行层 (20 家子公司 + 专项)    │
     │ ┌─ 营销(5) ──┐ ┌─ 运营(4) ────┐  │
     │ │ 墨笔·墨韵· │ │ 墨域·墨声·     │  │
     │ │ 墨图·墨播· │ │ 墨链·墨学       │  │
@@ -71,34 +77,49 @@
     └────────────────┬────────────────────┘
                      │  服务
     ┌────────────────┼────────────────────┐
-    │ L2-L5 基础设施                         │
-    │ Hermes Toolchain · 技能引擎            │
-    │ 飞书/闲鱼/小红书集成 · Config 体系      │
-    │ MCP Server · 记忆系统 · 飞轮管线        │
+    │ L3-L5 基础设施                        │
+    │ 6 模块卡片系统 · 3 探针 HealthProbe   │
+    │ 5 层记忆 · EventBus(文件+内存降级)    │
+    │ Hermes Toolchain · 290+ SKILL.md     │
+    │ 飞书/闲鱼/小红书集成 · Config 体系    │
     └──────────────────────────────────────┘
+```
 
-> **CEO 引擎 vs Handoff 路由**  
-> CEO 引擎（`ceo/`）是 L0 决策核心，负责意图分析→风险评估→DAG分解→调度。  
-> Handoff 自动路由（`agencies/handoff.py`）是独立的路由系统，基于 Worker 注册表做关键词匹配路由。  
-> 两套系统可并行使用：CEO 引擎做智能编排，Handoff 做快速匹配兜底。两者互不依赖。
+## 治理体系
+
+5 级审批体系（定义见 `config/governance.yaml`，单一真相源）：
+
+| 级别 | 类型 | 预算上限 | 描述 |
+|:----:|:----:|:--------:|:-----|
+| **L0** | auto | ¥0 | 自动执行 · 内容生成/数据采集/例行报告 |
+| **L1** | notify | ¥10 | 完成后通知 · 中风险操作 |
+| **L2** | approve | ¥100 | 需人工确认 · 报价>¥100/对外发布/修改配置 |
+| **L3** | board_approve | ¥1,000 | 董事会审批 · 重大决策 |
+| **L4** | **forbidden** | **∞** | **绝对禁止 · 现金/转账/支付** |
+
+SOUL.md 和 AGENTS.md 均引用 governance.yaml，确保治理定义无歧义。
 
 ## 核心指标
 
 | 指标 | 数值 |
 |:----|:----:|
-| 自主研发技能 | 492 个 SKILL.md |
-| Worker 文件 | 22 个（`molib/agencies/workers/`） |
-| 营收子系统 | 20 家（5 营销 + 4 运营 + 4 技术 + 1 财务 + 3 战略 + 3 共同） |
+| Python 代码 | 177 个模块（40,948 行） |
+| 技能定义 | 290+ 个 SKILL.md |
+| Worker 文件 | 26 个（`molib/agencies/workers/`） |
+| 子公司 | 20 家（5 营销 + 4 运营 + 4 技术 + 1 财务 + 3 战略 + 3 共同） |
 | 已吸收开源项目 | 27 个（~520K⭐） |
-| Handoff 自动路由 | 16 家子系统已注册 |
+| Handoff 自动路由 | 16 家子公司已注册 |
 | CLI 命令 | 25+ 统一入口 |
-| 自动化脚本 | 24 个（bots/） |
+| 自动化脚本 | 31 个（bots/） |
 | 商业化方案 | 9 个（business/） |
-| 系统文档 | 27 篇（docs/） |
+| 系统文档 | 28 篇（docs/） |
 | 定时作业 | 8 个（默认暂停，零空转） |
+| 卡片系统 | 6 模块子包（cards/） |
+| 健康探针 | 3 外部依赖（HealthProbe） |
+| SQLite 数据库 | 3 个（cost/state/tasks） |
 | 月营收目标 | ¥52,000 |
-| 月预算 | ¥3,490 |
-| ROI | 14.9x |
+| 月预算 | ¥1,360 |
+| ROI | 38.2x |
 
 ## 快速部署
 
@@ -123,7 +144,7 @@ bash setup.sh
 ## CLI 入口
 
 ```bash
-python -m molib health                 # 系统健康检查
+python -m molib health                 # 系统健康检查（含 HealthProbe）
 python -m molib help                    # 查看所有命令
 
 python -m molib content write          # 墨笔文创 — 内容创作
@@ -140,6 +161,7 @@ python -m molib intel trending         # 墨研竞情 — 趋势扫描
 python -m molib data analyze           # 墨测数据 — 数据分析
 python -m molib handoff route          # 自动路由到最佳 Worker
 python -m molib handoff list           # 查看所有可用 Worker
+python -m molib health probe           # 手动运行 HealthProbe
 python -m molib plan create            # 创建目标分解
 python -m molib plan decompose         # 自动分解大任务
 ```
@@ -185,7 +207,7 @@ python -m molib plan decompose         # 自动分解大任务
 | 子系统 | Worker | 核心能力 | 关联技能 |
 |:-------|:-------|:---------|:---------|
 | **墨商 BD** | bd.py | 商务拓展·合作·投标 | molin-bd-scanner |
-| **墨海出海** | global_marketing.py | 多语言·全球化·出海 | molin-global |
+| **墨海出海** | global_marketing.py | 多语言·全球化·出海·繁体 | molin-global |
 | **墨研竞情** | research.py | 竞争分析·趋势·情报 | world-monitor |
 
 ### 共同服务（3 家）
@@ -208,21 +230,37 @@ python -m molib plan decompose         # 自动分解大任务
 
 ```
 Molin-OS/
-├── config/                       # 系统配置
-│   ├── governance.yaml           # 4 级审批规则
-│   ├── company.toml              # 子系统映射
-│   ├── models.toml               # 模型路由
-│   └── .env.example              # 环境变量模板
-├── molib/                        # 核心执行包
+├── config/                       # 系统配置（单一真相源）
+│   ├── governance.yaml           # 5 级审批规则（L0-L4）
+│   ├── company.toml              # 子公司映射
+│   ├── models.toml               # 模型路由（含 version+alias）
+│   └── channels.yaml             # 消息渠道配置
+├── molib/                        # 核心执行包（177 模块）
 │   ├── cli.py                    # CLI 入口
-│   ├── __main__.py               # Python 入口
-│   ├── ceo/                      # L0 CEO 引擎（10 模块）
+│   ├── __main__.py               # Python 入口（v5.0.1）
+│   ├── cost.py                   # 成本追踪（SQLite 持久化）
+│   ├── ceo/                      # L0 CEO 引擎（17 模块）
+│   │   ├── cards/                # 卡片系统子包（6 模块）
+│   │   │   ├── builder.py        # CardBuilder 核心构建器
+│   │   │   ├── templates.py      # 6 个卡片模板
+│   │   │   ├── sender.py         # FeishuCardSender
+│   │   │   ├── thinking.py       # ThinkingCardManager
+│   │   │   └── utils.py          # 降级转换
+│   │   ├── feishu_card.py        # 弃用（重定向到 cards/）
+│   │   └── thinking_card.py      # 弃用（重定向到 cards/）
 │   ├── agencies/                 # L1-L2 执行层
 │   │   ├── handoff.py            # Handoff 自动路由
 │   │   ├── handoff_register.py   # 16 家 Worker 注册
 │   │   ├── planning.py           # 规划分解引擎
-│   │   └── workers/              # 22 个 Worker 文件
+│   │   └── workers/              # 26 个 Worker 文件
+│   ├── infra/                    # L4 基础设施
+│   │   ├── self_healing.py       # 自愈引擎（默认禁用）
+│   │   ├── health_probe.py       # HealthProbe（3 探针）
+│   │   ├── event_bus.py          # 内存 Pub/Sub 事件总线
+│   │   ├── credential_vault.py   # 凭证管理
+│   │   └── deep_approval.py      # 深度审批
 │   ├── shared/                   # L3 共享能力层
+│   │   ├── event_bus.py          # 文件接力事件总线
 │   │   ├── ai/                   # LLM 客户端·视觉·Browser Agent
 │   │   ├── analysis/             # 分析·评价·预测引擎
 │   │   ├── content/              # SEO·社交写作
@@ -230,22 +268,55 @@ Molin-OS/
 │   │   ├── publish/              # 平台发布·翻译
 │   │   └── storage/              # 向量数据库·缓存·文件
 │   ├── xianyu/                   # 闲鱼集成（WebSocket + API）
-│   ├── content/                  # 内容管线
-│   ├── core/                     # 核心系统
-│   ├── intelligence/             # 情报采集
-│   ├── publish/                  # 发布模块
-│   └── management/               # VP 管理层
-├── bots/                         # 24 个自动化脚本
+│   ├── management/               # VP 管理层
+│   ├── sop/                      # SOP 引擎
+│   └── evolution/                # 进化引擎
+├── bots/                         # 31 个自动化脚本
+│   └── xhs/                      # 小红书子目录（5 文件）
 ├── business/                     # 9 个商业化方案
-├── docs/                         # 27 篇系统文档
+├── docs/                         # 28 篇系统文档
 ├── relay/                        # 飞轮接力数据
-├── cron/jobs.yaml                # 8 个定时作业
-├── tests/                        # 6 个测试模块
-├── skills/                       # 492 个 SKILL.md
-├── setup.py                      # pip 安装
+├── cron/jobs.yaml                # 8 个定时作业（时区: Asia/Shanghai）
+├── tests/                        # 测试模块
+├── skills/                       # 290+ 个 SKILL.md
+├── setup.py                      # pip 安装（v5.0.0）
 ├── requirements.txt              # Python 依赖
-├── setup.sh                      # 一键部署
-└── Makefile                      # 常用命令
+└── setup.sh                      # 一键部署
+```
+
+## 基础设施
+
+### 记忆系统（5 层）
+
+| 层级 | 存储 | 用途 |
+|:----|:-----|:----|
+| 工作记忆 | LLM 上下文 | 当前会话内信息 |
+| 情节记忆 | claude-mem / session_search | 跨会话关键事实 |
+| 向量记忆 | ChromaDB (SQLite) | 语义检索 |
+| 成本追踪 | cost.db | API 费用持久化 |
+| 状态存储 | state.db / tasks.db | 系统运行时状态 |
+
+### 健康探测（HealthProbe）
+
+`molib/infra/health_probe.py` — 自动探测 3 个外部依赖：
+
+| 探针 | 检测内容 | 失败时 |
+|:----|:---------|:------|
+| DeepSeek API | OpenRouter 可达性 | 飞书告警 |
+| 飞书服务 | feishu-cli 登录状态 | 重试 + 告警 |
+| 本地进程 | Hermes/Python 存活 | 自动恢复 |
+
+### 卡片系统
+
+`molib/ceo/cards/` — 统一卡片入口（6 模块）：
+
+```
+cards/builder.py      → CardBuilder 构建器
+cards/templates.py    → 6 个卡片模板函数
+cards/sender.py       → FeishuCardSender
+cards/thinking.py     → ThinkingCardManager
+cards/utils.py        → card_to_text 降级
+cards/__init__.py     → 统一导出
 ```
 
 ## 已吸收项目
@@ -279,7 +350,7 @@ Molin-OS/
 
 ## 定时作业
 
-默认全部暂停（零空转）。激活后每日自动流水线：
+默认全部暂停（零空转）。激活后每日自动流水线（时区: Asia/Shanghai）：
 
 | 时间 | 作业 | 功能 |
 |:---:|:-----|:-----|
@@ -291,21 +362,3 @@ Molin-OS/
 | 12:00 | 系统状态快照 | 汇总产出 + 运营快照 |
 | 15/45 分 | 闲鱼消息检测 | 新消息 AI 自动回复 |
 | 周五 10:00 | 自学习进化 | GitHub 扫描 + 技能更新 |
-
-## 拓展路线图
-
-42 项行动 × 9 个方向 — 56/56 全部闭合：
-
-| 方向 | 完成度 | 关键交付 |
-|:-----|:------:|:---------|
-| CH1 记忆自进化 | 4/4 | claude-mem · session_search · SOUL 反思 · 墨梦蒸馏 |
-| CH2 沉睡激活 | 7/7 | ghost-os · karpathy · cli-anything · xhs · moneymaker · MCP · trading |
-| CH3 变现矩阵 | 6/6 | 星球方案 · 定制 · 模板 · 代运营 · 技能商店安装器 · 付费课程 |
-| CH4 内容生产 | 4/4 | 三棒飞轮 · 播客 · MoneyPrinterTurbo · 每日简报 |
-| CH5 电商私域 | 5/5 | 闲鱼 5 升级 · 私域 4 模块 · 电商策略 · twenty CRM · 猪八戒 · 小红书 |
-| CH6 GitHub 吸收 | 6/6 | 吸收管线 · 10+ 项目 · deepagents planning |
-| CH7 多模态能力 | 7/7 | 生图 · TTS · 视频 · 品牌 · 语音 · 插件化 |
-| CH8 出海本地化 | 3/3 | 台湾策略 · 繁简转换 · Dcard/Vocus 方案 |
-| CH9 SaaS 化 | 4/4 | 技能商店 · 安装器 CLI · SKILL 质量评估 · molib CLI 参考 |
-| CH10 子系统拓展 | 3/3 | 墨播矩阵 · 墨数分析 · 墨投交易（已激活） |
-| CH11 技能层新建 | 14/14 | 12 个新 SKILL.md + 4 个方案文档 |
