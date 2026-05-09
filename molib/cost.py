@@ -3,6 +3,15 @@
 ==========================
 跟踪 DeepSeek、百炼(DashScope)等 API 的调用次数和估算成本。
 
+⚠️ 两套成本追踪系统并存说明：
+   - 本文件 (molib/cost.py): 使用 ~/.hermes/cost.db 记录 API 调用成本
+     按模型定价估算费用（元），配合 governance.yaml 的 budget 做月度预算控制。
+   - molib/shared/finance/cost_tracker.py: 使用 ~/.hermes/usage.db 记录 token 用量
+     从 provider 维度统计，支持 USD/CNY 双币种，偏重用量审计。
+   两者数据源独立但互补：cost.py 关注「花了多少钱」与预算对齐，
+   cost_tracker.py 关注「用了多少 token」与用量审计对齐。
+   未来可考虑合并到统一成本数据库。
+
 DeepSeek API 定价（2026.5）:
   - deepseek-chat (V3): ¥2/1M input, ¥8/1M output
   - deepseek-reasoner (R1): ¥4/1M input, ¥16/1M output

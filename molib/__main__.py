@@ -29,6 +29,8 @@ import json
 import asyncio
 from pathlib import Path
 
+from molib import __version__
+
 
 def cmd_health(args: list[str]) -> dict:
     """系统健康检查 — 快速验证各模块可用性"""
@@ -66,7 +68,7 @@ def cmd_health(args: list[str]) -> dict:
     return {
         "status": "ok" if all("❌" not in v for v in results.values()) else "degraded",
         "checks": results,
-        "version": "v5.1-unified",
+        "version": "v" + __version__,
         "note": "SOUL.md+AGENTS.md已填写，Hermes现在知道自己是谁",
     }
 

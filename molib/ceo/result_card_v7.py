@@ -1,15 +1,16 @@
-"""
+""""
 墨麟OS — 美观版结果卡片 (result_card_v7 吸收)
 =================================================
-从 molin-os-ultra/integrations/feishu/result_card_v7.py 吸收：
-1. _strip_markdown / _truncate — 安全的MD清理工具
-2. build_ceo_response_card — CEO回复/派发/澄清的差异化卡片
-3. build_execution_result_card — 任务完成卡片（摘要+子公司字段组+查看按钮）
-4. build_error_card_v7 — 错误卡片（含部分结果+重试按钮）
+⚠️ 已弃用 — 请使用 molib.ceo.feishu_card 中的 CardBuilder / build_*_card 系列函数。
 
-用法：
-    card = build_execution_result_card(...)
-    FeishuCardSender().send_card(card, chat_id)
+从 molin-os-ultra/integrations/feishu/result_card_v7.py 吸收的历史函数。
+为保持向后兼容保留此文件，新代码应直接使用 feishu_card 模块。
+
+用法（新）：
+    from molib.ceo.feishu_card import CardBuilder, build_simple_card, build_report_card
+    card = CardBuilder("标题").add_div("内容").build_json()
+
+如发现此文件中某函数无对应替代，请将其迁移到 feishu_card.py 后删除此文件。
 """
 
 import json

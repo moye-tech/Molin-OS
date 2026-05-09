@@ -2,7 +2,7 @@
 name: taiwan-localization
 description: 台湾市场本地化技能 — 繁简转换、Dcard/Vocus/LINE 运营、TWD 定价策略，支持 Hermes 出海台湾
 version: 0.1.0
-tags: [localization, taiwan, traditional-chinese, social-media, line, dcard, vocus]
+tags: [localization, taiwan, traditional-chinese, social-media, line, dcard, vocus, globalization, international, zh-tw, localize, overseas-market]
 metadata:
   hermes:
     molin_owner: 墨海出海

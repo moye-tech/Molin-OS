@@ -2,11 +2,13 @@
 # =================================
 # Version: v1.0
 
-# 4级审批系统 (基于 Paperclip 62K★ 设计模式)
+# 5级治理系统（融合数字阈值 + 操作性质描述）
+# 此文件是治理级别的单一真相源。SOUL.md 和 AGENTS.md 中的治理描述应引用此处。
 approval_levels:
   L0:
     name: 自动执行
     budget_max: 0
+    type: auto
     description: 零成本操作，AI自动执行无需审批
     examples:
       - 生成一份内容草稿
@@ -14,18 +16,20 @@ approval_levels:
       - 系统健康检查
 
   L1:
-    name: AI自审
+    name: 通知
     budget_max: 10
-    description: AI内部检查后自动执行
+    type: notify
+    description: AI内部检查后自动执行，完成后通知创始人
     examples:
       - 发布一篇小红书笔记
       - 更新SEO关键词
       - 调整商品定价
 
   L2:
-    name: 人工确认
+    name: 审批
     budget_max: 100
-    description: 需人类确认后执行
+    type: approve
+    description: 需人类确认后执行（报价 > ¥100 需审批）
     examples:
       - 对外商业提案
       - 大额推广投放
@@ -34,11 +38,22 @@ approval_levels:
   L3:
     name: 董事会审批
     budget_max: 1000
+    type: board_approve
     description: 重大决策需全面评估
     examples:
       - 新增产品线
       - 战略方向调整
       - 超预算支出
+
+  L4:
+    name: 绝对禁止
+    budget_max: 0
+    type: forbidden
+    description: 涉及真实现金/转账/支付/改价的操作，绝不碰
+    examples:
+      - 执行转账或支付操作
+      - 修改商品价格
+      - 访问真实银行账户
 
 # ── 预算控制 ──
 # ⚠️ 预算口径说明（两个不同维度，不要混淆）

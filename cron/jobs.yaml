@@ -9,6 +9,10 @@
 #   deliver: 结果投递目标 (origin=当前对话)
 #   repeat: forever=一直循环, 数字=执行次数
 
+timezone: Asia/Shanghai
+# 注意: 如果 Hermes Agent 使用系统 crontab，需在 crontab 顶部设置
+# TZ=Asia/Shanghai，确保 cron 表达式按北京时间执行。
+
 jobs:
   # ── 08:00 情报层 ──
   - name: "墨思情报银行每日扫描"

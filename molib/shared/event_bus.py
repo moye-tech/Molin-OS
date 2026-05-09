@@ -3,6 +3,14 @@
 =========================
 蓝图概念代码化（替代Redis Pub/Sub）。
 
+⚠️ 两个 EventBus 并存说明：
+   - 本文件 (molib/shared/event_bus.py, 177行): 文件接力总线
+     支持 ZeroMQ 和 JSON 文件降级模式，适合跨进程/跨会话事件传递。
+   - molib/infra/event_bus.py (320行): 内存 Pub/Sub 总线
+     使用内存处理器列表 + 可选文件持久化，适合进程内子公司间横向通信。
+   两者不冲突：shared/event_bus.py 用于进程间/文件接力场景，
+   infra/event_bus.py 用于进程内实时事件分发。未来可考虑合并。
+
 使用 ZeroMQ（纯Python，无守护进程）实现子公司间实时事件通知。
 当 ZeroMQ 不可用时，自动降级为 JSON 文件接力。
 
