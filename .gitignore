@@ -26,7 +26,11 @@ dist/
 build/
 *.egg
 .eggs/
-*.whl
+*.egg-info
+
+# Runtime output — not committed
+output/
+relay/*.md
 
 # Virtual Environment
 venv/

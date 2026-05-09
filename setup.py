@@ -11,7 +11,6 @@ with open("README.md", "r", encoding="utf-8") as f:
 
 setup(
     name="molin-os",
-    version="5.0.0",
     author="moye-tech",
     author_email="fengye940708@gmail.com",
     description="墨麟OS — AI一人公司操作系统 (6层·492技能·22Worker·¥52K/月)",

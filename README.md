@@ -8,16 +8,16 @@
 # 墨麟OS — AI 一人公司操作系统
 
 <p align="center">
-  <strong>6 层架构 · 290+ 项技能 · 20 家子公司 · 26 个 Worker</strong><br>
+  <strong>6 层架构 · 516 项技能 · 20 家子公司 · 22 个 Worker</strong><br>
   一个人就是一个集团
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/python-3.12+-00b894?style=flat-square&logo=python" alt="Python">
   <img src="https://img.shields.io/badge/license-MIT-00b894?style=flat-square" alt="License">
-  <img src="https://img.shields.io/badge/skills-290%2B-success?style=flat-square" alt="Skills">
-  <img src="https://img.shields.io/badge/workers-26-success?style=flat-square" alt="Workers">
-  <img src="https://img.shields.io/badge/status-v5.0.1-blueviolet?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/skills-516%2B-success?style=flat-square" alt="Skills">
+  <img src="https://img.shields.io/badge/workers-22-success?style=flat-square" alt="Workers">
+  <img src="https://img.shields.io/badge/status-final-blueviolet?style=flat-square" alt="Status">
   <img src="https://img.shields.io/badge/absorbed-27%20projects-10b981?style=flat-square" alt="Absorbed">
   <img src="https://img.shields.io/badge/revenue-%C2%A552K%2Fmonth-ff6b6b?style=flat-square" alt="Revenue">
 </p>
@@ -80,7 +80,7 @@
     │ L3-L5 基础设施                        │
     │ 6 模块卡片系统 · 3 探针 HealthProbe   │
     │ 5 层记忆 · EventBus(文件+内存降级)    │
-    │ Hermes Toolchain · 290+ SKILL.md     │
+    │ Hermes Toolchain · 516 SKILL.md     │
     │ 飞书/闲鱼/小红书集成 · Config 体系    │
     └──────────────────────────────────────┘
 ```
@@ -104,13 +104,13 @@ SOUL.md 和 AGENTS.md 均引用 governance.yaml，确保治理定义无歧义。
 | 指标 | 数值 |
 |:----|:----:|
 | Python 代码 | 177 个模块（40,948 行） |
-| 技能定义 | 290+ 个 SKILL.md |
-| Worker 文件 | 26 个（`molib/agencies/workers/`） |
+| 技能定义 | 516 个 SKILL.md |
+| Worker 文件 | 22 个（`molib/agencies/workers/`） |
 | 子公司 | 20 家（5 营销 + 4 运营 + 4 技术 + 1 财务 + 3 战略 + 3 共同） |
 | 已吸收开源项目 | 27 个（~520K⭐） |
 | Handoff 自动路由 | 16 家子公司已注册 |
 | CLI 命令 | 25+ 统一入口 |
-| 自动化脚本 | 31 个（bots/） |
+| 自动化脚本 | 25 个（bots/） |
 | 商业化方案 | 9 个（business/） |
 | 系统文档 | 28 篇（docs/） |
 | 定时作业 | 8 个（默认暂停，零空转） |
