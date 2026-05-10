@@ -20,7 +20,9 @@ metadata:
 
 - API Key: 设置 `FIRECRAWL_API_KEY` 到 `~/.hermes/.env`
 - 免费获取: https://firecrawl.dev/ （500 credit 免费额度）
-- SDK: `pip install firecrawl-py`（已在 Hermes venv 安装）
+- SDK: `pip install firecrawl-py`（已在 Hermes venv 安装，v4.25.2）
+- ⚠️ **v4.x Breaking Changes**: `Firecrawl` → `FirecrawlApp`, `scrape_url()` → `scrape()`, 返回 `Document` 对象（非 dict）
+- 桥接模块已适配: `molib/infra/external/firecrawl.py`
 - 可选自托管: `FIRECRAWL_API_URL` 指向自建实例
 
 ### .env 配置注意事项
@@ -54,56 +56,56 @@ molib 的 `_get_client()` 内置了从 `.env` 自动加载的逻辑，cron 和 C
 ## 初始化
 
 ```python
-from firecrawl import Firecrawl
+from firecrawl import FirecrawlApp
 
 # 生产环境
-fc = Firecrawl(api_key="YOUR_KEY")
+app = FirecrawlApp(api_key="YOUR_KEY")
 
 # 自托管
-fc = Firecrawl(api_key="YOUR_KEY", api_url="http://localhost:3002")
-
-# v1 兼容层
-v1 = fc.v1
+app = FirecrawlApp(api_key="YOUR_KEY", api_url="http://localhost:3002")
 ```
 
 ## API 完整参考
 
-### 1. scrape_url — 单页抓取
+> ⚠️ **SDK v4.25.2 (2026-05)**: 实际安装的 SDK 使用 `FirecrawlApp`（非 `Firecrawl`），
+> 方法为 `scrape()`（非 `scrape_url`），返回 `Document` 对象（非 dict）。
+> 墨麟OS 桥接模块 `molib/infra/external/firecrawl.py` 已适配 v2。
+
+### 1. scrape — 单页抓取（v4.25.2 实际 API）
 
 ```python
-# 基础抓取（Markdown格式）
-result = fc.v1.scrape_url(
+from firecrawl import FirecrawlApp
+app = FirecrawlApp(api_key="YOUR_KEY")
+
+# 基础抓取（Markdown格式）— 返回 Document 对象
+doc = app.scrape(
     "https://example.com",
     formats=["markdown", "html"],
     only_main_content=True,
-    wait_for=2000,               # 等待JS渲染(ms)
     timeout=30000
 )
-print(result.markdown)           # Markdown 内容
-print(result.html)               # 原始 HTML
-print(result.metadata.title)     # 页面标题
+print(doc.markdown)              # Markdown 内容
+print(doc.metadata.title)        # 页面标题 (Document.metadata 是对象)
+print(doc.links)                 # 链接列表
 
-# 带浏览器操作的抓取（JS渲染页面）
-result = fc.v1.scrape_url(
+# 带浏览器操作的抓取
+doc = app.scrape(
     "https://spa-site.com",
     formats=["markdown", "screenshot@fullPage"],
     actions=[
         {"type": "wait", "milliseconds": 2000},
         {"type": "click", "selector": "button.load-more"},
-        {"type": "wait", "milliseconds": 1000},
-        {"type": "screenshot"}
     ],
-    mobile=True,                 # 移动端 UA
-    proxy="stealth",             # 反检测代理
+    mobile=True,
     block_ads=True
 )
 ```
 
-### 2. crawl_url — 全站爬取
+### 2. crawl — 全站爬取（v4.25.2）
 
 ```python
-# 启动爬取
-job = fc.v1.crawl_url(
+# 启动爬取（v4.25.2）
+job = app.crawl_url(
     "https://docs.example.com",
     max_pages=100,
     exclude_paths=["/admin/*", "/login"],
@@ -117,100 +119,57 @@ job = fc.v1.crawl_url(
 print(f"Job ID: {job.job_id}")
 
 # 监控进度
-status = fc.v1.check_crawl_status(job.job_id)
-print(f"Pages crawled: {status.pages_crawled}/{status.max_pages}")
+status = app.check_crawl_status(job.job_id)
+print(f"Pages: {status.pages_crawled}/{status.max_pages}")
 
-# 等待完成并获取结果
-result = fc.v1.wait_for_crawl(job.job_id, poll_interval=10)
+# 等待完成
+result = app.wait_for_crawl(job.job_id, poll_interval=10)
 for page in result.pages:
     print(page.url, page.markdown[:200])
 ```
 
-### 3. batch_scrape_urls — 批量抓取
+### 3. batch_scrape — 批量抓取
 
 ```python
-# 异步批量
-batch = fc.v1.async_batch_scrape_urls(
+batch = app.async_batch_scrape_urls(
     ["https://a.com", "https://b.com", "https://c.com"],
     formats=["markdown"],
     max_concurrency=5,
     only_main_content=True
 )
-print(f"Batch ID: {batch.batch_id}")
-
-# 查询状态
-status = fc.v1.check_batch_scrape_status(batch.batch_id)
-print(f"Completed: {status.completed}/{status.total}")
-
-# 获取结果列表
-results = fc.v1.get_batch_scrape_results(batch.batch_id)
-for r in results:
-    print(r.url, len(r.markdown or ""))
+# 查询状态: app.check_batch_scrape_status(batch.batch_id)
+# 获取结果: app.get_batch_scrape_results(batch.batch_id)
 ```
 
-### 4. search — 网络搜索
+### 4. search — 网络搜索（v4.25.2）
 
 ```python
-# 搜索并返回结构化结果
-results = fc.v1.search(
+# 搜索 — 参数直接传入（非 params dict）
+results = app.search(
     "AI agent frameworks 2026",
     limit=20,
-    search_options={
-        "country": "cn",            # 按国家过滤
-        "lang": "zh",               # 语言
-        "tbs": "qdr:w"              # 时间范围：过去一周
-    },
-    scrape_options={
-        "formats": ["markdown"],
-        "only_main_content": True
-    }
+    sources=["web"]
 )
-for r in results:
+for r in results:  # 返回 list
     print(r.title, r.url, r.description)
 ```
 
-### 5. extract — LLM 结构化提取
+### 5. extract — LLM 结构化提取（v4.25.2）
 
 ```python
-# 从 URL 提取结构化数据
-result = fc.v1.extract(
+result = app.extract(
     urls=["https://example.com/products"],
     prompt="Extract all product names, prices, and descriptions",
-    schema={
-        "type": "object",
-        "properties": {
-            "products": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "name": {"type": "string"},
-                        "price": {"type": "string"},
-                        "description": {"type": "string"}
-                    }
-                }
-            }
-        }
-    },
+    schema={...},
     allow_external_links=False
 )
 print(result.data)
 ```
 
-### 6. map — 站点地图
+### 6. deep_research — 深度研究
 
 ```python
-# 生成 URL 地图
-sitemap = fc.v1.map_url("https://docs.example.com")
-for url in sitemap.urls:
-    print(url)
-```
-
-### 7. deep_research — 深度研究
-
-```python
-# 多轮搜索 + 综合研究
-report = fc.v1.deep_research(
+report = app.deep_research(
     "What are the latest AI agent frameworks in 2026?",
     max_depth=3,
     time_limit=180,
@@ -220,58 +179,39 @@ print(report.summary)
 print(report.sources)
 ```
 
-### 8. generate_llms_txt — 生成 LLMs.txt
+### 7. 其他常用方法
 
 ```python
-# 为网站生成 LLMs.txt
-result = fc.v1.generate_llms_txt(
-    "https://docs.example.com",
-    max_pages=200
-)
-print(result.llms_txt)
-```
+# 站点地图
+sitemap = app.map_url("https://docs.example.com")
 
-### 9. 爬取任务管理
+# 生成 LLMs.txt
+result = app.generate_llms_txt("https://docs.example.com", max_pages=200)
 
-```python
+# Credit 查询
+usage = app.get_credit_usage()
+
 # 取消爬取
-fc.v1.cancel_crawl("job-xxx")
+app.cancel_crawl("job-xxx")
 
-# 列出所有爬取任务
-jobs = fc.v1.list_crawl_jobs()
-
-# 获取爬取结果（已完成的任务）
-result = fc.v1.get_crawl_results("job-xxx")
-```
-
-### 10. v2 API — 文件解析
-
-```python
-# 解析上传的文件（PDF/Word/Excel/图片等）
-doc = fc.parse(
-    "/path/to/document.pdf",
-    options={"max_pages": 50}
-)
-print(doc.markdown)
+# 解析文件（PDF/Word/Excel/图片）
+doc = app.parse("/path/to/document.pdf")
 ```
 
 ## 在 molib 中使用
 
 ```bash
-# 单页抓取
-python -m molib intel scrape --url "https://example.com"
+# 单页抓取（通过 molib bridge）
+python -m molib intel firecrawl scrape --url "https://example.com"
 
-# 爬取全站
-python -m molib intel crawl --url "https://docs.example.com" --max-pages 50
+# 网络搜索
+python -m molib intel firecrawl search --query "AI agent trends 2026"
 
-# 搜索
-python -m molib intel search --query "AI agent trends 2026" --limit 10
-
-# 批量抓取
-python -m molib intel batch --urls-file urls.txt
+# 全站爬取
+python -m molib intel firecrawl crawl --url "https://docs.example.com"
 
 # 深度研究
-python -m molib intel research --topic "AI agent market 2026"
+python -m molib intel firecrawl research --topic "AI agent market 2026"
 ```
 
 ## 墨研竞情集成
@@ -280,12 +220,15 @@ python -m molib intel research --topic "AI agent market 2026"
 
 ```
 情报流程:
-1. firecrawl.search() → 发现热点话题
-2. firecrawl.scrape_url() → 采集原文
-3. firecrawl.extract() → LLM结构提取
+1. firecrawl search → 发现热点话题
+2. firecrawl scrape → 采集原文（已适配 v4.25.2 Document 对象）
+3. firecrawl extract → LLM结构提取
 4. memory存储 → relay/intelligence_morning.json
 5. 下游飞轮消费
 ```
+
+**桥接模块**: `molib/infra/external/firecrawl.py`（147行）
+已适配 FirecrawlApp v4.25.2: scrape()/search() + Document→dict 转换 + API key 自动加载
 
 ## 治理级别
 
@@ -299,6 +242,8 @@ python -m molib intel research --topic "AI agent market 2026"
 - **.env 被保护**：`patch()` 不允许直接编辑 `.env`，用 `terminal` + `sed` 操作
 - **terminal 输出遮盖**：`grep FIRECRAWL .env` 显示 `***`，需用 Python SDK 验证
 - **自托管**: 设置 `FIRECRAWL_API_URL=http://localhost:3002`
-- **反爬**: 使用 `proxy="stealth"` + `mobile=True` + `block_ads=True`
-- **JS渲染**: 用 `wait_for` 参数等页面加载，或用 `actions` 执行交互
-- **Credit 管理**: 免费额度 500 credits/月，监控 `fc.v1.get_credit_usage()`
+- **反爬**: 使用 `mobile=True` + `block_ads=True`
+- **JS渲染**: 用 `actions` 参数执行交互
+- **Credit 管理**: 免费额度 500 credits/月，监控 `app.get_credit_usage()`
+- **v4.25.2 Document 对象**: `scrape()` 返回 `Document` 对象，用 `.markdown` / `.metadata.title` / `.links` 访问属性，非 dict
+- **Molib 桥接**: 直接用 `from molib.infra.external.firecrawl import scrape_url`，已内置 API key 加载 + Document→dict 转换

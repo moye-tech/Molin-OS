@@ -555,6 +555,44 @@ curl -X POST http://127.0.0.1:8188/free \
 python3 scripts/fetch_logs.py --tail-queue --host https://cloud.comfy.org
 ```
 
+## Molin-OS 方案2：纯 Python diffusers 替代（Mac M2 8GB）
+
+网络不稳定或 Mac M2 环境无法 git clone ComfyUI 时，使用纯 Python
+diffusers 方案替代。无需 ComfyUI 安装，直接用 PyTorch MPS。
+
+### 核心桥接模块
+
+`~/Molin-OS/molib/infra/molib_comfy.py` — v2.0 方案2 引擎。
+
+支持模型（8GB 内存优化）：
+- `sd-turbo` — 蒸馏 SD，1-4步，~3.5GB，默认推荐
+- `sd-1.5` — 经典 SD 1.5，20步，~4.5GB
+- `sdxl-turbo` — SDXL 蒸馏版，4步，~7GB，8GB 极限
+
+### CLI 命令
+
+```
+molib comfy check                     # 环境诊断
+molib comfy generate --prompt "..."    # txt2img
+molib comfy models                    # 列出可用模型
+molib comfy preload --model sd-turbo  # 预热
+molib comfy img2img --prompt "..." --image ./input.png  # img2img
+```
+
+### 前置条件
+
+```bash
+pip install diffusers accelerate safetensors transformers huggingface_hub
+```
+
+首次运行时自动下载模型到 `~/.cache/huggingface/hub/`。
+
+### 与 ComfyUI 的关系
+
+- 方案2 是**独立替代方案**，不需要 ComfyUI
+- 如果后续安装了 ComfyUI，`check()` 会返回 `tier3_comfyui: true`
+- `generate()` 优先使用 diffusers；如果 ComfyUI API 可用则走 API
+
 ## Pitfalls
 
 1. **API format required** — every script and the `/api/prompt` endpoint expect

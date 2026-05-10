@@ -223,8 +223,8 @@ T = TypeVar("T")
 class Task(Generic[T]):
     payload: T | dict  # TypeError!
 
-# ✅ Correct — works
-from __future__ import annotations  # ← MUST be line 1 or 2 (after docstring)
+# ✅ Correct — works (__future__ MUST be line 1, before docstring)
+from __future__ import annotations
 """docstring"""
 from abc import ABC
 from dataclasses import dataclass
@@ -240,6 +240,33 @@ head -3 molib/agencies/workers/base.py
 ## Mac M2 Network Constraints
 
 **CRITICAL — GitHub downloads >10MB reliably fail** on this machine. Symptoms: 9-byte truncated files, timeout, "truncated gzip input". This affects: git clone, curl -L release downloads, brew install (from source).
+
+### Proxy Workaround (Clash Party / Mihomo)
+
+**Clash Party is installed and running** on this Mac (`/Applications/Clash Party.app`). It wraps Mihomo (Clash Meta) as sidecar:
+
+| Setting | Value |
+|---------|-------|
+| HTTP/SOCKS proxy | `http://127.0.0.1:7890` |
+| SOCKS port | `7891` |
+| Mixed port | `7890` |
+| TUN device | `utun1500` (system-level VPN) |
+| Control socket | `/tmp/mihomo-party-501-5151.sock` |
+| Working dir | `~/Library/Application Support/mihomo-party/work` |
+| Config | `~/Library/Application Support/mihomo-party/work/config.yaml` |
+| Subscription mgmt | `~/Library/Application Support/mihomo-party/profile.yaml` |
+
+**Verified working** (2026-05-11):
+```bash
+# pip through proxy — bypasses PyPI SSL timeouts
+pip install --proxy http://127.0.0.1:7890 gpt-researcher browser-use
+
+# curl through proxy
+curl -x http://127.0.0.1:7890 https://httpbin.org/ip
+# → {"origin": "109.61.127.153"}  (HK exit IP)
+```
+
+**When network operations fail (SSL timeout, connection reset), retry with `--proxy http://127.0.0.1:7890` or `export https_proxy=http://127.0.0.1:7890`.**
 
 ### Proven Workaround: Pure Python Fallback
 
@@ -280,7 +307,7 @@ New external tool needed?
 
 | Capability | Engine | Status | Cost |
 |------------|--------|--------|------|
-| TTS (Chinese) | macOS `say` (Tingting/Meijia/Sinji) | ✅ Built-in | Free |
+| AI image generation | diffusers (方案2) + PyTorch MPS 2.11.0 | ✅ Tier 2 MPS ✅, 方案2 (diffusers sd-turbo/sd-1.5/sdxl-turbo) active. Tier 3 ComfyUI clone blocked by network → skipped in favor of纯Python方案2. | Free |
 | TTS (50+ voices) | macOS `say -v '?'` | ✅ Built-in | Free |
 | Digital human (static) | ffmpeg + say → image+audio→video | ✅ Tier 1 | Free |
 | Digital human (lip-sync) | SadTalker + PyTorch MPS | 🔜 Tier 2 | Free (`pip install torch` ✅ done 2026-05-10) |
@@ -305,6 +332,14 @@ New external tool needed?
 | Python | 3.11.15 | No match/case exhaustiveness, no `str | None` syntax |
 | Disk | 169 GB free | Plenty for files, not for ML models (>5GB each) |
 | OpenSSL | System (3.x) | TLS 1.3 may fail on some endpoints → force TLS 1.2 |
+
+### Hard Constraints (User Explicit — 2026-05-11)
+
+**NO Docker.** User explicitly rejected Docker-based solutions. Find pure Python or macOS native alternatives for everything. Skip projects that require Docker (RAGFlow, OpenHands) unless user explicitly requests otherwise.
+
+**NO local LLM / Ollama.** User explicitly rejected local LLM deployment. Skip ollama, skip downloading 7B+ models. Use cloud API alternatives: Fish-Speech API for TTS (not local CosyVoice), DashScope for translation (not local Seed-X), DeepSeek API for LLM tasks.
+
+**API-First for heavy compute.** When a task requires GPU or >3GB models, use cloud APIs: fal.ai for FLUX.2 image generation, Fish Audio for TTS, DashScope for translation/vision. Reserve local MPS for lightweight inference only (diffusers sd-turbo, small PyTorch models).
 
 **Mandatory evaluation before any new module:**
 1. Does it need cloud services? → Skip if yes, document rationale
@@ -351,6 +386,80 @@ When the user provides design documents (HTML/Markdown), process them systematic
 
 - `references/worker-activation-pattern.md` — From SKILL.md-only to working code+CLI (2026-05-10)
 - `references/worker-v2-migration-pattern.md` — Batch upgrade to SmartSubsidiaryWorker + collaboration injection (2026-05-10)
+- `references/external-integration-pattern.md` — Lazy-import dict-return fallback-chain pattern for heavy GitHub deps (2026-05-11)
+- `references/firecrawl-v2-migration.md` — Firecrawl v2 API breaking changes: Document objects, scrape_url→scrape (2026-05-11)
+- `references/github-arsenal.md` — 47+ GitHub projects mapped to 20 subsidiaries, P1/P2/P3 priorities (2026-05-11)
+- `references/plan-b-pure-python-fallback.md` — 方案2: when network blocks external tools, create pure Python equivalents (2026-05-11)
+
+## Mac M2 Pip Timeout → Tsinghua Mirror / Clash Proxy
+
+**PyPI direct downloads frequently time out** on this machine (read timeout after 15s, 4 retries all fail). Two proven workarounds:
+
+```bash
+# Option A: Tsinghua mirror (国内直连)
+pip install -i https://pypi.tuna.tsinghua.edu.cn/simple gpt-researcher browser-use playwright
+
+# Option B: Clash Party proxy (经香港出口)
+pip install --proxy http://127.0.0.1:7890 diffusers accelerate safetensors
+```
+
+**When to use mirror:** Any `pip install` that shows `ReadTimeoutError` on first attempt — try mirror first (faster, no proxy overhead).
+**When to use proxy:** Mirror fails or package not available on mirror — use Clash proxy.
+
+**Post-install dependency fix:** Some packages (e.g., `browser-use 0.12.6`) pin exact versions of shared deps (`openai==2.16.0`, `requests==2.32.5`) that conflict with Hermes Agent. After installing, restore Hermes deps:
+
+```bash
+pip install --proxy http://127.0.0.1:7890 "openai<3,>=2.36" "requests<3,>=2.33" "rich<15,>=14.3.3"
+```
+
+Accept the pip dependency conflict warnings — the code imports fine.
+
+## Non-Invasive Enhancement Pattern
+
+**Rule:** When enhancing large existing modules (500+ lines), create a WRAPPER rather than modifying the original. This was proven on RAGEngine (568 lines):
+
+```python
+# ❌ Wrong — modify 568-line file, risk breakage
+# rag_engine.py — add HyDE + BM25 directly
+
+# ✅ Right — create wrapper
+# hybrid_retriever.py — imports RAGEngine, adds HyDE + BM25 on top
+```
+
+This pattern applies to all shared/infra modules. The wrapper:
+- Imports the original class
+- Adds new functionality in a separate class/function
+- Returns unified results
+- Doesn't change the original's API or behavior
+
+## External Integration Module Pattern
+
+When integrating GitHub open-source projects (pypi packages or cloud APIs), use `molib/infra/external/`:
+
+```python
+"""Module docstring with GitHub stars count and Worker integration points."""
+from __future__ import annotations
+
+async def main_function(param: str) -> dict:
+    """Always return dict. Never raise — return error dict."""
+    try:
+        from heavy_dep import Client  # lazy import — only on first call
+        client = Client()
+        result = client.do_work(param)
+        return {"data": result, "status": "success", "source": "name"}
+    except ImportError:
+        return {"error": "not installed. Run: pip install x", "status": "unavailable"}
+    except Exception as e:
+        return {"error": str(e), "status": "error"}
+```
+
+**Rules:**
+- All functions return `dict` — never raise exceptions
+- Lazy import all heavy deps inside functions — don't import at module level
+- Always provide `"status"` key: "success" | "error" | "unavailable" | "timeout" | "no_api_key"
+- Always provide `"source"` key for tracing
+- Fallback chain: cloud API → local alternative → macOS built-in → LLM fallback → mock
+- File path: `molib/infra/external/<project_name>.py`
 
 ## Module Catalog
 
@@ -370,9 +479,10 @@ When the user provides design documents (HTML/Markdown), process them systematic
 | `molib_mail.py` ⭐ | `molib/infra/` | 350 | `molib mail list/subscriber/campaign/stats` | smtplib (listmonk 15K★ 替代) |
 | `molib_order.py` ⭐ | `molib/infra/` | 380 | `molib order create/list/invoice/stats` | sqlite3 (MedusaJS 27K★ + KillBill 4K★ 替代) |
 | `molib_analytics.py` ⭐ | `molib/infra/` | 200 | `molib analytics track/stats/top-pages` | sqlite3 (Umami 23K★ 替代) |
-| `molib_comfy.py` ⭐ | `molib/infra/` | 180 | `molib comfy check/generate` | PyTorch MPS (ComfyUI 60K★ 桥) |
+| `molib_comfy.py` | `molib/infra/` | 418 | `molib comfy check/generate/models/preload/img2img` | PyTorch MPS + diffusers (方案2: 纯Python替代 ComfyUI 60K★, sd-turbo/sd-1.5/sdxl-turbo) |
 | `molib_flow.py` ⭐ | `molib/infra/` | 80 | `molib flow check/start/compare` | npx n8n (55K★ 桥) |
 | `molib_stt.py` ⭐ | `molib/infra/` | 130 | `molib stt check/transcribe` | ffmpeg (Whisper 替代) |
+| External bridges v2.2 | `molib/infra/external/` | 行 | — | 12模块: gpt-researcher/firecrawl/browser-use/crawl4ai/diffusers/fish-speech/fal-flux/storm/nemo-guardrails/n8n-rest/langgraph-chain/seedx-translate |
 | `designer_worker.py` ⭐ | `molib/agencies/workers/` | 100 | — | PyTorch MPS (墨图设计升级) |
 | `voice_actor_worker.py` ⭐ | `molib/agencies/workers/` | 115 | — | macOS say + ffmpeg (墨声配音升级) |
 | `data_analyst_worker.py` ⭐ | `molib/agencies/workers/` | 100 | — | MolibAnalytics + CocoIndex (墨测数据升级) |
