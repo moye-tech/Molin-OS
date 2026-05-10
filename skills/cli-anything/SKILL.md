@@ -2,13 +2,19 @@
 name: cli-anything
 description: CLI Agent原生化引擎 — 基于HKUDS/CLI-Anything (33K⭐)。让所有软件变成Agent原生CLI命令，一句话实现软件到CLI的转换。墨智（AI研发）的CLI基础设施升级。
 version: 1.0.0
-tags: [cli, agent-native, automation, tool-transformation, developer-tools]
+tags:
+- cli
+- agent-native
+- automation
+- tool-transformation
+- developer-tools
 category: engineering
 metadata:
   hermes:
     source: https://github.com/HKUDS/CLI-Anything
     stars: 33324
     molin_owner: 墨智（AI研发）
+min_hermes_version: 0.13.0
 ---
 
 # CLI-Anything — 让所有软件成为Agent原生CLI

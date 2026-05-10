@@ -1,10 +1,15 @@
 ---
 name: pm-gtm-strategy
-description: "Design go-to-market strategy covering target segments, channels, messaging, pricing, and launch timeline."
+description: Design go-to-market strategy covering target segments, channels, messaging,
+  pricing, and launch timeline.
 version: 1.0.0
-tags: [pm, product-management, go-to-market]
+tags:
+- pm
+- product-management
+- go-to-market
 category: productivity
 source: https://github.com/phuryn/pm-skills
+min_hermes_version: 0.13.0
 ---
 
 ---

@@ -1,14 +1,19 @@
 ---
-
 name: pm-brainstorm-okrs
-description: "Brainstorm team-level OKRs aligned with company objectives — qualitative objectives with measurable key results. Use when setting quarterly OKRs, aligning team goals with company strategy, drafting ob"
+description: Brainstorm team-level OKRs aligned with company objectives — qualitative
+  objectives with measurable key results. Use when setting quarterly OKRs, aligning
+  team goals with company strategy, drafting ob
 version: 1.0.0
-tags: [pm, product-management, execution]
+tags:
+- pm
+- product-management
+- execution
 category: productivity
 source: https://github.com/phuryn/pm-skills
 metadata:
   hermes:
     molin_owner: 墨品（产品设计）
+min_hermes_version: 0.13.0
 ---
 
 ---

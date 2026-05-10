@@ -1,10 +1,15 @@
 ---
 name: agent-product-feedback-synthesizer
-description: "Synthesize user feedback into actionable product insights — theme clustering, sentiment scoring, priority ranking, and feature request mapping."
+description: Synthesize user feedback into actionable product insights — theme clustering,
+  sentiment scoring, priority ranking, and feature request mapping.
 version: 1.0.0
-tags: [agency, persona, product]
+tags:
+- agency
+- persona
+- product
 category: creative
 source: https://github.com/msitarzewski/agency-agents
+min_hermes_version: 0.13.0
 ---
 
 ---

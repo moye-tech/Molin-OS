@@ -1,16 +1,28 @@
 ---
-
 name: world-monitor
-description: Real-time global intelligence monitoring — track news, geopolitical events, tech trends, and industry shifts across multiple sources. Use when you need to stay informed about what's happening in the world that affects your business.
+description: Real-time global intelligence monitoring — track news, geopolitical events,
+  tech trends, and industry shifts across multiple sources. Use when you need to stay
+  informed about what's happening in the world that affects your business.
 version: 1.0.0
-tags: [intelligence, monitoring, news, geopolitics, trends, awareness]
+tags:
+- intelligence
+- monitoring
+- news
+- geopolitics
+- trends
+- awareness
 category: research
-related_skills: [last30days, blogwatcher, polymarket, mirofish-trends]
+related_skills:
+- last30days
+- blogwatcher
+- polymarket
+- mirofish-trends
 metadata:
   hermes:
     source: https://github.com/koala73/worldmonitor
     stars: 53000
     molin_owner: 墨思（情报研究）
+min_hermes_version: 0.13.0
 ---
 
 # World Monitor — 全球情报监控

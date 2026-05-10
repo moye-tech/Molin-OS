@@ -1,10 +1,15 @@
 ---
 name: agent-product-trend-researcher
-description: "Research product and technology trends — identify emerging patterns, competitive landscape shifts, and market opportunity signals."
+description: Research product and technology trends — identify emerging patterns,
+  competitive landscape shifts, and market opportunity signals.
 version: 1.0.0
-tags: [agency, persona, product]
+tags:
+- agency
+- persona
+- product
 category: creative
 source: https://github.com/msitarzewski/agency-agents
+min_hermes_version: 0.13.0
 ---
 
 ---

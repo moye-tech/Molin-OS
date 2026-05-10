@@ -1,10 +1,14 @@
 ---
 name: ag-seo-forensic-incident-response
-description: "Investigate sudden drops in organic traffic or rankings and run a structured forensic SEO incident response with triage, root-cause analysis and recov"
+description: Investigate sudden drops in organic traffic or rankings and run a structured
+  forensic SEO incident response with triage, root-cause analysis and recov
 version: 1.0.0
-tags: [antigravity, devops]
+tags:
+- antigravity
+- devops
 category: software-development
 source: https://github.com/sickn33/antigravity-awesome-skills
+min_hermes_version: 0.13.0
 ---
 
 ---

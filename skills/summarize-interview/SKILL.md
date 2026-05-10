@@ -1,14 +1,19 @@
 ---
-
 name: pm-summarize-interview
-description: "Summarize a customer interview transcript into a structured template with JTBD, satisfaction signals, and action items. Use when processing interview recordings or transcripts, synthesizing discovery "
+description: 'Summarize a customer interview transcript into a structured template
+  with JTBD, satisfaction signals, and action items. Use when processing interview
+  recordings or transcripts, synthesizing discovery '
 version: 1.0.0
-tags: [pm, product-management, product-discovery]
+tags:
+- pm
+- product-management
+- product-discovery
 category: productivity
 source: https://github.com/phuryn/pm-skills
 metadata:
   hermes:
     molin_owner: 墨品（产品设计）
+min_hermes_version: 0.13.0
 ---
 
 ---

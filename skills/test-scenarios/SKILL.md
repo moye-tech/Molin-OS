@@ -1,10 +1,15 @@
 ---
 name: pm-test-scenarios
-description: "Generate comprehensive test scenarios covering happy path, edge cases, error states, and performance boundaries."
+description: Generate comprehensive test scenarios covering happy path, edge cases,
+  error states, and performance boundaries.
 version: 1.0.0
-tags: [pm, product-management, execution]
+tags:
+- pm
+- product-management
+- execution
 category: productivity
 source: https://github.com/phuryn/pm-skills
+min_hermes_version: 0.13.0
 ---
 
 ---

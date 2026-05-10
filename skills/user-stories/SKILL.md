@@ -1,10 +1,15 @@
 ---
 name: pm-user-stories
-description: "Create user stories with acceptance criteria following INVEST principles. Map stories to epics and personas."
+description: Create user stories with acceptance criteria following INVEST principles.
+  Map stories to epics and personas.
 version: 1.0.0
-tags: [pm, product-management, execution]
+tags:
+- pm
+- product-management
+- execution
 category: productivity
 source: https://github.com/phuryn/pm-skills
+min_hermes_version: 0.13.0
 ---
 
 ---

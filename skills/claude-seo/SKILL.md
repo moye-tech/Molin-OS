@@ -1,15 +1,40 @@
 ---
-
 name: claude-seo
-version: "1.9.6"
-description: "Universal SEO skill with 19 core sub-skills and 3 extensions. Full site audits, single-page analysis, technical SEO (crawlability, indexability, Core Web Vitals with INP), schema markup, content quality (E-E-A-T), image optimization, sitemap analysis, GEO for AI Overviews/ChatGPT/Perplexity, semantic clustering, SXO, drift monitoring, e-commerce SEO, programmatic SEO, competitor pages, local SEO, maps intelligence, hreflang/i18n, Google APIs, backlink profile analysis, and strategic planning. Industry detection for SaaS, e-commerce, local, publishers, agencies. Trigger phrases: SEO, audit, schema, Core Web Vitals, sitemap, E-E-A-T, AI Overviews, GEO, technical SEO, content quality, page speed, structured data, backlinks, keyword research, topic cluster, search experience, SEO drift, ecommerce SEO, local SEO, Google Maps, hreflang, programmatic SEO, competitor comparison."
+version: 1.9.6
+description: 'Universal SEO skill with 19 core sub-skills and 3 extensions. Full site
+  audits, single-page analysis, technical SEO (crawlability, indexability, Core Web
+  Vitals with INP), schema markup, content quality (E-E-A-T), image optimization,
+  sitemap analysis, GEO for AI Overviews/ChatGPT/Perplexity, semantic clustering,
+  SXO, drift monitoring, e-commerce SEO, programmatic SEO, competitor pages, local
+  SEO, maps intelligence, hreflang/i18n, Google APIs, backlink profile analysis, and
+  strategic planning. Industry detection for SaaS, e-commerce, local, publishers,
+  agencies. Trigger phrases: SEO, audit, schema, Core Web Vitals, sitemap, E-E-A-T,
+  AI Overviews, GEO, technical SEO, content quality, page speed, structured data,
+  backlinks, keyword research, topic cluster, search experience, SEO drift, ecommerce
+  SEO, local SEO, Google Maps, hreflang, programmatic SEO, competitor comparison.'
 author: AgriciDaniel (converted for Hermes Agent)
-tags: [seo, marketing, content-optimization, search-engine, keyword-research, technical-seo, local-seo, ecommerce-seo, schema, backlinks]
-allowed-tools: [web_search, web_extract, read_file, write_file, terminal]
-source: "https://github.com/AgriciDaniel/claude-seo"
+tags:
+- seo
+- marketing
+- content-optimization
+- search-engine
+- keyword-research
+- technical-seo
+- local-seo
+- ecommerce-seo
+- schema
+- backlinks
+allowed-tools:
+- web_search
+- web_extract
+- read_file
+- write_file
+- terminal
+source: https://github.com/AgriciDaniel/claude-seo
 metadata:
   hermes:
     molin_owner: 墨增（增长引擎）
+min_hermes_version: 0.13.0
 ---
 
 # claude-seo: Universal SEO Mastery for AI Agents

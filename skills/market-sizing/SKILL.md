@@ -1,14 +1,19 @@
 ---
-
 name: pm-market-sizing
-description: "Estimate market size using TAM, SAM, and SOM with top-down and bottom-up approaches. Use when sizing a market opportunity, estimating addressable market, preparing for investor pitches, or evaluating "
+description: 'Estimate market size using TAM, SAM, and SOM with top-down and bottom-up
+  approaches. Use when sizing a market opportunity, estimating addressable market,
+  preparing for investor pitches, or evaluating '
 version: 1.0.0
-tags: [pm, product-management, market-research]
+tags:
+- pm
+- product-management
+- market-research
 category: productivity
 source: https://github.com/phuryn/pm-skills
 metadata:
   hermes:
     molin_owner: 墨品（产品设计）
+min_hermes_version: 0.13.0
 ---
 
 ---

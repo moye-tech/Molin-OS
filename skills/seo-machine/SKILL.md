@@ -1,16 +1,24 @@
 ---
-
 name: seo-machine
-description: "SEO-optimized content machine: keyword research, intent detection, quality scoring, readability, internal linking, and competitive gap analysis."
+description: 'SEO-optimized content machine: keyword research, intent detection, quality
+  scoring, readability, internal linking, and competitive gap analysis.'
 version: 1.0.0
 author: Hermes Agent (based on TheCraigHewitt/seomachine)
 license: MIT
 metadata:
   hermes:
-    tags: [seo, content, keywords, optimization, search, marketing, writing]
+    tags:
+    - seo
+    - content
+    - keywords
+    - optimization
+    - search
+    - marketing
+    - writing
     related_skills: []
     category: productivity
     molin_owner: 墨增（增长引擎）
+min_hermes_version: 0.13.0
 ---
 
 # SEO Machine

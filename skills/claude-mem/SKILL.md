@@ -2,7 +2,12 @@
 name: claude-mem
 description: 自动交互记忆捕捉系统 — 基于 thedotmack/claude-mem (71K⭐) 的自动记忆管线。每次任务后自动提取关键信息→写入Hermes记忆系统→构建知识图谱。墨脑（知识管理）核心技能。
 version: 1.0.0
-tags: [memory, auto-capture, knowledge-graph, self-learning, cross-session]
+tags:
+- memory
+- auto-capture
+- knowledge-graph
+- self-learning
+- cross-session
 category: intelligence
 metadata:
   hermes:
@@ -10,6 +15,7 @@ metadata:
     stars: 71000
     upstream_fork: https://github.com/moye-tech/claude-mem
     molin_owner: 墨脑（知识管理）
+min_hermes_version: 0.13.0
 ---
 
 # Claude-Mem — 墨麟自动记忆捕捉系统

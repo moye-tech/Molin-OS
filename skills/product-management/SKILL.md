@@ -1,5 +1,4 @@
 ---
-
 name: 产品子公司
 description: 负责产品规划、设计
 version: 1.0.0
@@ -8,13 +7,17 @@ license: MIT
 dependencies: []
 metadata:
   hermes:
-    tags: [product, subsidiary, business]
+    tags:
+    - product
+    - subsidiary
+    - business
     config:
       approval_level: medium
       cost_level: medium
       max_concurrent: 2
       model_preference: qwen3.6-plus
     molin_owner: 墨品（产品设计）
+min_hermes_version: 0.13.0
 ---
 
 # 产品子公司

@@ -1,5 +1,4 @@
 ---
-
 name: 教育子公司
 description: 负责教育、培训、知识付费业务
 version: 1.0.0
@@ -8,13 +7,17 @@ license: MIT
 dependencies: []
 metadata:
   hermes:
-    tags: [edu, subsidiary, business]
+    tags:
+    - edu
+    - subsidiary
+    - business
     config:
       approval_level: medium
       cost_level: low
       max_concurrent: 2
       model_preference: qwen3.6-plus
     molin_owner: 墨育（教育）
+min_hermes_version: 0.13.0
 ---
 
 # 教育子公司

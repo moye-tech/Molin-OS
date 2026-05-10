@@ -1,5 +1,4 @@
 ---
-
 name: 研究子公司
 description: 负责市场研究、竞品分析
 version: 1.0.0
@@ -8,13 +7,17 @@ license: MIT
 dependencies: []
 metadata:
   hermes:
-    tags: [research, subsidiary, business]
+    tags:
+    - research
+    - subsidiary
+    - business
     config:
       approval_level: medium
       cost_level: medium
       max_concurrent: 2
       model_preference: claude-opus
     molin_owner: 墨思（情报研究）
+min_hermes_version: 0.13.0
 ---
 
 # 研究子公司

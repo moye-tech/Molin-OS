@@ -1,14 +1,19 @@
 ---
-
 name: pm-identify-assumptions-new
-description: "Identify risky assumptions for a new product idea across 8 risk categories including Go-to-Market, Strategy, and Team. Use when evaluating startup risks, assessing a new product concept, or mapping as"
+description: Identify risky assumptions for a new product idea across 8 risk categories
+  including Go-to-Market, Strategy, and Team. Use when evaluating startup risks, assessing
+  a new product concept, or mapping as
 version: 1.0.0
-tags: [pm, product-management, product-discovery]
+tags:
+- pm
+- product-management
+- product-discovery
 category: productivity
 source: https://github.com/phuryn/pm-skills
 metadata:
   hermes:
     molin_owner: 墨品（产品设计）
+min_hermes_version: 0.13.0
 ---
 
 ---

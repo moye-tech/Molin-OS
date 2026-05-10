@@ -1,10 +1,15 @@
 ---
 name: pm-ideal-customer-profile
-description: "Define the ideal customer profile with firmographics, pain points, buying triggers, and value drivers."
+description: Define the ideal customer profile with firmographics, pain points, buying
+  triggers, and value drivers.
 version: 1.0.0
-tags: [pm, product-management, go-to-market]
+tags:
+- pm
+- product-management
+- go-to-market
 category: productivity
 source: https://github.com/phuryn/pm-skills
+min_hermes_version: 0.13.0
 ---
 
 ---

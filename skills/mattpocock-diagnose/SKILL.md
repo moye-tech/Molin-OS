@@ -1,13 +1,21 @@
 ---
-
 name: diagnose
-description: "Structured debugging protocol: reproduce the issue, isolate the failing component, trace to root cause, THEN propose a fix. Never jumps to fixes without understanding. Use when debugging any bug, error, unexpected behavior, or test failure."
+description: 'Structured debugging protocol: reproduce the issue, isolate the failing
+  component, trace to root cause, THEN propose a fix. Never jumps to fixes without
+  understanding. Use when debugging any bug, error, unexpected behavior, or test failure.'
 version: 1.0.0
 source: https://github.com/mattpocock/skills (56K stars)
 metadata:
   hermes:
-    tags: [debugging, troubleshooting, root-cause-analysis, bug-fix, diagnosis, software-development]
+    tags:
+    - debugging
+    - troubleshooting
+    - root-cause-analysis
+    - bug-fix
+    - diagnosis
+    - software-development
     molin_owner: 墨码（软件工坊）
+min_hermes_version: 0.13.0
 ---
 
 # Diagnose — Structured Debugging Protocol

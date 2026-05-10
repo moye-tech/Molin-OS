@@ -1,26 +1,43 @@
 ---
 name: swarm-engine
-description: Unified swarm orchestration engine — decompose complex tasks into role-based parallel agents, execute concurrently, and synthesize results. Merges agentic-engineering patterns, swarm orchestration, and subagent-driven development into one cohesive system.
+description: Unified swarm orchestration engine — decompose complex tasks into role-based
+  parallel agents, execute concurrently, and synthesize results. Merges agentic-engineering
+  patterns, swarm orchestration, and subagent-driven development into one cohesive
+  system.
 version: 2.0.0
-tags: [swarm, multi-agent, orchestration, parallel, delegation, workflow]
+tags:
+- swarm
+- multi-agent
+- orchestration
+- parallel
+- delegation
+- workflow
 category: meta
-related_skills: [molin-ceo-persona, self-learning-loop, archon-workflow, paperclip-company-os]
+related_skills:
+- molin-ceo-persona
+- self-learning-loop
+- archon-workflow
+- paperclip-company-os
 metadata:
   hermes:
-    merged_from: [agentic-engineering, swarm-orchestration, subagent-driven-development]
+    merged_from:
+    - agentic-engineering
+    - swarm-orchestration
+    - subagent-driven-development
     ruflo_integrated:
-      - topology_selection: 根据任务类型自动选择拓扑（mesh/hierarchical/ring）
-      - consensus_mechanisms: 多Agent投票决策（Raft/BFT/Gossip）
-      - q_learning_routing: 学习最优Agent分配策略
-      - agent_role_system: 60+预定义Agent角色模板
+    - topology_selection: 根据任务类型自动选择拓扑（mesh/hierarchical/ring）
+    - consensus_mechanisms: 多Agent投票决策（Raft/BFT/Gossip）
+    - q_learning_routing: 学习最优Agent分配策略
+    - agent_role_system: 60+预定义Agent角色模板
     upstream_fork: https://github.com/moye-tech/ruflo
     deerflow_integrated:
-      - long_horizon_decomposition: 长时域任务拆解（deer-flow 65K⭐ 模式）
-      - sub_agent_mgmt: 子Agent自动创建/销毁/状态追踪
+    - long_horizon_decomposition: 长时域任务拆解（deer-flow 65K⭐ 模式）
+    - sub_agent_mgmt: 子Agent自动创建/销毁/状态追踪
     omx_integrated:
-      - hook_system: 任务生命周期钩子
-      - agent_team_orchestration: 多Agent团队编排
+    - hook_system: 任务生命周期钩子
+    - agent_team_orchestration: 多Agent团队编排
     molin_owner: 墨智（AI研发）
+min_hermes_version: 0.13.0
 ---
 
 # Swarm Engine — 统一蜂群引擎

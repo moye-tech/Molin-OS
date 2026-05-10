@@ -1,14 +1,29 @@
 ---
 name: hermes-skill-adaptation-pipeline
-description: "Adapt external GitHub projects (Claude Code skills, Python frameworks, CLI tools) into Hermes Agent skills. Covers: condensing multi-file skill sets into single orchestrator SKILL.md, wrapping installed frameworks, creating reference/template files, patching downstream docs like molin-company-structure, and pushing to repo. Use when integrating external repos (not built for Hermes) into the Hermes OS skill system."
+description: 'Adapt external GitHub projects (Claude Code skills, Python frameworks,
+  CLI tools) into Hermes Agent skills. Covers: condensing multi-file skill sets into
+  single orchestrator SKILL.md, wrapping installed frameworks, creating reference/template
+  files, patching downstream docs like molin-company-structure, and pushing to repo.
+  Use when integrating external repos (not built for Hermes) into the Hermes OS skill
+  system.'
 version: 1.0.0
 author: Hermes Agent
 license: MIT
 metadata:
   hermes:
-    tags: [skills, adaptation, integration, hermes-os, conversion]
-    related_skills: [skill-discovery, hermes-agent-skill-authoring, batch-yaml-frontmatter-injection, readme-standardization]
+    tags:
+    - skills
+    - adaptation
+    - integration
+    - hermes-os
+    - conversion
+    related_skills:
+    - skill-discovery
+    - hermes-agent-skill-authoring
+    - batch-yaml-frontmatter-injection
+    - readme-standardization
     molin_owner: CEO
+min_hermes_version: 0.13.0
 ---
 
 # Hermes Skill Adaptation Pipeline

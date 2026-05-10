@@ -1,13 +1,23 @@
 ---
-
 name: owned-repo-integration-audit
-description: Audit multiple owned fork/clone repositories against the current Hermes system to identify what's already integrated and what's missing. Produces a prioritized integration roadmap with effort estimates.
+description: Audit multiple owned fork/clone repositories against the current Hermes
+  system to identify what's already integrated and what's missing. Produces a prioritized
+  integration roadmap with effort estimates.
 version: 1.0.0
-tags: [gap-analysis, integration, codebase-audit, roadmap]
-related_skills: [decompiled-codebase-extraction, skill-discovery, codebase-inspection, github-repo-management]
+tags:
+- gap-analysis
+- integration
+- codebase-audit
+- roadmap
+related_skills:
+- decompiled-codebase-extraction
+- skill-discovery
+- codebase-inspection
+- github-repo-management
 metadata:
   hermes:
     molin_owner: 墨码（软件工坊）
+min_hermes_version: 0.13.0
 ---
 
 # Owned Repository Integration Audit

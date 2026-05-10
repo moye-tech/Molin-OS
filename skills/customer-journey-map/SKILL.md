@@ -1,14 +1,19 @@
 ---
-
 name: pm-customer-journey-map
-description: "Create an end-to-end customer journey map with stages, touchpoints, emotions, pain points, and opportunities. Use when mapping the customer experience, identifying friction points, improving onboardin"
+description: Create an end-to-end customer journey map with stages, touchpoints, emotions,
+  pain points, and opportunities. Use when mapping the customer experience, identifying
+  friction points, improving onboardin
 version: 1.0.0
-tags: [pm, product-management, market-research]
+tags:
+- pm
+- product-management
+- market-research
 category: productivity
 source: https://github.com/phuryn/pm-skills
 metadata:
   hermes:
     molin_owner: 墨品（产品设计）
+min_hermes_version: 0.13.0
 ---
 
 ---

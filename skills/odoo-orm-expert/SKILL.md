@@ -1,10 +1,14 @@
 ---
 name: ag-odoo-orm-expert
-description: "Master Odoo ORM patterns: search, browse, create, write, domain filters, computed fields, and performance-safe query techniques."
+description: 'Master Odoo ORM patterns: search, browse, create, write, domain filters,
+  computed fields, and performance-safe query techniques.'
 version: 1.0.0
-tags: [antigravity, general]
+tags:
+- antigravity
+- general
 category: software-development
 source: https://github.com/sickn33/antigravity-awesome-skills
+min_hermes_version: 0.13.0
 ---
 
 ---

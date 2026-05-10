@@ -1,13 +1,24 @@
 ---
-
 name: zoom-out
-description: "Code comprehension: understand the big picture of a codebase before making changes. Maps module structure, data flow, entry points, and key abstractions so the agent can reason about impact. Use when onboarding to an unfamiliar codebase, before making cross-cutting changes, or when the agent needs context about how everything fits together."
+description: 'Code comprehension: understand the big picture of a codebase before
+  making changes. Maps module structure, data flow, entry points, and key abstractions
+  so the agent can reason about impact. Use when onboarding to an unfamiliar codebase,
+  before making cross-cutting changes, or when the agent needs context about how everything
+  fits together.'
 version: 1.0.0
 source: https://github.com/mattpocock/skills (56K stars)
 metadata:
   hermes:
-    tags: [code-comprehension, onboarding, architecture, exploration, impact-analysis, software-development, code-review]
+    tags:
+    - code-comprehension
+    - onboarding
+    - architecture
+    - exploration
+    - impact-analysis
+    - software-development
+    - code-review
     molin_owner: 墨码（软件工坊）
+min_hermes_version: 0.13.0
 ---
 
 # Zoom Out — Big-Picture Code Comprehension

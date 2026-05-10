@@ -1,16 +1,39 @@
 ---
-
 name: obliteratus
-description: Remove refusal behaviors from open-weight LLMs using OBLITERATUS — mechanistic interpretability techniques (diff-in-means, SVD, whitened SVD, LEACE, SAE decomposition, etc.) to excise guardrails while preserving reasoning. 9 CLI methods, 28 analysis modules, 116 model presets across 5 compute tiers, tournament evaluation, and telemetry-driven recommendations. Use when a user wants to uncensor, abliterate, or remove refusal from an LLM.
+description: Remove refusal behaviors from open-weight LLMs using OBLITERATUS — mechanistic
+  interpretability techniques (diff-in-means, SVD, whitened SVD, LEACE, SAE decomposition,
+  etc.) to excise guardrails while preserving reasoning. 9 CLI methods, 28 analysis
+  modules, 116 model presets across 5 compute tiers, tournament evaluation, and telemetry-driven
+  recommendations. Use when a user wants to uncensor, abliterate, or remove refusal
+  from an LLM.
 version: 2.0.0
 author: Hermes Agent
 license: MIT
-dependencies: [obliteratus, torch, transformers, bitsandbytes, accelerate, safetensors]
+dependencies:
+- obliteratus
+- torch
+- transformers
+- bitsandbytes
+- accelerate
+- safetensors
 metadata:
   hermes:
-    tags: [Abliteration, Uncensoring, Refusal-Removal, LLM, Weight-Projection, SVD, Mechanistic-Interpretability, HuggingFace, Model-Surgery]
-    related_skills: [vllm, gguf, huggingface-tokenizers]
+    tags:
+    - Abliteration
+    - Uncensoring
+    - Refusal-Removal
+    - LLM
+    - Weight-Projection
+    - SVD
+    - Mechanistic-Interpretability
+    - HuggingFace
+    - Model-Surgery
+    related_skills:
+    - vllm
+    - gguf
+    - huggingface-tokenizers
     molin_owner: 墨智（AI研发）
+min_hermes_version: 0.13.0
 ---
 
 # OBLITERATUS Skill

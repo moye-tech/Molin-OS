@@ -6,9 +6,17 @@ author: Hermes Agent
 category: meta
 metadata:
   hermes:
-    tags: [relay, protocol, pipeline, handoff, molin]
-    related_skills: [molin-daily-briefing, molin-ceo-persona]
+    tags:
+    - relay
+    - protocol
+    - pipeline
+    - handoff
+    - molin
+    related_skills:
+    - molin-daily-briefing
+    - molin-ceo-persona
     molin_owner: CEO
+min_hermes_version: 0.13.0
 ---
 
 # 子公司接力协议

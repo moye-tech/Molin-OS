@@ -1,14 +1,27 @@
 ---
 name: molin-education
-description: "墨育 · AI 教育引擎 — 课程设计、AI 个性化辅导、学习路径规划、间隔重复、互动测验生成。基于 HKUDS/DeepTutor ⭐23.2k 的 AI 辅导理念 + 24kchengYe/human-skill-tree ⭐517 的学习科学框架。Use when: 用户需要设计课程大纲、生成教学内容、创建学习计划、辅导学生、评估学习效果。"
+description: '墨育 · AI 教育引擎 — 课程设计、AI 个性化辅导、学习路径规划、间隔重复、互动测验生成。基于 HKUDS/DeepTutor ⭐23.2k
+  的 AI 辅导理念 + 24kchengYe/human-skill-tree ⭐517 的学习科学框架。Use when: 用户需要设计课程大纲、生成教学内容、创建学习计划、辅导学生、评估学习效果。'
 version: 1.0.0
 author: Hermes Agent
 license: MIT
 metadata:
   hermes:
-    tags: [education, tutor, curriculum, learning, course, ai-tutor, molin]
-    related_skills: [molin-memory, writing-plans, molin-goals, content-strategy]
+    tags:
+    - education
+    - tutor
+    - curriculum
+    - learning
+    - course
+    - ai-tutor
+    - molin
+    related_skills:
+    - molin-memory
+    - writing-plans
+    - molin-goals
+    - content-strategy
     molin_owner: 墨育（教育）
+min_hermes_version: 0.13.0
 ---
 
 # 墨育 · AI 教育引擎

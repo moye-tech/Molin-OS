@@ -1,15 +1,34 @@
 ---
-
 name: seo-audit
-description: "When the user wants to audit, review, or diagnose SEO issues on their site. Trigger phrases: 'SEO audit,' 'technical SEO,' 'why am I not ranking,' 'SEO issues,' 'on-page SEO,' 'meta tags review,' 'SEO health check,' 'my traffic dropped,' 'lost rankings,' 'not showing up in Google,' 'site isn't ranking,' 'Google update hit me,' 'page speed,' 'core web vitals,' 'crawl errors,' 'indexing issues,' 'my SEO is bad,' 'help with SEO.' For building pages at scale to target keywords, see programmatic-seo. For adding structured data, see schema-markup. For AI search optimization, see ai-seo."
+description: 'When the user wants to audit, review, or diagnose SEO issues on their
+  site. Trigger phrases: ''SEO audit,'' ''technical SEO,'' ''why am I not ranking,''
+  ''SEO issues,'' ''on-page SEO,'' ''meta tags review,'' ''SEO health check,'' ''my
+  traffic dropped,'' ''lost rankings,'' ''not showing up in Google,'' ''site isn''t
+  ranking,'' ''Google update hit me,'' ''page speed,'' ''core web vitals,'' ''crawl
+  errors,'' ''indexing issues,'' ''my SEO is bad,'' ''help with SEO.'' For building
+  pages at scale to target keywords, see programmatic-seo. For adding structured data,
+  see schema-markup. For AI search optimization, see ai-seo.'
 version: 1.2.0
 author: coreyhaines31
 metadata:
   hermes:
-    tags: [marketing, seo, audit, technical-seo, search-optimization, organic-traffic]
-    related_skills: [ai-seo, programmatic-seo, site-architecture, schema-markup, page-cro, analytics-tracking]
-    source: "https://github.com/coreyhaines31/marketingskills"
+    tags:
+    - marketing
+    - seo
+    - audit
+    - technical-seo
+    - search-optimization
+    - organic-traffic
+    related_skills:
+    - ai-seo
+    - programmatic-seo
+    - site-architecture
+    - schema-markup
+    - page-cro
+    - analytics-tracking
+    source: https://github.com/coreyhaines31/marketingskills
     molin_owner: 墨增（增长引擎）
+min_hermes_version: 0.13.0
 ---
 
 # SEO Audit

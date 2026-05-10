@@ -1,11 +1,11 @@
 ---
-
 name: molin-company-structure
 description: 墨麟 AI 集团 — 20家子公司 + 4层架构。参考 molin-ai-intelligent-system 架构，每一条业务线独立运营、垂直深耕。v5.0
 version: 5.0.0
 metadata:
   hermes:
     molin_owner: CEO
+min_hermes_version: 0.13.0
 ---
 
 # 墨麟 AI 集团 · 组织架构 v5.0

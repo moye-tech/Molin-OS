@@ -1,10 +1,15 @@
 ---
 name: pm-gtm-motions
-description: "Design GTM motions — product-led, sales-led, or hybrid — with funnel metrics and conversion targets."
+description: Design GTM motions — product-led, sales-led, or hybrid — with funnel
+  metrics and conversion targets.
 version: 1.0.0
-tags: [pm, product-management, go-to-market]
+tags:
+- pm
+- product-management
+- go-to-market
 category: productivity
 source: https://github.com/phuryn/pm-skills
+min_hermes_version: 0.13.0
 ---
 
 ---

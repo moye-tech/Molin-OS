@@ -1,14 +1,19 @@
 ---
-
 name: pm-prioritize-assumptions
-description: "Prioritize assumptions using an Impact × Risk matrix and suggest experiments for each. Use when triaging a list of assumptions, deciding what to test first, or applying the assumption prioritization c"
+description: Prioritize assumptions using an Impact × Risk matrix and suggest experiments
+  for each. Use when triaging a list of assumptions, deciding what to test first,
+  or applying the assumption prioritization c
 version: 1.0.0
-tags: [pm, product-management, product-discovery]
+tags:
+- pm
+- product-management
+- product-discovery
 category: productivity
 source: https://github.com/phuryn/pm-skills
 metadata:
   hermes:
     molin_owner: 墨品（产品设计）
+min_hermes_version: 0.13.0
 ---
 
 ---

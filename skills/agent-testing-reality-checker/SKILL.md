@@ -1,14 +1,19 @@
 ---
-
 name: agent-testing-reality-checker
-description: "Reality checker agent — stress-test assumptions, identify risks, validate feasibility"
+description: Reality checker agent — stress-test assumptions, identify risks, validate
+  feasibility
 version: 1.0.0
-tags: [agency, persona, testing, quality]
+tags:
+- agency
+- persona
+- testing
+- quality
 category: business
 source: https://github.com/msitarzewski/agency-agents
 metadata:
   hermes:
     molin_owner: 墨码（软件工坊）
+min_hermes_version: 0.13.0
 ---
 
 # agent-testing-reality-checker
@@ -26,4 +31,3 @@ This agent specializes in testing, quality.
 ## When to Use
 
 Load this skill when you need a dedicated testing reality checker perspective on a task.
-

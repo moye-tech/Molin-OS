@@ -2,7 +2,14 @@
 name: agent-engineering-skills
 description: 墨智工程技能库 — 基于 addyosmani/agent-skills (27K⭐) 批量导入的21个生产级工程技能。覆盖API设计/浏览器测试/CI-CD/代码简化/上下文工程/性能优化等功能。
 version: 1.0.0
-tags: [engineering, skills-library, api-design, testing, perf, security, frontend]
+tags:
+- engineering
+- skills-library
+- api-design
+- testing
+- perf
+- security
+- frontend
 category: engineering
 metadata:
   hermes:
@@ -12,6 +19,7 @@ metadata:
     skills_imported: 21
     new_to_hermes: 12
     molin_owner: 墨智（AI研发）
+min_hermes_version: 0.13.0
 ---
 
 # Agent Engineering Skills — 墨智工程技能库

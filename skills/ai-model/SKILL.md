@@ -1,5 +1,4 @@
 ---
-
 name: AI子公司
 description: 负责提示工程、AI优化
 version: 1.0.0
@@ -8,13 +7,17 @@ license: MIT
 dependencies: []
 metadata:
   hermes:
-    tags: [ai, subsidiary, business]
+    tags:
+    - ai
+    - subsidiary
+    - business
     config:
       approval_level: low
       cost_level: low
       max_concurrent: 2
       model_preference: glm-5
     molin_owner: 墨智（AI研发）
+min_hermes_version: 0.13.0
 ---
 
 # AI子公司

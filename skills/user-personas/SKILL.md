@@ -1,14 +1,19 @@
 ---
-
 name: pm-user-personas
-description: "Create refined user personas from research data — 3 personas with JTBD, pains, gains, and unexpected insights. Use when building personas from survey data, creating user profiles from research, or seg"
+description: Create refined user personas from research data — 3 personas with JTBD,
+  pains, gains, and unexpected insights. Use when building personas from survey data,
+  creating user profiles from research, or seg
 version: 1.0.0
-tags: [pm, product-management, market-research]
+tags:
+- pm
+- product-management
+- market-research
 category: productivity
 source: https://github.com/phuryn/pm-skills
 metadata:
   hermes:
     molin_owner: 墨品（产品设计）
+min_hermes_version: 0.13.0
 ---
 
 ---

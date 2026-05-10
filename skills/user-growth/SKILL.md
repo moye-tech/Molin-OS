@@ -1,5 +1,4 @@
 ---
-
 name: 增长子公司
 description: 负责用户增长、营销
 version: 1.0.0
@@ -8,13 +7,17 @@ license: MIT
 dependencies: []
 metadata:
   hermes:
-    tags: [growth, subsidiary, business]
+    tags:
+    - growth
+    - subsidiary
+    - business
     config:
       approval_level: medium
       cost_level: high
       max_concurrent: 3
       model_preference: claude-sonnet
     molin_owner: 墨增（增长引擎）
+min_hermes_version: 0.13.0
 ---
 
 # 增长子公司

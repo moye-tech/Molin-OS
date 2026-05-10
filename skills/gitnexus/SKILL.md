@@ -2,7 +2,12 @@
 name: gitnexus
 description: 代码知识图谱引擎 — 基于 abhigyanpatwari/GitNexus (35K⭐) 的零服务端代码智能引擎。将任意代码仓库转化为知识图谱，支持深度代码分析和智能查询。墨维（运维）核心技能。
 version: 1.0.0
-tags: [knowledge-graph, code-analysis, git, neo4j, dependency-graph]
+tags:
+- knowledge-graph
+- code-analysis
+- git
+- neo4j
+- dependency-graph
 category: github
 metadata:
   hermes:
@@ -10,6 +15,7 @@ metadata:
     stars: 35000
     upstream_fork: https://github.com/moye-tech/GitNexus
     molin_owner: 墨维（运维）
+min_hermes_version: 0.13.0
 ---
 
 # GitNexus — 代码知识图谱引擎

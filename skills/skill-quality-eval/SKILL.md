@@ -2,11 +2,17 @@
 name: skill-quality-eval
 description: 技能质量评估标准 — 5 维度评分模型、沉睡技能识别、每季度全技能审查流程
 version: 0.1.0
-tags: [meta, evaluation, quality, governance, skills]
+tags:
+- meta
+- evaluation
+- quality
+- governance
+- skills
 metadata:
   hermes:
     molin_owner: L0-中枢
     review_frequency: 每季度
+min_hermes_version: 0.13.0
 ---
 
 # 技能质量评估标准

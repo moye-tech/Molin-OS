@@ -6,9 +6,19 @@ author: Hermes Agent
 category: meta
 metadata:
   hermes:
-    tags: [ceo, briefing, daily, report, molin]
-    related_skills: [molin-ceo-persona, molin-goals, molin-governance, molin-relay-protocol]
+    tags:
+    - ceo
+    - briefing
+    - daily
+    - report
+    - molin
+    related_skills:
+    - molin-ceo-persona
+    - molin-goals
+    - molin-governance
+    - molin-relay-protocol
     molin_owner: CEO
+min_hermes_version: 0.13.0
 ---
 
 # CEO 每日简报

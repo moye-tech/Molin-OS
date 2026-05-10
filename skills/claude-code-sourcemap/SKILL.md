@@ -1,8 +1,14 @@
 ---
 name: claude-code-sourcemap
-description: Claude Code 源码参考 — 基于 ChinaSiro/claude-code-sourcemap (9K⭐)，通过 npm sourcemap 还原的 4756 个文件（含1884个 .ts/.tsx）。提供 Claude Code v2.1.88 的完整TypeScript源码作为代码分析/工具参考源。
+description: Claude Code 源码参考 — 基于 ChinaSiro/claude-code-sourcemap (9K⭐)，通过 npm sourcemap
+  还原的 4756 个文件（含1884个 .ts/.tsx）。提供 Claude Code v2.1.88 的完整TypeScript源码作为代码分析/工具参考源。
 version: 1.0.0
-tags: [claude-code, source-code, reference, typescript, analysis]
+tags:
+- claude-code
+- source-code
+- reference
+- typescript
+- analysis
 category: engineering
 metadata:
   hermes:
@@ -14,6 +20,7 @@ metadata:
     version: 2.1.88
     note: 与 claude-code-repo（claude-code-best版）同源但还原方式不同，可交叉参考
     molin_owner: 墨智（AI研发）
+min_hermes_version: 0.13.0
 ---
 
 # Claude Code Sourcemap — 源码参考

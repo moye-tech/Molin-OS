@@ -1,14 +1,19 @@
 ---
-
 name: agent-marketing-bilibili-content-strategist
-description: "Bilibili content strategist — video strategy, community engagement, trending topics"
+description: Bilibili content strategist — video strategy, community engagement, trending
+  topics
 version: 1.0.0
-tags: [agency, persona, marketing, bilibili]
+tags:
+- agency
+- persona
+- marketing
+- bilibili
 category: business
 source: https://github.com/msitarzewski/agency-agents
 metadata:
   hermes:
     molin_owner: 墨增（增长引擎）
+min_hermes_version: 0.13.0
 ---
 
 # agent-marketing-bilibili-content-strategist
@@ -26,4 +31,3 @@ This agent specializes in marketing, bilibili.
 ## When to Use
 
 Load this skill when you need a dedicated marketing bilibili content strategist perspective on a task.
-

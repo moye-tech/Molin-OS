@@ -1,14 +1,19 @@
 ---
-
 name: pm-ansoff-matrix
-description: "Generate an Ansoff Matrix analysis mapping growth strategies across market penetration, market development, product development, and diversification. Use when considering growth options, planning mark"
+description: Generate an Ansoff Matrix analysis mapping growth strategies across market
+  penetration, market development, product development, and diversification. Use when
+  considering growth options, planning mark
 version: 1.0.0
-tags: [pm, product-management, product-strategy]
+tags:
+- pm
+- product-management
+- product-strategy
 category: productivity
 source: https://github.com/phuryn/pm-skills
 metadata:
   hermes:
     molin_owner: 墨品（产品设计）
+min_hermes_version: 0.13.0
 ---
 
 ---

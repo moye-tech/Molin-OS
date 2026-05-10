@@ -1,14 +1,17 @@
 ---
-
 name: ag-c4-code
-description: "Expert C4 Code-level documentation specialist. Analyzes code directories to create comprehensive C4 code-level documentation including function signat"
+description: Expert C4 Code-level documentation specialist. Analyzes code directories
+  to create comprehensive C4 code-level documentation including function signat
 version: 1.0.0
-tags: [antigravity, devops]
+tags:
+- antigravity
+- devops
 category: software-development
 source: https://github.com/sickn33/antigravity-awesome-skills
 metadata:
   hermes:
     molin_owner: CEO
+min_hermes_version: 0.13.0
 ---
 
 ---

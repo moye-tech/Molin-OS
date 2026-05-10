@@ -1,10 +1,14 @@
 ---
 name: ag-docs-architect
-description: "Creates comprehensive technical documentation from existing codebases. Analyzes architecture, design patterns, and implementation details to produce l"
+description: Creates comprehensive technical documentation from existing codebases.
+  Analyzes architecture, design patterns, and implementation details to produce l
 version: 1.0.0
-tags: [antigravity, documentation]
+tags:
+- antigravity
+- documentation
 category: software-development
 source: https://github.com/sickn33/antigravity-awesome-skills
+min_hermes_version: 0.13.0
 ---
 
 ---

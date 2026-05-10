@@ -1,8 +1,14 @@
 ---
 name: claudecodeui
-description: CloudCLI 可视化界面参考 — 基于 siteboon/claudecodeui (10K⭐)。在移动端和Web端使用 Claude Code / Cursor CLI / Codex。WebUI/GUI，远程管理Claude Code会话和项目。墨智（AI研发）的UI参考方案。
+description: CloudCLI 可视化界面参考 — 基于 siteboon/claudecodeui (10K⭐)。在移动端和Web端使用 Claude
+  Code / Cursor CLI / Codex。WebUI/GUI，远程管理Claude Code会话和项目。墨智（AI研发）的UI参考方案。
 version: 1.0.0
-tags: [webui, claude-code, cloudcli, gui, remote]
+tags:
+- webui
+- claude-code
+- cloudcli
+- gui
+- remote
 category: engineering
 metadata:
   hermes:
@@ -11,6 +17,7 @@ metadata:
     upstream_fork: https://github.com/moye-tech/claudecodeui
     language: TypeScript/React
     molin_owner: 墨智（AI研发）
+min_hermes_version: 0.13.0
 ---
 
 # CloudCLI / claudecodeui — 可视化界面参考

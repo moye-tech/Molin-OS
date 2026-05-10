@@ -1,5 +1,4 @@
 ---
-
 name: design-md
 description: Author/validate/export Google's DESIGN.md token spec files.
 version: 1.0.0
@@ -7,9 +6,23 @@ author: Hermes Agent
 license: MIT
 metadata:
   hermes:
-    tags: [design, design-system, tokens, ui, accessibility, wcag, tailwind, dtcg, google]
-    related_skills: [popular-web-designs, claude-design, excalidraw, architecture-diagram]
+    tags:
+    - design
+    - design-system
+    - tokens
+    - ui
+    - accessibility
+    - wcag
+    - tailwind
+    - dtcg
+    - google
+    related_skills:
+    - popular-web-designs
+    - claude-design
+    - excalidraw
+    - architecture-diagram
     molin_owner: 墨迹（内容工厂）
+min_hermes_version: 0.13.0
 ---
 
 # DESIGN.md Skill

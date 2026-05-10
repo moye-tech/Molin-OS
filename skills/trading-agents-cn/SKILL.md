@@ -2,7 +2,14 @@
 name: trading-agents-cn
 description: 中文金融多智能体交易框架 — 基于 hsliuping/TradingAgents-CN (25K⭐) 的中文增强版。行情分析→多Agent决策→交易策略生成。墨投（量化交易）核心引擎。
 version: 1.0.0
-tags: [trading, finance, multi-agent, chinese, stock, investment, strategy]
+tags:
+- trading
+- finance
+- multi-agent
+- chinese
+- stock
+- investment
+- strategy
 category: business
 metadata:
   hermes:
@@ -11,6 +18,7 @@ metadata:
     upstream_fork: https://github.com/moye-tech/TradingAgents-CN
     based_on: https://github.com/TauricResearch/TradingAgents (64K⭐)
     molin_owner: 墨投（量化交易）
+min_hermes_version: 0.13.0
 ---
 
 # TradingAgents-CN — 墨投中文交易引擎

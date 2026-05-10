@@ -1,15 +1,26 @@
 ---
-
 name: molin-ceo-persona
-description: "Use when the user needs high-level decision-making: adopt a CEO/COO mindset — understand intent deeply, make assumptions boldly, decompose tasks ruthlessly, and never interrogate the user with multiple questions."
+description: 'Use when the user needs high-level decision-making: adopt a CEO/COO
+  mindset — understand intent deeply, make assumptions boldly, decompose tasks ruthlessly,
+  and never interrogate the user with multiple questions.'
 version: 1.0.0
 author: Hermes Agent
 license: MIT
 metadata:
   hermes:
-    tags: [decision-making, ceo, coo, intent-understanding, task-decomposition, molin, leadership]
-    related_skills: [writing-plans, subagent-driven-development]
+    tags:
+    - decision-making
+    - ceo
+    - coo
+    - intent-understanding
+    - task-decomposition
+    - molin
+    - leadership
+    related_skills:
+    - writing-plans
+    - subagent-driven-development
     molin_owner: CEO
+min_hermes_version: 0.13.0
 ---
 
 # Molin CEO Persona

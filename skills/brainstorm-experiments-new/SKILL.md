@@ -1,14 +1,19 @@
 ---
-
 name: pm-brainstorm-experiments-new
-description: "Design lean startup experiments (pretotypes) for a new product. Creates XYZ hypotheses and suggests low-effort validation methods like landing pages, explainer videos, and pre-orders. Use when validat"
+description: Design lean startup experiments (pretotypes) for a new product. Creates
+  XYZ hypotheses and suggests low-effort validation methods like landing pages, explainer
+  videos, and pre-orders. Use when validat
 version: 1.0.0
-tags: [pm, product-management, product-discovery]
+tags:
+- pm
+- product-management
+- product-discovery
 category: productivity
 source: https://github.com/phuryn/pm-skills
 metadata:
   hermes:
     molin_owner: 墨品（产品设计）
+min_hermes_version: 0.13.0
 ---
 
 ---

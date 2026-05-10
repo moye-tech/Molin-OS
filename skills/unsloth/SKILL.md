@@ -1,16 +1,33 @@
 ---
-
 name: unsloth
-description: Expert guidance for fast fine-tuning with Unsloth - 2-5x faster training, 50-80% less memory, LoRA/QLoRA optimization
+description: Expert guidance for fast fine-tuning with Unsloth - 2-5x faster training,
+  50-80% less memory, LoRA/QLoRA optimization
 version: 1.0.0
 author: Orchestra Research
 license: MIT
-dependencies: [unsloth, torch, transformers, trl, datasets, peft]
+dependencies:
+- unsloth
+- torch
+- transformers
+- trl
+- datasets
+- peft
 metadata:
   hermes:
-    tags: [Fine-Tuning, Unsloth, Fast Training, LoRA, QLoRA, Memory-Efficient, Optimization, Llama, Mistral, Gemma, Qwen]
-
+    tags:
+    - Fine-Tuning
+    - Unsloth
+    - Fast Training
+    - LoRA
+    - QLoRA
+    - Memory-Efficient
+    - Optimization
+    - Llama
+    - Mistral
+    - Gemma
+    - Qwen
     molin_owner: 墨智（AI研发）
+min_hermes_version: 0.13.0
 ---
 
 # Unsloth Skill
@@ -80,6 +97,3 @@ To refresh this skill with updated documentation:
 2. The skill will be rebuilt with the latest information
 
 <!-- Trigger re-upload 1763621536 -->
-
-
-

@@ -1,10 +1,14 @@
 ---
 name: ag-error-handling-patterns
-description: "Build resilient applications with robust error handling strategies that gracefully handle failures and provide excellent debugging experiences."
+description: Build resilient applications with robust error handling strategies that
+  gracefully handle failures and provide excellent debugging experiences.
 version: 1.0.0
-tags: [antigravity, general]
+tags:
+- antigravity
+- general
 category: software-development
 source: https://github.com/sickn33/antigravity-awesome-skills
+min_hermes_version: 0.13.0
 ---
 
 ---

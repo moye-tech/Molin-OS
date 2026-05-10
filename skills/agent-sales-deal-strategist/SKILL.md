@@ -1,14 +1,19 @@
 ---
-
 name: agent-sales-deal-strategist
-description: "Sales deal strategist — pipeline management, outreach templates, CRM strategy"
+description: Sales deal strategist — pipeline management, outreach templates, CRM
+  strategy
 version: 1.0.0
-tags: [agency, persona, sales, crm]
+tags:
+- agency
+- persona
+- sales
+- crm
 category: business
 source: https://github.com/msitarzewski/agency-agents
 metadata:
   hermes:
     molin_owner: 墨商BD（商务拓展）
+min_hermes_version: 0.13.0
 ---
 
 # agent-sales-deal-strategist
@@ -26,4 +31,3 @@ This agent specializes in sales, crm.
 ## When to Use
 
 Load this skill when you need a dedicated sales deal strategist perspective on a task.
-

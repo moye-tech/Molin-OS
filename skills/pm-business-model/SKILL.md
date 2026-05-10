@@ -1,14 +1,22 @@
 ---
-
 name: pm-business-model
-description: "Generate comprehensive business model analysis using Business Model Canvas or Lean Canvas. Covers value propositions, customer segments, revenue streams, key resources, partnerships, and cost structure."
+description: Generate comprehensive business model analysis using Business Model Canvas
+  or Lean Canvas. Covers value propositions, customer segments, revenue streams, key
+  resources, partnerships, and cost structure.
 version: 1.0.0
-tags: [pm, product-management, strategy, business-model, canvas, monetization]
+tags:
+- pm
+- product-management
+- strategy
+- business-model
+- canvas
+- monetization
 category: productivity
 source: https://github.com/phuryn/pm-skills
 metadata:
   hermes:
     molin_owner: 墨品（产品设计）
+min_hermes_version: 0.13.0
 ---
 
 # Business Model Canvas — 商业模式画布

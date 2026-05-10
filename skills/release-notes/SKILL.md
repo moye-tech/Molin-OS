@@ -1,10 +1,15 @@
 ---
 name: pm-release-notes
-description: "Generate professional release notes from commits, PRs, and changelogs. Structure by feature, fix, and breaking change categories."
+description: Generate professional release notes from commits, PRs, and changelogs.
+  Structure by feature, fix, and breaking change categories.
 version: 1.0.0
-tags: [pm, product-management, execution]
+tags:
+- pm
+- product-management
+- execution
 category: productivity
 source: https://github.com/phuryn/pm-skills
+min_hermes_version: 0.13.0
 ---
 
 ---

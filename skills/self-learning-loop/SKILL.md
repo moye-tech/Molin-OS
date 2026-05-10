@@ -1,23 +1,40 @@
 ---
-
 name: self-learning-loop
-description: Auto-reflect on completed tasks, extract lessons learned, and automatically update or create skills. The system gets smarter with every use — inspired by Ruflo's self-learning memory architecture.
+description: Auto-reflect on completed tasks, extract lessons learned, and automatically
+  update or create skills. The system gets smarter with every use — inspired by Ruflo's
+  self-learning memory architecture.
 version: 1.0.0
-tags: [self-learning, auto-improve, reflection, memory, skills, optimization]
+tags:
+- self-learning
+- auto-improve
+- reflection
+- memory
+- skills
+- optimization
 category: software-development
-related_skills: [skill-discovery, agentic-engineering, swarm-orchestration]
+related_skills:
+- skill-discovery
+- agentic-engineering
+- swarm-orchestration
 metadata:
   hermes:
     inspired_by: https://github.com/ruvnet/ruflo
     upstream_fork: https://github.com/moye-tech/ruflo
     stars: 38000
-    concepts: [self-learning, experience-crystallization, auto-skill-creation, reflection-loops, q-learning-routing, self-optimizing-orchestration]
+    concepts:
+    - self-learning
+    - experience-crystallization
+    - auto-skill-creation
+    - reflection-loops
+    - q-learning-routing
+    - self-optimizing-orchestration
     ruflo_integrated:
-      - Q-Learning Router: 学习最优任务分配策略，每次决策后自动调优
-      - EWC++ (Elastic Weight Consolidation): 学新知识不忘旧经验
-      - ReasoningBank: 模式库，重复使用的模式自动沉淀
-      - Self-Optimizing Loop: 每次编排后自动评估并调整策略
+    - Q-Learning Router: 学习最优任务分配策略，每次决策后自动调优
+    - EWC++ (Elastic Weight Consolidation): 学新知识不忘旧经验
+    - ReasoningBank: 模式库，重复使用的模式自动沉淀
+    - Self-Optimizing Loop: 每次编排后自动评估并调整策略
     molin_owner: CEO
+min_hermes_version: 0.13.0
 ---
 
 # Self-Learning Loop — 自学习回路

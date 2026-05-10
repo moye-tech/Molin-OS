@@ -1,14 +1,26 @@
 ---
 name: molin-customer-service
-description: "墨声 · 智能客服引擎 — AI驱动的客服应答、FAQ自动维护、工单管理、满意度追踪。Use when: 用户需要配置客服自动回复、管理FAQ、处理客户咨询、追踪服务满意度。集成Hermes的xianyu-automation和send_message能力。"
+description: '墨声 · 智能客服引擎 — AI驱动的客服应答、FAQ自动维护、工单管理、满意度追踪。Use when: 用户需要配置客服自动回复、管理FAQ、处理客户咨询、追踪服务满意度。集成Hermes的xianyu-automation和send_message能力。'
 version: 1.0.0
 author: Hermes Agent (Molin AI)
 license: MIT
 metadata:
   hermes:
-    tags: [customer-service, faq, ticket, automation, chatbot, support, molin]
-    related_skills: [xianyu-automation, marketing-skills-copywriting, marketing-skills-cro, social-push-publisher]
+    tags:
+    - customer-service
+    - faq
+    - ticket
+    - automation
+    - chatbot
+    - support
+    - molin
+    related_skills:
+    - xianyu-automation
+    - marketing-skills-copywriting
+    - marketing-skills-cro
+    - social-push-publisher
     molin_owner: 墨声（智能客服）
+min_hermes_version: 0.13.0
 ---
 
 # 墨声 · 智能客服引擎

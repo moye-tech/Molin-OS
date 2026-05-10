@@ -2,13 +2,20 @@
 name: dbt-data-pipeline
 description: dbt-core (14K⭐) 数据管线工具 — 用 SQL 定义数据转换逻辑，支持增量更新、测试和文档生成
 version: 0.1.0
-tags: [data, pipeline, analytics, sql, transformation, dbt]
+tags:
+- data
+- pipeline
+- analytics
+- sql
+- transformation
+- dbt
 metadata:
   hermes:
     molin_owner: 墨测数据
     source: https://github.com/dbt-labs/dbt-core
     stars: 14000
     pip_package: dbt-core
+min_hermes_version: 0.13.0
 ---
 
 # dbt-core — 数据管线工具

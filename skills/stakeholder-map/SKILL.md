@@ -1,10 +1,15 @@
 ---
 name: pm-stakeholder-map
-description: "Map stakeholders by influence and interest. Identify communication strategies for each quadrant."
+description: Map stakeholders by influence and interest. Identify communication strategies
+  for each quadrant.
 version: 1.0.0
-tags: [pm, product-management, execution]
+tags:
+- pm
+- product-management
+- execution
 category: productivity
 source: https://github.com/phuryn/pm-skills
+min_hermes_version: 0.13.0
 ---
 
 ---

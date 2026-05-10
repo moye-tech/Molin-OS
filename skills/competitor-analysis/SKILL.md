@@ -1,10 +1,15 @@
 ---
 name: pm-competitor-analysis
-description: "Comprehensive competitive analysis framework — identify competitors, compare features, pricing, market position, and derive strategic insights."
+description: Comprehensive competitive analysis framework — identify competitors,
+  compare features, pricing, market position, and derive strategic insights.
 version: 1.0.0
-tags: [pm, product-management, market-research]
+tags:
+- pm
+- product-management
+- market-research
 category: productivity
 source: https://github.com/phuryn/pm-skills
+min_hermes_version: 0.13.0
 ---
 
 ---

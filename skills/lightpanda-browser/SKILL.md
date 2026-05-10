@@ -1,8 +1,15 @@
 ---
 name: lightpanda-browser
-description: 高性能无头浏览引擎 — 基于 Lightpanda（极快极轻量的无头浏览器，专为AI/爬虫/自动化设计）。比 Chromium 快10x，资源占用极低。墨维（运维）+ 墨思（情报）的爬虫基础设施。
+description: 高性能无头浏览引擎 — 基于 Lightpanda（极快极轻量的无头浏览器，专为AI/爬虫/自动化设计）。比 Chromium 快10x，资源占用极低。墨维（运维）+
+  墨思（情报）的爬虫基础设施。
 version: 1.0.0
-tags: [browser, headless, crawler, automation, scraping, lightpanda]
+tags:
+- browser
+- headless
+- crawler
+- automation
+- scraping
+- lightpanda
 category: devops
 metadata:
   hermes:
@@ -11,6 +18,7 @@ metadata:
     upstream_fork: https://github.com/moye-tech/browser
     language: Nim + TypeScript
     molin_owner: 墨维（运维）
+min_hermes_version: 0.13.0
 ---
 
 # Lightpanda Browser — 高性能无头浏览器

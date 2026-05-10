@@ -1,18 +1,25 @@
 ---
-
 name: apple-notes
 description: Manage Apple Notes via the memo CLI on macOS (create, view, search, edit).
 version: 1.0.0
 author: Hermes Agent
 license: MIT
-platforms: [macos]
+platforms:
+- macos
 metadata:
   hermes:
-    tags: [Notes, Apple, macOS, note-taking]
-    related_skills: [obsidian]
+    tags:
+    - Notes
+    - Apple
+    - macOS
+    - note-taking
+    related_skills:
+    - obsidian
     molin_owner: 墨维（运维）
 prerequisites:
-  commands: [memo]
+  commands:
+  - memo
+min_hermes_version: 0.13.0
 ---
 
 # Apple Notes

@@ -1,15 +1,24 @@
 ---
-
 name: setup-hermes-enhancement-repo
-description: Handle GitHub repos that are enhancements/layers on top of Hermes Agent itself — not standalone services. Distinguish between deployable projects and Hermes-integration repos, then set them up properly without redundant standalone deployment.
+description: Handle GitHub repos that are enhancements/layers on top of Hermes Agent
+  itself — not standalone services. Distinguish between deployable projects and Hermes-integration
+  repos, then set them up properly without redundant standalone deployment.
 version: 1.0.0
 author: Hermes Agent
 license: MIT
 metadata:
   hermes:
-    tags: [Hermes-Agent, GitHub, Setup, Integration, Environment]
-    related_skills: [github-auth, github-repo-management]
+    tags:
+    - Hermes-Agent
+    - GitHub
+    - Setup
+    - Integration
+    - Environment
+    related_skills:
+    - github-auth
+    - github-repo-management
     molin_owner: CEO
+min_hermes_version: 0.13.0
 ---
 
 # Setup Hermes Enhancement Repo

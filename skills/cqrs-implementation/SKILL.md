@@ -1,10 +1,14 @@
 ---
 name: ag-cqrs-implementation
-description: "Implement Command Query Responsibility Segregation for scalable architectures. Use when separating read and write models, optimizing query performance"
+description: Implement Command Query Responsibility Segregation for scalable architectures.
+  Use when separating read and write models, optimizing query performance
 version: 1.0.0
-tags: [antigravity, general]
+tags:
+- antigravity
+- general
 category: software-development
 source: https://github.com/sickn33/antigravity-awesome-skills
+min_hermes_version: 0.13.0
 ---
 
 ---

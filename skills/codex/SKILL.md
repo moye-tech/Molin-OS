@@ -1,20 +1,34 @@
 ---
-
 name: codex
-description: Delegate coding tasks to OpenAI Codex CLI agent. Use for building features, refactoring, PR reviews, and batch issue fixing. Requires the codex CLI and a git repository.
+description: Delegate coding tasks to OpenAI Codex CLI agent. Use for building features,
+  refactoring, PR reviews, and batch issue fixing. Requires the codex CLI and a git
+  repository.
 version: 1.0.0
 author: Hermes Agent
 license: MIT
 metadata:
   hermes:
-    tags: [Coding-Agent, Codex, OpenAI, Code-Review, Refactoring]
-    related_skills: [claude-code, hermes-agent, oh-my-codex]
+    tags:
+    - Coding-Agent
+    - Codex
+    - OpenAI
+    - Code-Review
+    - Refactoring
+    related_skills:
+    - claude-code
+    - hermes-agent
+    - oh-my-codex
     omx_integrated:
-      - source: https://github.com/Yeachan-Heo/oh-my-codex (27K⭐)
-      - upstream_fork: https://github.com/moye-tech/oh-my-codex
-      - value: Codex多Agent编排层，添加hooks/Agent团队/HUD
-      - patterns: [multi-agent, workflow-automation, hooks-system, agent-teams]
+    - source: https://github.com/Yeachan-Heo/oh-my-codex (27K⭐)
+    - upstream_fork: https://github.com/moye-tech/oh-my-codex
+    - value: Codex多Agent编排层，添加hooks/Agent团队/HUD
+    - patterns:
+      - multi-agent
+      - workflow-automation
+      - hooks-system
+      - agent-teams
     molin_owner: 墨智（AI研发）
+min_hermes_version: 0.13.0
 ---
 
 # Codex CLI

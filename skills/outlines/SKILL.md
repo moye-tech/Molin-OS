@@ -1,16 +1,31 @@
 ---
-
 name: outlines
-description: Guarantee valid JSON/XML/code structure during generation, use Pydantic models for type-safe outputs, support local models (Transformers, vLLM), and maximize inference speed with Outlines - dottxt.ai's structured generation library
+description: Guarantee valid JSON/XML/code structure during generation, use Pydantic
+  models for type-safe outputs, support local models (Transformers, vLLM), and maximize
+  inference speed with Outlines - dottxt.ai's structured generation library
 version: 1.0.0
 author: Orchestra Research
 license: MIT
-dependencies: [outlines, transformers, vllm, pydantic]
+dependencies:
+- outlines
+- transformers
+- vllm
+- pydantic
 metadata:
   hermes:
-    tags: [Prompt Engineering, Outlines, Structured Generation, JSON Schema, Pydantic, Local Models, Grammar-Based Generation, vLLM, Transformers, Type Safety]
-
+    tags:
+    - Prompt Engineering
+    - Outlines
+    - Structured Generation
+    - JSON Schema
+    - Pydantic
+    - Local Models
+    - Grammar-Based Generation
+    - vLLM
+    - Transformers
+    - Type Safety
     molin_owner: 墨智（AI研发）
+min_hermes_version: 0.13.0
 ---
 
 # Outlines: Structured Text Generation
@@ -653,5 +668,3 @@ class Article(BaseModel):
 - `references/json_generation.md` - Comprehensive JSON and Pydantic patterns
 - `references/backends.md` - Backend-specific configuration
 - `references/examples.md` - Production-ready examples
-
-

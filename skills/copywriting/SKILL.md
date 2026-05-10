@@ -1,15 +1,31 @@
 ---
-
 name: copywriting
-description: "When the user wants to write, rewrite, or improve marketing copy for any page — including homepage, landing pages, pricing pages, feature pages, about pages, or product pages. Trigger phrases: 'write copy for,' 'improve this copy,' 'rewrite this page,' 'marketing copy,' 'headline help,' 'CTA copy,' 'value proposition,' 'tagline,' 'subheadline,' 'hero section copy,' 'above the fold,' 'this copy is weak,' 'make this more compelling,' 'help me describe my product.' For email copy, see email-sequence. For popup copy, see popup-cro. For editing existing copy, see copy-editing."
+description: 'When the user wants to write, rewrite, or improve marketing copy for
+  any page — including homepage, landing pages, pricing pages, feature pages, about
+  pages, or product pages. Trigger phrases: ''write copy for,'' ''improve this copy,''
+  ''rewrite this page,'' ''marketing copy,'' ''headline help,'' ''CTA copy,'' ''value
+  proposition,'' ''tagline,'' ''subheadline,'' ''hero section copy,'' ''above the
+  fold,'' ''this copy is weak,'' ''make this more compelling,'' ''help me describe
+  my product.'' For email copy, see email-sequence. For popup copy, see popup-cro.
+  For editing existing copy, see copy-editing.'
 version: 1.1.0
 author: coreyhaines31
 metadata:
   hermes:
-    tags: [marketing, copywriting, conversion, writing, content]
-    related_skills: [page-cro, copy-editing, email-sequence, ab-test-setup]
-    source: "https://github.com/coreyhaines31/marketingskills"
+    tags:
+    - marketing
+    - copywriting
+    - conversion
+    - writing
+    - content
+    related_skills:
+    - page-cro
+    - copy-editing
+    - email-sequence
+    - ab-test-setup
+    source: https://github.com/coreyhaines31/marketingskills
     molin_owner: 墨增（增长引擎）
+min_hermes_version: 0.13.0
 ---
 
 # Copywriting

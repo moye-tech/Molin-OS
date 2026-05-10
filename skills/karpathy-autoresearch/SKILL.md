@@ -2,7 +2,13 @@
 name: karpathy-autoresearch
 description: 自主科研Agent — 基于 karpathy/autoresearch (78K⭐)。AI Agent在单GPU上独立运行科研流程：提出假设→收集数据→分析→生成报告。墨思（情报研究）核心增强。
 version: 1.0.0
-tags: [research, agent, autonomous, karpathy, scientific, gpu]
+tags:
+- research
+- agent
+- autonomous
+- karpathy
+- scientific
+- gpu
 category: research
 metadata:
   hermes:
@@ -10,6 +16,7 @@ metadata:
     stars: 78662
     author: Andrej Karpathy
     molin_owner: 墨思（情报研究）
+min_hermes_version: 0.13.0
 ---
 
 # Karpathy AutoResearch — 自主科研Agent

@@ -1,10 +1,14 @@
 ---
 name: ag-xss-html-injection
-description: "Execute comprehensive client-side injection vulnerability assessments on web applications to identify XSS and HTML injection flaws, demonstrate exploi"
+description: Execute comprehensive client-side injection vulnerability assessments
+  on web applications to identify XSS and HTML injection flaws, demonstrate exploi
 version: 1.0.0
-tags: [antigravity, general]
+tags:
+- antigravity
+- general
 category: software-development
 source: https://github.com/sickn33/antigravity-awesome-skills
+min_hermes_version: 0.13.0
 ---
 
 ---

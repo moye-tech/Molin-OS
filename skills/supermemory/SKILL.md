@@ -1,8 +1,14 @@
 ---
 name: supermemory
-description: 超级记忆引擎 — 基于 supermemoryai/supermemory (22K⭐) 的超快速语义记忆检索API。作为 Hermes mempalace 的补充后端，提供快速检索+跨会话记忆关联能力。
+description: 超级记忆引擎 — 基于 supermemoryai/supermemory (22K⭐) 的超快速语义记忆检索API。作为 Hermes
+  mempalace 的补充后端，提供快速检索+跨会话记忆关联能力。
 version: 1.0.0
-tags: [memory, semantic-search, api, cross-session, retrieval]
+tags:
+- memory
+- semantic-search
+- api
+- cross-session
+- retrieval
 category: intelligence
 metadata:
   hermes:
@@ -11,6 +17,7 @@ metadata:
     upstream_fork: https://github.com/moye-tech/supermemory
     complements: mempalace
     molin_owner: 墨脑（知识管理）
+min_hermes_version: 0.13.0
 ---
 
 # Supermemory — 超级记忆引擎

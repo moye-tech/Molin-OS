@@ -1,10 +1,14 @@
 ---
 name: ag-changelog-automation
-description: "Automate changelog generation from commits, PRs, and releases following Keep a Changelog format. Use when setting up release workflows, generating rel"
+description: Automate changelog generation from commits, PRs, and releases following
+  Keep a Changelog format. Use when setting up release workflows, generating rel
 version: 1.0.0
-tags: [antigravity, general]
+tags:
+- antigravity
+- general
 category: software-development
 source: https://github.com/sickn33/antigravity-awesome-skills
+min_hermes_version: 0.13.0
 ---
 
 ---

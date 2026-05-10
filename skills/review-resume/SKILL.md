@@ -1,14 +1,18 @@
 ---
-
 name: pm-review-resume
-description: "Resume review and optimization for product managers"
+description: Resume review and optimization for product managers
 version: 1.0.0
-tags: [pm, product-management, toolkit, resume]
+tags:
+- pm
+- product-management
+- toolkit
+- resume
 category: business
 source: https://github.com/msitarzewski/agency-agents
 metadata:
   hermes:
     molin_owner: 墨品（产品设计）
+min_hermes_version: 0.13.0
 ---
 
 # pm-review-resume
@@ -26,4 +30,3 @@ This agent specializes in toolkit, resume.
 ## When to Use
 
 Load this skill when you need a dedicated pm review resume perspective on a task.
-

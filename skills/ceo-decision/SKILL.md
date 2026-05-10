@@ -1,5 +1,4 @@
 ---
-
 name: CEO Decision Engine
 description: CEO决策引擎 - 负责ROI分析、三层决策（GO/NO_GO/NEED_INFO）、记忆集成的CEO决策系统
 version: 1.0.0
@@ -8,13 +7,20 @@ license: MIT
 dependencies: []
 metadata:
   hermes:
-    tags: [ceo, decision, roi, analysis, business, investment]
+    tags:
+    - ceo
+    - decision
+    - roi
+    - analysis
+    - business
+    - investment
     config:
       min_roi_ratio: 1.5
       min_confidence: 0.7
       max_payback_days: 180
       high_composite_score: 7.0
     molin_owner: CEO
+min_hermes_version: 0.13.0
 ---
 
 # CEO决策引擎

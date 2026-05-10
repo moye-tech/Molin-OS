@@ -1,10 +1,14 @@
 ---
 name: ag-zeroize-audit
-description: "Detects missing zeroization of sensitive data in source code and identifies zeroization removed by compiler optimizations, with assembly-level analysi"
+description: Detects missing zeroization of sensitive data in source code and identifies
+  zeroization removed by compiler optimizations, with assembly-level analysi
 version: 1.0.0
-tags: [antigravity, general]
+tags:
+- antigravity
+- general
 category: software-development
 source: https://github.com/sickn33/antigravity-awesome-skills
+min_hermes_version: 0.13.0
 ---
 
 ---

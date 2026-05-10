@@ -1,10 +1,14 @@
 ---
 name: ag-web-security-testing
-description: "Web application security testing workflow for OWASP Top 10 vulnerabilities including injection, XSS, authentication flaws, and access control issues."
+description: Web application security testing workflow for OWASP Top 10 vulnerabilities
+  including injection, XSS, authentication flaws, and access control issues.
 version: 1.0.0
-tags: [antigravity, security]
+tags:
+- antigravity
+- security
 category: software-development
 source: https://github.com/sickn33/antigravity-awesome-skills
+min_hermes_version: 0.13.0
 ---
 
 ---

@@ -1,5 +1,4 @@
 ---
-
 name: molin-governance
 description: 墨麟一人公司治理规则 — 4级审批、预算控制、决策审计、回滚机制。定义什么可以自动执行、什么需要老板确认。
 version: 1.0.0
@@ -7,6 +6,7 @@ category: meta
 metadata:
   hermes:
     molin_owner: CEO
+min_hermes_version: 0.13.0
 ---
 
 # 墨麟治理规则

@@ -1,8 +1,16 @@
 ---
 name: batch-yaml-frontmatter-injection
-description: 批量注入/修改 SKILL.md 的 YAML frontmatter 字段（如 molin_owner），处理行号前缀文件、多 frontmatter、缺失 metadata 块等各种边界情况。
+description: 批量注入/修改 SKILL.md 的 YAML frontmatter 字段（如 molin_owner），处理行号前缀文件、多 frontmatter、缺失
+  metadata 块等各种边界情况。
 version: 1.0.0
-tags: [batch, yaml, frontmatter, maintenance, metadata, skills]
+tags:
+- batch
+- yaml
+- frontmatter
+- maintenance
+- metadata
+- skills
+min_hermes_version: 0.13.0
 ---
 
 # 批量 YAML Frontmatter 注入

@@ -1,10 +1,15 @@
 ---
 name: pm-prioritization-frameworks
-description: "Apply RICE, MoSCoW, Kano, and Value vs Effort prioritization frameworks to feature backlogs."
+description: Apply RICE, MoSCoW, Kano, and Value vs Effort prioritization frameworks
+  to feature backlogs.
 version: 1.0.0
-tags: [pm, product-management, execution]
+tags:
+- pm
+- product-management
+- execution
 category: productivity
 source: https://github.com/phuryn/pm-skills
+min_hermes_version: 0.13.0
 ---
 
 ---

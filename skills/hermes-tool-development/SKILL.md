@@ -1,12 +1,20 @@
 ---
-
 name: hermes-tool-development
-description: Patterns and pitfalls for developing new tools in the Hermes Agent codebase. Covers tool registration, SQLite test isolation, feature-gating, schema design, and registry integration.
+description: Patterns and pitfalls for developing new tools in the Hermes Agent codebase.
+  Covers tool registration, SQLite test isolation, feature-gating, schema design,
+  and registry integration.
 version: 1.0.0
-tags: [hermes, tool-development, testing, sqlite, feature-flags, patterns]
+tags:
+- hermes
+- tool-development
+- testing
+- sqlite
+- feature-flags
+- patterns
 metadata:
   hermes:
     molin_owner: CEO
+min_hermes_version: 0.13.0
 ---
 
 # Hermes Agent Tool Development

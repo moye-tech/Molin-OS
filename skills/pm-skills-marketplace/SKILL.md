@@ -2,7 +2,13 @@
 name: pm-skills-marketplace
 description: PM技能市场 — 基于 phuryn/pm-skills (11K⭐) 批量导入的 65 个产品管理技能和 36 个工作流。覆盖产品发现/战略/执行/增长/市场研究全链路。墨品（产品设计）技能库。
 version: 1.0.0
-tags: [product-management, skills, marketplace, discovery, strategy, growth]
+tags:
+- product-management
+- skills
+- marketplace
+- discovery
+- strategy
+- growth
 category: business
 metadata:
   hermes:
@@ -13,6 +19,7 @@ metadata:
     workflows: 36
     plugins: 8
     molin_owner: 墨品（产品设计）
+min_hermes_version: 0.13.0
 ---
 
 # PM Skills Marketplace — 墨品产品管理技能库

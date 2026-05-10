@@ -1,16 +1,29 @@
 ---
-
 name: archon-workflow
-description: "Deterministic AI coding workflow engine: YAML-defined repeatable workflows, isolated git worktrees, human approval gates, loop-with-until, composable bash+AI nodes."
+description: 'Deterministic AI coding workflow engine: YAML-defined repeatable workflows,
+  isolated git worktrees, human approval gates, loop-with-until, composable bash+AI
+  nodes.'
 version: 1.0.0
 author: Hermes Agent (based on coleam00/Archon)
 license: MIT
 metadata:
   hermes:
-    tags: [workflow, deterministic, ai-coding, git, yaml, automation, ci-cd]
-    related_skills: [subagent-driven-development, writing-plans, requesting-code-review, test-driven-development]
+    tags:
+    - workflow
+    - deterministic
+    - ai-coding
+    - git
+    - yaml
+    - automation
+    - ci-cd
+    related_skills:
+    - subagent-driven-development
+    - writing-plans
+    - requesting-code-review
+    - test-driven-development
     category: software-development
     molin_owner: 墨码（软件工坊）
+min_hermes_version: 0.13.0
 ---
 
 # Archon Workflow

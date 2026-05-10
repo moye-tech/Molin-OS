@@ -1,10 +1,15 @@
 ---
 name: pm-retro
-description: "Facilitate sprint retrospectives — capture what went well, what didn't, and actionable improvements."
+description: Facilitate sprint retrospectives — capture what went well, what didn't,
+  and actionable improvements.
 version: 1.0.0
-tags: [pm, product-management, execution]
+tags:
+- pm
+- product-management
+- execution
 category: productivity
 source: https://github.com/phuryn/pm-skills
+min_hermes_version: 0.13.0
 ---
 
 ---

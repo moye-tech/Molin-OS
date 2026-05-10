@@ -1,10 +1,14 @@
 ---
 name: ag-wordpress
-description: "Complete WordPress development workflow covering theme development, plugin creation, WooCommerce integration, performance optimization, and security h"
+description: Complete WordPress development workflow covering theme development, plugin
+  creation, WooCommerce integration, performance optimization, and security h
 version: 1.0.0
-tags: [antigravity, security]
+tags:
+- antigravity
+- security
 category: software-development
 source: https://github.com/sickn33/antigravity-awesome-skills
+min_hermes_version: 0.13.0
 ---
 
 ---

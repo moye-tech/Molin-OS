@@ -1,14 +1,19 @@
 ---
-
 name: agent-engineering-technical-writer
-description: "Technical writer agent — documentation, API references, tutorials, and knowledge base"
+description: Technical writer agent — documentation, API references, tutorials, and
+  knowledge base
 version: 1.0.0
-tags: [agency, persona, engineering, documentation]
+tags:
+- agency
+- persona
+- engineering
+- documentation
 category: business
 source: https://github.com/msitarzewski/agency-agents
 metadata:
   hermes:
     molin_owner: 墨码（软件工坊）
+min_hermes_version: 0.13.0
 ---
 
 # agent-engineering-technical-writer
@@ -26,4 +31,3 @@ This agent specializes in engineering, documentation.
 ## When to Use
 
 Load this skill when you need a dedicated engineering technical writer perspective on a task.
-

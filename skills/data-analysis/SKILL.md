@@ -1,5 +1,4 @@
 ---
-
 name: 数据子公司
 description: 负责数据分析、洞察
 version: 1.0.0
@@ -8,13 +7,17 @@ license: MIT
 dependencies: []
 metadata:
   hermes:
-    tags: [data, subsidiary, business]
+    tags:
+    - data
+    - subsidiary
+    - business
     config:
       approval_level: low
       cost_level: medium
       max_concurrent: 2
       model_preference: qwen3.6-plus
     molin_owner: 墨数（数据）
+min_hermes_version: 0.13.0
 ---
 
 # 数据子公司

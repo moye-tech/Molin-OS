@@ -1,14 +1,19 @@
 ---
-
 name: pm-prioritize-features
-description: "Prioritize a backlog of feature ideas based on impact, effort, risk, and strategic alignment with top 5 recommendations. Use when prioritizing a feature backlog, making scope decisions, or ranking pro"
+description: Prioritize a backlog of feature ideas based on impact, effort, risk,
+  and strategic alignment with top 5 recommendations. Use when prioritizing a feature
+  backlog, making scope decisions, or ranking pro
 version: 1.0.0
-tags: [pm, product-management, product-discovery]
+tags:
+- pm
+- product-management
+- product-discovery
 category: productivity
 source: https://github.com/phuryn/pm-skills
 metadata:
   hermes:
     molin_owner: 墨品（产品设计）
+min_hermes_version: 0.13.0
 ---
 
 ---

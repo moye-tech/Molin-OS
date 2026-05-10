@@ -1,15 +1,30 @@
 ---
-
 name: analytics-tracking
-description: "When the user wants to set up, improve, or audit analytics tracking and measurement. Trigger phrases: 'set up tracking,' 'GA4,' 'Google Analytics,' 'conversion tracking,' 'event tracking,' 'UTM parameters,' 'tag manager,' 'GTM,' 'analytics implementation,' 'tracking plan,' 'how do I measure this,' 'track conversions,' 'attribution,' 'Mixpanel,' 'Segment,' 'are my events firing,' 'analytics isn't working.' For A/B test measurement, see ab-test-setup."
+description: 'When the user wants to set up, improve, or audit analytics tracking
+  and measurement. Trigger phrases: ''set up tracking,'' ''GA4,'' ''Google Analytics,''
+  ''conversion tracking,'' ''event tracking,'' ''UTM parameters,'' ''tag manager,''
+  ''GTM,'' ''analytics implementation,'' ''tracking plan,'' ''how do I measure this,''
+  ''track conversions,'' ''attribution,'' ''Mixpanel,'' ''Segment,'' ''are my events
+  firing,'' ''analytics isn''t working.'' For A/B test measurement, see ab-test-setup.'
 version: 1.1.0
 author: coreyhaines31
 metadata:
   hermes:
-    tags: [marketing, analytics, ga4, tracking, measurement, gtm]
-    related_skills: [ab-test-setup, seo-audit, page-cro, revops]
-    source: "https://github.com/coreyhaines31/marketingskills"
+    tags:
+    - marketing
+    - analytics
+    - ga4
+    - tracking
+    - measurement
+    - gtm
+    related_skills:
+    - ab-test-setup
+    - seo-audit
+    - page-cro
+    - revops
+    source: https://github.com/coreyhaines31/marketingskills
     molin_owner: 墨增（增长引擎）
+min_hermes_version: 0.13.0
 ---
 
 # Analytics Tracking

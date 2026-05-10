@@ -1,14 +1,24 @@
 ---
-
 name: xianyu-automation
-description: "Xianyu (闲鱼) second-hand marketplace automation — message polling, deal-signal detection, and buyer conversation pipeline. Use when managing Xianyu seller conversations, detecting purchase/refund intent, processing incoming messages, or setting up automated reply workflows."
+description: Xianyu (闲鱼) second-hand marketplace automation — message polling, deal-signal
+  detection, and buyer conversation pipeline. Use when managing Xianyu seller conversations,
+  detecting purchase/refund intent, processing incoming messages, or setting up automated
+  reply workflows.
 version: 1.0.0
-tags: [xianyu, xianyu, ecommerce, automation, second-hand-market, deal-detection, message-pipeline]
+tags:
+- xianyu
+- xianyu
+- ecommerce
+- automation
+- second-hand-market
+- deal-detection
+- message-pipeline
 category: productivity
 source: molin-ai-intelligent-system/integrations/xianyu/listener.py (v6.6)
 metadata:
   hermes:
     molin_owner: 墨商销售（闲鱼实业）
+min_hermes_version: 0.13.0
 ---
 
 ---

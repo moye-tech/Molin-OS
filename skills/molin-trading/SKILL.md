@@ -1,14 +1,28 @@
 ---
 name: molin-trading
-description: "墨投交易 — 加密货币量化交易策略开发、回测、优化、实盘管理。基于 Freqtrade 2026.4 (github.com/freqtrade/freqtrade ⭐34k+)。Use when: 用户需要开发量化交易策略、回测策略、参数优化、分析市场数据、管理交易机器人。支持币安/OKX/Coinbase等主流交易所。"
+description: '墨投交易 — 加密货币量化交易策略开发、回测、优化、实盘管理。基于 Freqtrade 2026.4 (github.com/freqtrade/freqtrade
+  ⭐34k+)。Use when: 用户需要开发量化交易策略、回测策略、参数优化、分析市场数据、管理交易机器人。支持币安/OKX/Coinbase等主流交易所。'
 version: 1.0.0
 author: Hermes Agent + Freqtrade
 license: GPL-3.0
 metadata:
   hermes:
-    tags: [trading, crypto, quant, backtesting, freqtrade, bot, finance, molin]
-    related_skills: [data-science, agent-finance-financial-analyst, research, writing-plans]
+    tags:
+    - trading
+    - crypto
+    - quant
+    - backtesting
+    - freqtrade
+    - bot
+    - finance
+    - molin
+    related_skills:
+    - data-science
+    - agent-finance-financial-analyst
+    - research
+    - writing-plans
     molin_owner: 墨投（交易）
+min_hermes_version: 0.13.0
 ---
 
 # 墨投 · 量化交易引擎

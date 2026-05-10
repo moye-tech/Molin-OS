@@ -2,7 +2,13 @@
 name: mattpocock-engineer-skills
 description: 100个工程师核心技能 — 基于 mattpocock/skills (56K⭐)。TypeScript专家 Matt Pocock 职业生涯总结的100条工程技能。覆盖TypeScript/工程方法论/软技能/代码质量/项目管理。墨智（AI研发）工程师成长宝典。
 version: 1.0.0
-tags: [engineering, skills, typescript, best-practices, career, code-quality]
+tags:
+- engineering
+- skills
+- typescript
+- best-practices
+- career
+- code-quality
 category: engineering
 metadata:
   hermes:
@@ -11,6 +17,7 @@ metadata:
     author: Matt Pocock (TypeScript专家)
     skills_count: 100
     molin_owner: 墨智（AI研发）
+min_hermes_version: 0.13.0
 ---
 
 # Matt Pocock Engineer Skills — 100个工程核心技能

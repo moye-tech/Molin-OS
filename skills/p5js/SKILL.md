@@ -1,13 +1,25 @@
 ---
-
 name: p5js
-description: "p5.js sketches: gen art, shaders, interactive, 3D."
+description: 'p5.js sketches: gen art, shaders, interactive, 3D.'
 version: 1.0.0
 metadata:
   hermes:
-    tags: [creative-coding, generative-art, p5js, canvas, interactive, visualization, webgl, shaders, animation]
-    related_skills: [ascii-video, manim-video, excalidraw]
+    tags:
+    - creative-coding
+    - generative-art
+    - p5js
+    - canvas
+    - interactive
+    - visualization
+    - webgl
+    - shaders
+    - animation
+    related_skills:
+    - ascii-video
+    - manim-video
+    - excalidraw
     molin_owner: 墨迹（内容工厂）
+min_hermes_version: 0.13.0
 ---
 
 # p5.js Production Pipeline

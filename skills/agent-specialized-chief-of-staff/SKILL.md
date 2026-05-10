@@ -1,14 +1,18 @@
 ---
-
 name: agent-specialized-chief-of-staff
-description: "Chief of Staff agent — executive-level task management, priority tracking, and decision support"
+description: Chief of Staff agent — executive-level task management, priority tracking,
+  and decision support
 version: 1.0.0
-tags: [agency, persona, specialized]
+tags:
+- agency
+- persona
+- specialized
 category: business
 source: https://github.com/msitarzewski/agency-agents
 metadata:
   hermes:
     molin_owner: 墨商BD（商务拓展）
+min_hermes_version: 0.13.0
 ---
 
 # 🧭 Chief of Staff

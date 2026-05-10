@@ -1,10 +1,15 @@
 ---
 name: agent-product-manager
-description: "Product manager persona — define product vision, strategy, roadmap, and execution plans with cross-functional stakeholder alignment."
+description: Product manager persona — define product vision, strategy, roadmap, and
+  execution plans with cross-functional stakeholder alignment.
 version: 1.0.0
-tags: [agency, persona, product]
+tags:
+- agency
+- persona
+- product
 category: creative
 source: https://github.com/msitarzewski/agency-agents
+min_hermes_version: 0.13.0
 ---
 
 ---

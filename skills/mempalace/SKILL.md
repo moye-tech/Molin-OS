@@ -1,10 +1,14 @@
 ---
-
 name: mempalace
-description: Enhanced semantic memory backend using MemPalace — verbatim storage, semantic search, knowledge graph, cross-session correlation, and automatic memory consolidation. Supersedes the built-in file-based memory (MEMORY.md/USER.md) for advanced operations.
+description: Enhanced semantic memory backend using MemPalace — verbatim storage,
+  semantic search, knowledge graph, cross-session correlation, and automatic memory
+  consolidation. Supersedes the built-in file-based memory (MEMORY.md/USER.md) for
+  advanced operations.
 metadata:
   hermes:
     molin_owner: 墨脑（知识管理）
+version: 1.0.0
+min_hermes_version: 0.13.0
 ---
 
 # MemPalace — Enhanced Memory Backend for Hermes

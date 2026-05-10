@@ -1,8 +1,15 @@
 ---
 name: opencli-hub
-description: 通用CLI中心 — 将任何网站和工具转换为CLI命令。一个通用的CLI Hub和AI原生运行时，让Hermes能统一调用各平台工具。墨智（AI研发）+ 墨维（运维）的CLI基础设施。
+description: 通用CLI中心 — 将任何网站和工具转换为CLI命令。一个通用的CLI Hub和AI原生运行时，让Hermes能统一调用各平台工具。墨智（AI研发）+
+  墨维（运维）的CLI基础设施。
 version: 1.0.0
-tags: [cli, hub, integration, automation, tools, universal]
+tags:
+- cli
+- hub
+- integration
+- automation
+- tools
+- universal
 category: devops
 metadata:
   hermes:
@@ -11,6 +18,7 @@ metadata:
     upstream_fork: https://github.com/moye-tech/OpenCLI
     language: TypeScript
     molin_owner: 墨智（AI研发）
+min_hermes_version: 0.13.0
 ---
 
 # OpenCLI Hub — 通用CLI中心

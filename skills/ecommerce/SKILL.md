@@ -1,5 +1,4 @@
 ---
-
 name: 电商子公司
 description: 负责电商、销售业务
 version: 1.0.0
@@ -8,13 +7,17 @@ license: MIT
 dependencies: []
 metadata:
   hermes:
-    tags: [shop, subsidiary, business]
+    tags:
+    - shop
+    - subsidiary
+    - business
     config:
       approval_level: medium
       cost_level: high
       max_concurrent: 3
       model_preference: claude-haiku
     molin_owner: 墨商销售（闲鱼实业）
+min_hermes_version: 0.13.0
 ---
 
 # 电商子公司

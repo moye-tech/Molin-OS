@@ -1,8 +1,15 @@
 ---
 name: gstack-agent-templates
-description: 23个生产级Agent配置模板 — 基于 garrytan/gstack (88K⭐)，YC CEO Garry Tan 的 Claude Code Agent 配置。直接导入 Hermes Agent 系统，让墨麟具备 CIO 级别的 Agent 组织能力。
+description: 23个生产级Agent配置模板 — 基于 garrytan/gstack (88K⭐)，YC CEO Garry Tan 的 Claude
+  Code Agent 配置。直接导入 Hermes Agent 系统，让墨麟具备 CIO 级别的 Agent 组织能力。
 version: 1.0.0
-tags: [agent-templates, gstack, garrytan, orchestration, ceo, production]
+tags:
+- agent-templates
+- gstack
+- garrytan
+- orchestration
+- ceo
+- production
 category: meta
 metadata:
   hermes:
@@ -11,6 +18,7 @@ metadata:
     author: Garry Tan (YC CEO)
     agents: 23
     molin_owner: 墨智（AI研发）
+min_hermes_version: 0.13.0
 ---
 
 # GStack Agent Templates — 23个生产级Agent配置

@@ -1,10 +1,15 @@
 ---
 name: pm-wwas
-description: "What Would Awesome Success look like — define the ideal outcome before planning execution."
+description: What Would Awesome Success look like — define the ideal outcome before
+  planning execution.
 version: 1.0.0
-tags: [pm, product-management, execution]
+tags:
+- pm
+- product-management
+- execution
 category: productivity
 source: https://github.com/phuryn/pm-skills
+min_hermes_version: 0.13.0
 ---
 
 ---

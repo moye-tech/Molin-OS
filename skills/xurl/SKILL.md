@@ -1,19 +1,29 @@
 ---
-
 name: xurl
-description: Interact with X/Twitter via xurl, the official X API CLI. Use for posting, replying, quoting, searching, timelines, mentions, likes, reposts, bookmarks, follows, DMs, media upload, and raw v2 endpoint access.
+description: Interact with X/Twitter via xurl, the official X API CLI. Use for posting,
+  replying, quoting, searching, timelines, mentions, likes, reposts, bookmarks, follows,
+  DMs, media upload, and raw v2 endpoint access.
 version: 1.1.0
 author: xdevplatform + openclaw + Hermes Agent
 license: MIT
-platforms: [linux, macos]
+platforms:
+- linux
+- macos
 prerequisites:
-  commands: [xurl]
+  commands:
+  - xurl
 metadata:
   hermes:
-    tags: [twitter, x, social-media, xurl, official-api]
+    tags:
+    - twitter
+    - x
+    - social-media
+    - xurl
+    - official-api
     homepage: https://github.com/xdevplatform/xurl
     upstream_skill: https://github.com/openclaw/openclaw/blob/main/skills/xurl/SKILL.md
     molin_owner: 墨域（私域CRM）
+min_hermes_version: 0.13.0
 ---
 
 # xurl — X (Twitter) API via the Official CLI

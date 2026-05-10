@@ -1,14 +1,19 @@
 ---
-
 name: pm-cohort-analysis
-description: "Perform cohort analysis on user engagement data — retention curves, feature adoption trends, and segment-level insights. Use when analyzing user retention by cohort, studying feature adoption over tim"
+description: Perform cohort analysis on user engagement data — retention curves, feature
+  adoption trends, and segment-level insights. Use when analyzing user retention by
+  cohort, studying feature adoption over tim
 version: 1.0.0
-tags: [pm, product-management, data-analytics]
+tags:
+- pm
+- product-management
+- data-analytics
 category: productivity
 source: https://github.com/phuryn/pm-skills
 metadata:
   hermes:
     molin_owner: 墨品（产品设计）
+min_hermes_version: 0.13.0
 ---
 
 ---

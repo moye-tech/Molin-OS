@@ -1,14 +1,19 @@
 ---
-
 name: pm-sentiment-analysis
-description: "Analyze user feedback data to identify segments with sentiment scores, JTBD, and product satisfaction insights. Use when analyzing user feedback at scale, running sentiment analysis on reviews or surv"
+description: Analyze user feedback data to identify segments with sentiment scores,
+  JTBD, and product satisfaction insights. Use when analyzing user feedback at scale,
+  running sentiment analysis on reviews or surv
 version: 1.0.0
-tags: [pm, product-management, market-research]
+tags:
+- pm
+- product-management
+- market-research
 category: productivity
 source: https://github.com/phuryn/pm-skills
 metadata:
   hermes:
     molin_owner: 墨品（产品设计）
+min_hermes_version: 0.13.0
 ---
 
 ---

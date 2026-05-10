@@ -1,5 +1,4 @@
 ---
-
 name: claude-design
 description: Design one-off HTML artifacts (landing, deck, prototype).
 version: 1.0.0
@@ -7,9 +6,24 @@ author: BadTechBandit
 license: MIT
 metadata:
   hermes:
-    tags: [design, html, prototype, ux, ui, creative, artifact, deck, motion, design-system]
-    related_skills: [design-md, popular-web-designs, excalidraw, architecture-diagram]
+    tags:
+    - design
+    - html
+    - prototype
+    - ux
+    - ui
+    - creative
+    - artifact
+    - deck
+    - motion
+    - design-system
+    related_skills:
+    - design-md
+    - popular-web-designs
+    - excalidraw
+    - architecture-diagram
     molin_owner: 墨迹（内容工厂）
+min_hermes_version: 0.13.0
 ---
 
 # Claude Design for CLI/API Agents

@@ -2,15 +2,20 @@
 name: moneyprinterturbo
 description: 从 https://github.com/harry0703/MoneyPrinterTurbo 吸收的技能 — A级 — 推荐吸收
 version: 0.1.0
-tags: [moneyprinterturbo, harry0703, video, automation]
+tags:
+- moneyprinterturbo
+- harry0703
+- video
+- automation
 metadata:
   hermes:
     source: https://github.com/harry0703/MoneyPrinterTurbo
     owner: harry0703
     stars: 57000
     assessment_score: 69.0
-    assessment_level: "A级 — 推荐吸收"
-    absorbed_at: "2026-05-08T01:51:09Z"
+    assessment_level: A级 — 推荐吸收
+    absorbed_at: '2026-05-08T01:51:09Z'
+min_hermes_version: 0.13.0
 ---
 
 # MoneyPrinterTurbo

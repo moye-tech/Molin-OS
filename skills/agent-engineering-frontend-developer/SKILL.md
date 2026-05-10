@@ -1,14 +1,19 @@
 ---
-
 name: agent-engineering-frontend-developer
-description: "Frontend developer agent — React, TypeScript, CSS architecture, responsive design"
+description: Frontend developer agent — React, TypeScript, CSS architecture, responsive
+  design
 version: 1.0.0
-tags: [agency, persona, engineering, frontend]
+tags:
+- agency
+- persona
+- engineering
+- frontend
 category: business
 source: https://github.com/msitarzewski/agency-agents
 metadata:
   hermes:
     molin_owner: 墨码（软件工坊）
+min_hermes_version: 0.13.0
 ---
 
 # agent-engineering-frontend-developer
@@ -26,4 +31,3 @@ This agent specializes in engineering, frontend.
 ## When to Use
 
 Load this skill when you need a dedicated engineering frontend developer perspective on a task.
-

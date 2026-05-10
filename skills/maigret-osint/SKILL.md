@@ -1,16 +1,27 @@
 ---
-
 name: maigret-osint
-description: OSINT username search across 3,000+ sites using maigret (23K stars). Find a person's online presence by username — social media, forums, developer platforms. Use for competitive research, due diligence, or influencer vetting.
+description: OSINT username search across 3,000+ sites using maigret (23K stars).
+  Find a person's online presence by username — social media, forums, developer platforms.
+  Use for competitive research, due diligence, or influencer vetting.
 version: 1.0.0
-tags: [osint, research, investigation, social-media, reconnaissance, maigret]
+tags:
+- osint
+- research
+- investigation
+- social-media
+- reconnaissance
+- maigret
 category: research
-related_skills: [last30days, blogwatcher, polymarket]
+related_skills:
+- last30days
+- blogwatcher
+- polymarket
 metadata:
   hermes:
     source: https://github.com/soxoj/maigret
     install: pip install maigret
     molin_owner: 墨思（情报研究）
+min_hermes_version: 0.13.0
 ---
 
 # Maigret OSINT — 跨平台账号搜索

@@ -1,10 +1,14 @@
 ---
 name: ag-debugger
-description: "Debugging specialist for errors, test failures, and unexpected behavior. Use proactively when encountering any issues."
+description: Debugging specialist for errors, test failures, and unexpected behavior.
+  Use proactively when encountering any issues.
 version: 1.0.0
-tags: [antigravity, testing]
+tags:
+- antigravity
+- testing
 category: software-development
 source: https://github.com/sickn33/antigravity-awesome-skills
+min_hermes_version: 0.13.0
 ---
 
 ---

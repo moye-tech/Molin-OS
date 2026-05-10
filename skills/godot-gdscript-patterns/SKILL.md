@@ -1,10 +1,14 @@
 ---
 name: ag-godot-gdscript-patterns
-description: "Master Godot 4 GDScript patterns including signals, scenes, state machines, and optimization. Use when building Godot games, implementing game systems"
+description: Master Godot 4 GDScript patterns including signals, scenes, state machines,
+  and optimization. Use when building Godot games, implementing game systems
 version: 1.0.0
-tags: [antigravity, general]
+tags:
+- antigravity
+- general
 category: software-development
 source: https://github.com/sickn33/antigravity-awesome-skills
+min_hermes_version: 0.13.0
 ---
 
 ---

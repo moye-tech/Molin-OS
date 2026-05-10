@@ -1,14 +1,19 @@
 ---
-
 name: pm-interview-script
-description: "Create a structured customer interview script with JTBD probing questions, warm-up, core exploration, and wrap-up sections. Follows The Mom Test principles — no leading questions, no pitching, focus o"
+description: Create a structured customer interview script with JTBD probing questions,
+  warm-up, core exploration, and wrap-up sections. Follows The Mom Test principles
+  — no leading questions, no pitching, focus o
 version: 1.0.0
-tags: [pm, product-management, product-discovery]
+tags:
+- pm
+- product-management
+- product-discovery
 category: productivity
 source: https://github.com/phuryn/pm-skills
 metadata:
   hermes:
     molin_owner: 墨品（产品设计）
+min_hermes_version: 0.13.0
 ---
 
 ---

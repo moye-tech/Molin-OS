@@ -1,8 +1,16 @@
 ---
 name: moneymaker-turbo
-description: 中文短视频批量生成引擎 — 基于 harry0703/MoneyPrinterTurbo (57K⭐)。只需提供主题或关键词，自动生成视频文案、素材、字幕、背景音乐并合成高清短视频。Pixelle-Video 的备选/补充管线。墨迹（内容工厂）视频工具。
+description: 中文短视频批量生成引擎 — 基于 harry0703/MoneyPrinterTurbo (57K⭐)。只需提供主题或关键词，自动生成视频文案、素材、字幕、背景音乐并合成高清短视频。Pixelle-Video
+  的备选/补充管线。墨迹（内容工厂）视频工具。
 version: 1.0.0
-tags: [video, automation, chinese, short-video, tts, subtitle, ai]
+tags:
+- video
+- automation
+- chinese
+- short-video
+- tts
+- subtitle
+- ai
 category: content
 metadata:
   hermes:
@@ -11,6 +19,7 @@ metadata:
     upstream_fork: https://github.com/moye-tech/MoneyPrinterTurbo
     alternative_to: pixelle-video
     molin_owner: 墨迹（内容工厂）
+min_hermes_version: 0.13.0
 ---
 
 # MoneyMaker Turbo — 中文短视频生成引擎

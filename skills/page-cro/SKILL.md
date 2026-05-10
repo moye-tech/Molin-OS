@@ -1,15 +1,33 @@
 ---
-
 name: page-cro
-description: "When the user wants to optimize, improve, or increase conversions on any marketing page — including homepage, landing pages, pricing pages, feature pages, or blog posts. Trigger phrases: 'CRO,' 'conversion rate optimization,' 'this page isn't converting,' 'improve conversions,' 'why isn't this page working,' 'my landing page sucks,' 'nobody's converting,' 'low conversion rate,' 'bounce rate is too high,' 'people leave without signing up,' 'this page needs work.' For signup/registration flows, see signup-flow-cro. For post-signup activation, see onboarding-cro. For forms outside of signup, see form-cro. For popups/modals, see popup-cro."
+description: 'When the user wants to optimize, improve, or increase conversions on
+  any marketing page — including homepage, landing pages, pricing pages, feature pages,
+  or blog posts. Trigger phrases: ''CRO,'' ''conversion rate optimization,'' ''this
+  page isn''t converting,'' ''improve conversions,'' ''why isn''t this page working,''
+  ''my landing page sucks,'' ''nobody''s converting,'' ''low conversion rate,'' ''bounce
+  rate is too high,'' ''people leave without signing up,'' ''this page needs work.''
+  For signup/registration flows, see signup-flow-cro. For post-signup activation,
+  see onboarding-cro. For forms outside of signup, see form-cro. For popups/modals,
+  see popup-cro.'
 version: 1.1.0
 author: coreyhaines31
 metadata:
   hermes:
-    tags: [marketing, cro, conversion, optimization, landing-page]
-    related_skills: [copywriting, signup-flow-cro, form-cro, popup-cro, ab-test-setup]
-    source: "https://github.com/coreyhaines31/marketingskills"
+    tags:
+    - marketing
+    - cro
+    - conversion
+    - optimization
+    - landing-page
+    related_skills:
+    - copywriting
+    - signup-flow-cro
+    - form-cro
+    - popup-cro
+    - ab-test-setup
+    source: https://github.com/coreyhaines31/marketingskills
     molin_owner: 墨增（增长引擎）
+min_hermes_version: 0.13.0
 ---
 
 # Page Conversion Rate Optimization (CRO)

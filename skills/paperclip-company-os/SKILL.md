@@ -1,16 +1,29 @@
 ---
-
 name: paperclip-company-os
-description: Company operating system patterns from Paperclip (62K stars) — org chart, goal cascade, heartbeat scheduling, ticket system, budget control, and governance. Use when designing autonomous business operations, multi-agent coordination, or zero-human workflows.
+description: Company operating system patterns from Paperclip (62K stars) — org chart,
+  goal cascade, heartbeat scheduling, ticket system, budget control, and governance.
+  Use when designing autonomous business operations, multi-agent coordination, or
+  zero-human workflows.
 version: 1.0.0
-tags: [company, orchestration, governance, heartbeat, budget, org-chart, paperclip]
+tags:
+- company
+- orchestration
+- governance
+- heartbeat
+- budget
+- org-chart
+- paperclip
 category: meta
-related_skills: [molin-ceo-persona, swarm-engine, self-learning-loop]
+related_skills:
+- molin-ceo-persona
+- swarm-engine
+- self-learning-loop
 metadata:
   hermes:
     source: https://github.com/paperclipai/paperclip
     stars: 62000
     molin_owner: CEO
+min_hermes_version: 0.13.0
 ---
 
 # Paperclip Company OS — 一人公司操作系统

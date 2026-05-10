@@ -1,14 +1,19 @@
 ---
-
 name: pm-brainstorm-ideas-existing
-description: "Brainstorm product ideas for an existing product using multi-perspective ideation from PM, Designer, and Engineer viewpoints. Use when generating new feature ideas, brainstorming solutions for an iden"
+description: Brainstorm product ideas for an existing product using multi-perspective
+  ideation from PM, Designer, and Engineer viewpoints. Use when generating new feature
+  ideas, brainstorming solutions for an iden
 version: 1.0.0
-tags: [pm, product-management, product-discovery]
+tags:
+- pm
+- product-management
+- product-discovery
 category: productivity
 source: https://github.com/phuryn/pm-skills
 metadata:
   hermes:
     molin_owner: 墨品（产品设计）
+min_hermes_version: 0.13.0
 ---
 
 ---

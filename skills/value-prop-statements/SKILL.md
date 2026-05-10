@@ -1,14 +1,19 @@
 ---
-
 name: pm-value-prop-statements
-description: "Generate value proposition statements for marketing, sales, and onboarding from existing value propositions. Use when writing marketing copy, creating sales messaging, or crafting onboarding messages."
+description: Generate value proposition statements for marketing, sales, and onboarding
+  from existing value propositions. Use when writing marketing copy, creating sales
+  messaging, or crafting onboarding messages.
 version: 1.0.0
-tags: [pm, product-management, marketing-growth]
+tags:
+- pm
+- product-management
+- marketing-growth
 category: productivity
 source: https://github.com/phuryn/pm-skills
 metadata:
   hermes:
     molin_owner: 墨品（产品设计）
+min_hermes_version: 0.13.0
 ---
 
 ---

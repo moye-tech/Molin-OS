@@ -1,14 +1,19 @@
 ---
-
 name: pm-positioning-ideas
-description: "Brainstorm product positioning ideas differentiated from competitors. Identifies top competitors and generates positioning statements with rationale. Use when developing product positioning, different"
+description: Brainstorm product positioning ideas differentiated from competitors.
+  Identifies top competitors and generates positioning statements with rationale.
+  Use when developing product positioning, different
 version: 1.0.0
-tags: [pm, product-management, marketing-growth]
+tags:
+- pm
+- product-management
+- marketing-growth
 category: productivity
 source: https://github.com/phuryn/pm-skills
 metadata:
   hermes:
     molin_owner: 墨品（产品设计）
+min_hermes_version: 0.13.0
 ---
 
 ---

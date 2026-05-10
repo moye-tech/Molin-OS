@@ -2,12 +2,19 @@
 name: email-newsletter
 description: AI情报日报邮件列表 — 使用 Buttondown 免费版进行每日简报自动生成与发送，含邮件序列设计和转化漏斗
 version: 0.1.0
-tags: [email, newsletter, automation, marketing, crm, buttondown]
+tags:
+- email
+- newsletter
+- automation
+- marketing
+- crm
+- buttondown
 metadata:
   hermes:
     molin_owner: 墨域私域
     service: Buttondown (buttondown.email)
     worker_ref: crm.py (墨域私域)
+min_hermes_version: 0.13.0
 ---
 
 # 邮件列表 — AI 情报日报

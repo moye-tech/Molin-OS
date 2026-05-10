@@ -1,14 +1,19 @@
 ---
-
 name: agent-engineering-rapid-prototyper
-description: "Rapid prototyper agent — fast iteration, minimal viable builds, speed over perfection"
+description: Rapid prototyper agent — fast iteration, minimal viable builds, speed
+  over perfection
 version: 1.0.0
-tags: [agency, persona, engineering, prototyping]
+tags:
+- agency
+- persona
+- engineering
+- prototyping
 category: business
 source: https://github.com/msitarzewski/agency-agents
 metadata:
   hermes:
     molin_owner: 墨码（软件工坊）
+min_hermes_version: 0.13.0
 ---
 
 # agent-engineering-rapid-prototyper
@@ -26,4 +31,3 @@ This agent specializes in engineering, prototyping.
 ## When to Use
 
 Load this skill when you need a dedicated engineering rapid prototyper perspective on a task.
-

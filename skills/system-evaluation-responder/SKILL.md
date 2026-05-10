@@ -1,14 +1,30 @@
 ---
 name: system-evaluation-responder
-description: "Systematic protocol for digesting external system evaluation reports — map defects to actual vs already-fixed vs real gaps, prioritize fixes against existing roadmap, and execute a batched fix plan. Use when: receiving an architecture review, code audit, third-party evaluation, or diagnostic report about the Hermes OS system."
+description: 'Systematic protocol for digesting external system evaluation reports
+  — map defects to actual vs already-fixed vs real gaps, prioritize fixes against
+  existing roadmap, and execute a batched fix plan. Use when: receiving an architecture
+  review, code audit, third-party evaluation, or diagnostic report about the Hermes
+  OS system.'
 version: 1.0.0
 author: Hermes Agent
 license: MIT
 metadata:
   hermes:
-    tags: [evaluation, audit, review, diagnosis, roadmap, planning]
-    related_skills: [molin-memory, self-learning-loop, skill-discovery, molin-governance, molin-company-structure]
+    tags:
+    - evaluation
+    - audit
+    - review
+    - diagnosis
+    - roadmap
+    - planning
+    related_skills:
+    - molin-memory
+    - self-learning-loop
+    - skill-discovery
+    - molin-governance
+    - molin-company-structure
     molin_owner: CEO
+min_hermes_version: 0.13.0
 ---
 
 # System Evaluation Responder Protocol

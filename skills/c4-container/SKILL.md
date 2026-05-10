@@ -1,14 +1,16 @@
 ---
-
 name: ag-c4-container
-description: "Expert C4 Container-level documentation specialist."
+description: Expert C4 Container-level documentation specialist.
 version: 1.0.0
-tags: [antigravity, devops]
+tags:
+- antigravity
+- devops
 category: software-development
 source: https://github.com/sickn33/antigravity-awesome-skills
 metadata:
   hermes:
     molin_owner: CEO
+min_hermes_version: 0.13.0
 ---
 
 ---

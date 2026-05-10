@@ -1,14 +1,27 @@
 ---
 name: molin-global
-description: "墨海 · 出海本地化引擎 — 多语言内容翻译、海外社媒运营、多平台同步发布、跨境合规检查。Use when: 用户需要将内容翻译成英语/日语/韩语等、在海外平台(Reddit/Twitter/LinkedIn)发帖、检查跨境合规。"
+description: '墨海 · 出海本地化引擎 — 多语言内容翻译、海外社媒运营、多平台同步发布、跨境合规检查。Use when: 用户需要将内容翻译成英语/日语/韩语等、在海外平台(Reddit/Twitter/LinkedIn)发帖、检查跨境合规。'
 version: 1.0.0
 author: Hermes Agent (Molin AI)
 license: MIT
 metadata:
   hermes:
-    tags: [localization, translation, international, social-media, compliance, molin]
-    related_skills: [social-push-publisher, seo-machine, marketing-skills-copywriting, ffmpeg-video-engine, molin-legal, marketing-skills-cro]
+    tags:
+    - localization
+    - translation
+    - international
+    - social-media
+    - compliance
+    - molin
+    related_skills:
+    - social-push-publisher
+    - seo-machine
+    - marketing-skills-copywriting
+    - ffmpeg-video-engine
+    - molin-legal
+    - marketing-skills-cro
     molin_owner: 墨海（出海本地化）
+min_hermes_version: 0.13.0
 ---
 
 # 墨海 · 出海本地化引擎

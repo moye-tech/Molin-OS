@@ -1,14 +1,29 @@
 ---
 name: molin-vizro
-description: "墨数 · BI仪表盘引擎 — 低代码数据可视化仪表盘，基于 McKinsey Vizro ⭐3.7k。Use when: 用户需要从数据创建可视化仪表盘、BI报告、数据分析看板、多指标KPI展示。兼容plotly/dash/pydantic生态。"
+description: '墨数 · BI仪表盘引擎 — 低代码数据可视化仪表盘，基于 McKinsey Vizro ⭐3.7k。Use when: 用户需要从数据创建可视化仪表盘、BI报告、数据分析看板、多指标KPI展示。兼容plotly/dash/pydantic生态。'
 version: 1.0.0
 author: Hermes Agent + Vizro
 license: Apache-2.0
 metadata:
   hermes:
-    tags: [vizro, dashboard, bi, plotly, dash, data-visualization, analytics, kpi, molin]
-    related_skills: [data-science, analysis-tools, research, reporting, plotly-dash]
+    tags:
+    - vizro
+    - dashboard
+    - bi
+    - plotly
+    - dash
+    - data-visualization
+    - analytics
+    - kpi
+    - molin
+    related_skills:
+    - data-science
+    - analysis-tools
+    - research
+    - reporting
+    - plotly-dash
     molin_owner: 墨数（BI仪表盘）
+min_hermes_version: 0.13.0
 ---
 
 # 墨数 · BI仪表盘引擎

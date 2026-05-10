@@ -1,14 +1,27 @@
 ---
 name: molin-memory
-description: "墨麟记忆引擎 — 子公司级向量RAG (ChromaDB) + 结构化存储 (SQLite) + 事件总线。22家子公司各自独立向量collection，支持语义检索、跨子公司事件通知、自动记忆上下文注入。Use when: 需要子公司回忆历史经验、跨子公司传递事件、为 Agent 注入带记忆的上下文。"
+description: '墨麟记忆引擎 — 子公司级向量RAG (ChromaDB) + 结构化存储 (SQLite) + 事件总线。22家子公司各自独立向量collection，支持语义检索、跨子公司事件通知、自动记忆上下文注入。Use
+  when: 需要子公司回忆历史经验、跨子公司传递事件、为 Agent 注入带记忆的上下文。'
 version: 1.0.0
 author: Hermes Agent
 license: MIT
 metadata:
   hermes:
-    tags: [memory, rag, vector, chromadb, sqlite, event-bus, molin]
-    related_skills: [self-learning-loop, molin-governance, molin-company-structure, molin-legal]
+    tags:
+    - memory
+    - rag
+    - vector
+    - chromadb
+    - sqlite
+    - event-bus
+    - molin
+    related_skills:
+    - self-learning-loop
+    - molin-governance
+    - molin-company-structure
+    - molin-legal
     molin_owner: 墨脑（知识管理）
+min_hermes_version: 0.13.0
 ---
 
 # 墨麟记忆引擎 · molin-memory

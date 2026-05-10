@@ -1,14 +1,22 @@
 ---
-
 name: decompiled-codebase-extraction
-description: Extract architecture, tools, and reusable patterns from decompiled/reverse-engineered codebases. Identify stubbed modules, feature flag systems, tool registries, and integration potential with existing systems.
+description: Extract architecture, tools, and reusable patterns from decompiled/reverse-engineered
+  codebases. Identify stubbed modules, feature flag systems, tool registries, and
+  integration potential with existing systems.
 version: 1.0.0
 author: Hermes Agent
-tags: [codebase-analysis, architecture, tool-extraction, decompiled-code]
+tags:
+- codebase-analysis
+- architecture
+- tool-extraction
+- decompiled-code
 metadata:
   hermes:
-    related_skills: [codebase-inspection, github-repo-management]
+    related_skills:
+    - codebase-inspection
+    - github-repo-management
     molin_owner: CEO
+min_hermes_version: 0.13.0
 ---
 
 # Decompiled Codebase Extraction

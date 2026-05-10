@@ -1,10 +1,15 @@
 ---
 name: pm-competitive-battlecard
-description: "Create competitive battlecards for sales enablement — strengths, weaknesses, objection handling per competitor."
+description: Create competitive battlecards for sales enablement — strengths, weaknesses,
+  objection handling per competitor.
 version: 1.0.0
-tags: [pm, product-management, go-to-market]
+tags:
+- pm
+- product-management
+- go-to-market
 category: productivity
 source: https://github.com/phuryn/pm-skills
+min_hermes_version: 0.13.0
 ---
 
 ---

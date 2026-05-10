@@ -1,14 +1,17 @@
 ---
-
 name: ag-brainstorming
-description: "Use before creative or constructive work (features, architecture, behavior). Transforms vague ideas into validated designs through disciplined reasoni"
+description: Use before creative or constructive work (features, architecture, behavior).
+  Transforms vague ideas into validated designs through disciplined reasoni
 version: 1.0.0
-tags: [antigravity, devops]
+tags:
+- antigravity
+- devops
 category: software-development
 source: https://github.com/sickn33/antigravity-awesome-skills
 metadata:
   hermes:
     molin_owner: CEO
+min_hermes_version: 0.13.0
 ---
 
 ---

@@ -2,15 +2,21 @@
 name: openai-agents-python
 description: 从 https://github.com/openai/openai-agents-python 吸收的技能 — A级 — 推荐吸收
 version: 0.1.0
-tags: [openai-agents-python, openai, agent, automation, workflow]
+tags:
+- openai-agents-python
+- openai
+- agent
+- automation
+- workflow
 metadata:
   hermes:
     source: https://github.com/openai/openai-agents-python
     owner: openai
     stars: 19000
     assessment_score: 75.0
-    assessment_level: "A级 — 推荐吸收"
-    absorbed_at: "2026-05-08T01:07:20Z"
+    assessment_level: A级 — 推荐吸收
+    absorbed_at: '2026-05-08T01:07:20Z'
+min_hermes_version: 0.13.0
 ---
 
 # openai-agents-python

@@ -2,12 +2,19 @@
 name: mo-tou
 description: 墨投交易 — 量化交易 Workflow，集成 TradingAgents-CN 多角度金融分析，支持信号生成、回测、市场分析和研究
 version: 0.1.0
-tags: [trading, quant, finance, backtest, analysis, signal]
+tags:
+- trading
+- quant
+- finance
+- backtest
+- analysis
+- signal
 metadata:
   hermes:
     molin_owner: 墨投交易
     worker_path: /home/ubuntu/hermes-os/molib/agencies/workers/trading.py
     cli_command: python -m molib trading
+min_hermes_version: 0.13.0
 ---
 
 # 墨投交易 — 量化交易 Workflow

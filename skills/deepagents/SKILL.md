@@ -2,15 +2,21 @@
 name: deepagents
 description: 从 https://github.com/langchain-ai/deepagents 吸收的技能 — A级 — 推荐吸收
 version: 0.1.0
-tags: [deepagents, langchain-ai, agent, automation, workflow]
+tags:
+- deepagents
+- langchain-ai
+- agent
+- automation
+- workflow
 metadata:
   hermes:
     source: https://github.com/langchain-ai/deepagents
     owner: langchain-ai
     stars: 4800
     assessment_score: 71.5
-    assessment_level: "A级 — 推荐吸收"
-    absorbed_at: "2026-05-08T01:07:21Z"
+    assessment_level: A级 — 推荐吸收
+    absorbed_at: '2026-05-08T01:07:21Z'
+min_hermes_version: 0.13.0
 ---
 
 # deepagents

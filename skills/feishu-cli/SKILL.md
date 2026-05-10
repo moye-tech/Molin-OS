@@ -1,14 +1,24 @@
 ---
 name: feishu-cli
-description: "飞书开放平台 CLI — Markdown 双向转换、文档读写、消息发送、多维表格、日历任务等全功能操控。当用户请求操作飞书文档、发送消息、管理知识库、创建表格、查看日历、搜索文件、管理权限等功能时加载。"
+description: 飞书开放平台 CLI — Markdown 双向转换、文档读写、消息发送、多维表格、日历任务等全功能操控。当用户请求操作飞书文档、发送消息、管理知识库、创建表格、查看日历、搜索文件、管理权限等功能时加载。
 version: 1.0.0
 author: Hermes Agent (integrated from riba2534/feishu-cli v1.23.0)
 license: MIT
-platforms: [linux, macos]
+platforms:
+- linux
+- macos
 metadata:
   hermes:
-    tags: [feishu, lark, document, messaging, integration]
-related_skills: [feishu-message-formatter, molin-ceo-persona]
+    tags:
+    - feishu
+    - lark
+    - document
+    - messaging
+    - integration
+related_skills:
+- feishu-message-formatter
+- molin-ceo-persona
+min_hermes_version: 0.13.0
 ---
 
 # feishu-cli — 飞书深度集成

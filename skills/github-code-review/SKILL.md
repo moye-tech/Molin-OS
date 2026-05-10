@@ -1,15 +1,24 @@
 ---
-
 name: github-code-review
-description: Review code changes by analyzing git diffs, leaving inline comments on PRs, and performing thorough pre-push review. Works with gh CLI or falls back to git + GitHub REST API via curl.
+description: Review code changes by analyzing git diffs, leaving inline comments on
+  PRs, and performing thorough pre-push review. Works with gh CLI or falls back to
+  git + GitHub REST API via curl.
 version: 1.1.0
 author: Hermes Agent
 license: MIT
 metadata:
   hermes:
-    tags: [GitHub, Code-Review, Pull-Requests, Git, Quality]
-    related_skills: [github-auth, github-pr-workflow]
+    tags:
+    - GitHub
+    - Code-Review
+    - Pull-Requests
+    - Git
+    - Quality
+    related_skills:
+    - github-auth
+    - github-pr-workflow
     molin_owner: 墨维（运维）
+min_hermes_version: 0.13.0
 ---
 
 # GitHub Code Review

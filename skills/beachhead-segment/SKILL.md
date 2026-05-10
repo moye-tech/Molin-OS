@@ -1,10 +1,15 @@
 ---
 name: pm-beachhead-segment
-description: "Identify and validate the optimal beachhead market segment for initial product launch."
+description: Identify and validate the optimal beachhead market segment for initial
+  product launch.
 version: 1.0.0
-tags: [pm, product-management, go-to-market]
+tags:
+- pm
+- product-management
+- go-to-market
 category: productivity
 source: https://github.com/phuryn/pm-skills
+min_hermes_version: 0.13.0
 ---
 
 ---

@@ -1,14 +1,23 @@
 ---
-
 name: pixelle-video
-description: "AI fully automated short video engine: Topic→Script→AI art→TTS→music→composite video pipeline."
+description: 'AI fully automated short video engine: Topic→Script→AI art→TTS→music→composite
+  video pipeline.'
 version: 1.0.0
 author: Hermes Agent (based on AIDC-AI/Pixelle-Video)
 license: MIT
 metadata:
   hermes:
-    tags: [video, automation, ai-art, tts, pipeline, content-creation, comfyui]
-    related_skills: [ffmpeg-video-engine, moneymaker-turbo]
+    tags:
+    - video
+    - automation
+    - ai-art
+    - tts
+    - pipeline
+    - content-creation
+    - comfyui
+    related_skills:
+    - ffmpeg-video-engine
+    - moneymaker-turbo
     category: creative
     money_printer_turbo:
       source: https://github.com/harry0703/MoneyPrinterTurbo
@@ -17,6 +26,7 @@ metadata:
       alternative_pipeline: true
       value: 提供 Pixelle 之外的完整中文短视频管线备选方案
     molin_owner: 墨影（IP孵化）
+min_hermes_version: 0.13.0
 ---
 
 # Pixelle-Video

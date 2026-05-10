@@ -1,10 +1,14 @@
 ---
 name: ag-solidity-security
-description: "Master smart contract security best practices, vulnerability prevention, and secure Solidity development patterns."
+description: Master smart contract security best practices, vulnerability prevention,
+  and secure Solidity development patterns.
 version: 1.0.0
-tags: [antigravity, security]
+tags:
+- antigravity
+- security
 category: software-development
 source: https://github.com/sickn33/antigravity-awesome-skills
+min_hermes_version: 0.13.0
 ---
 
 ---

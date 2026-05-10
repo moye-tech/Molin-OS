@@ -1,10 +1,14 @@
 ---
 name: ag-ssh-penetration-testing
-description: "Conduct comprehensive SSH security assessments including enumeration, credential attacks, vulnerability exploitation, tunneling techniques, and post-e"
+description: Conduct comprehensive SSH security assessments including enumeration,
+  credential attacks, vulnerability exploitation, tunneling techniques, and post-e
 version: 1.0.0
-tags: [antigravity, security]
+tags:
+- antigravity
+- security
 category: software-development
 source: https://github.com/sickn33/antigravity-awesome-skills
+min_hermes_version: 0.13.0
 ---
 
 ---

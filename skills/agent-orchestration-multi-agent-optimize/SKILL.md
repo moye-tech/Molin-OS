@@ -1,14 +1,17 @@
 ---
-
 name: ag-agent-orchestration-multi-agent-optimize
-description: "Optimize multi-agent systems with coordinated profiling, workload distribution, and cost-aware orchestration. Use when improving agent performance, th"
+description: Optimize multi-agent systems with coordinated profiling, workload distribution,
+  and cost-aware orchestration. Use when improving agent performance, th
 version: 1.0.0
-tags: [antigravity, general]
+tags:
+- antigravity
+- general
 category: software-development
 source: https://github.com/sickn33/antigravity-awesome-skills
 metadata:
   hermes:
     molin_owner: CEO
+min_hermes_version: 0.13.0
 ---
 
 ---

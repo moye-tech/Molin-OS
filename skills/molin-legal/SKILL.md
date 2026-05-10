@@ -1,14 +1,29 @@
 ---
 name: molin-legal
-description: "墨律法务 AI 法律助手 — 合同审查、风险评估、NDA生成、隐私政策、合规审计、谈判策略、PDF报告。用户提供合同文件/URL后自动执行13种法务分析。Use when: 用户需要审查合同、评估法律风险、生成法律文档、检查合规性、分析隐私政策。基于 zubair-trabzada/ai-legal-claude ⭐1.2k 适配 Hermes."
+description: '墨律法务 AI 法律助手 — 合同审查、风险评估、NDA生成、隐私政策、合规审计、谈判策略、PDF报告。用户提供合同文件/URL后自动执行13种法务分析。Use
+  when: 用户需要审查合同、评估法律风险、生成法律文档、检查合规性、分析隐私政策。基于 zubair-trabzada/ai-legal-claude ⭐1.2k
+  适配 Hermes.'
 version: 2.0.0
 author: Hermes Agent (adapted from zubair-trabzada/ai-legal-claude)
 license: MIT
 metadata:
   hermes:
-    tags: [legal, contract, compliance, privacy, nda, law, molin, business]
-    related_skills: [requesting-code-review, writing-plans, research, molin-company-structure]
+    tags:
+    - legal
+    - contract
+    - compliance
+    - privacy
+    - nda
+    - law
+    - molin
+    - business
+    related_skills:
+    - requesting-code-review
+    - writing-plans
+    - research
+    - molin-company-structure
     molin_owner: 墨律（法务）
+min_hermes_version: 0.13.0
 ---
 
 # 墨律法务 · AI 法律助手

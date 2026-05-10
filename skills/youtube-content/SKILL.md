@@ -1,14 +1,16 @@
 ---
-
 name: youtube-content
-description: >
-  Fetch YouTube video transcripts and transform them into structured content
-  (chapters, summaries, threads, blog posts). Use when the user shares a YouTube
-  URL or video link, asks to summarize a video, requests a transcript, or wants
-  to extract and reformat content from any YouTube video.
+description: 'Fetch YouTube video transcripts and transform them into structured content
+  (chapters, summaries, threads, blog posts). Use when the user shares a YouTube URL
+  or video link, asks to summarize a video, requests a transcript, or wants to extract
+  and reformat content from any YouTube video.
+
+  '
 metadata:
   hermes:
     molin_owner: 墨迹（内容工厂）
+version: 1.0.0
+min_hermes_version: 0.13.0
 ---
 
 # YouTube Content Tool

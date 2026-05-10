@@ -1,15 +1,22 @@
 ---
 name: ai-taste-quality
-description: AI输出质量控制 — 整合Leonxlnx/taste-skill (14K⭐) + alchaincyf/nuwa-skill (17K⭐)。给AI"好品味"，阻止低质量输出，蒸馏人的思维方式和表达能力。墨脑（知识管理）+ 墨智（AI研发）的质量防线。
+description: AI输出质量控制 — 整合Leonxlnx/taste-skill (14K⭐) + alchaincyf/nuwa-skill (17K⭐)。给AI"好品味"，阻止低质量输出，蒸馏人的思维方式和表达能力。墨脑（知识管理）+
+  墨智（AI研发）的质量防线。
 version: 1.0.0
-tags: [quality, taste, anti-hallucination, distillation, style]
+tags:
+- quality
+- taste
+- anti-hallucination
+- distillation
+- style
 category: meta
 metadata:
   hermes:
     sources:
-      - https://github.com/Leonxlnx/taste-skill (14909⭐) — 给AI品味
-      - https://github.com/alchaincyf/nuwa-skill (17031⭐) — 思维方式蒸馏
+    - https://github.com/Leonxlnx/taste-skill (14909⭐) — 给AI品味
+    - https://github.com/alchaincyf/nuwa-skill (17031⭐) — 思维方式蒸馏
     molin_owner: 墨脑（知识管理）
+min_hermes_version: 0.13.0
 ---
 
 # AI Taste & Quality — 墨麟AI输出质量控制

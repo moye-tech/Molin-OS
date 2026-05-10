@@ -1,10 +1,15 @@
 ---
 name: pm-sprint-plan
-description: "Plan and structure sprints with story point estimation, capacity planning, and velocity tracking."
+description: Plan and structure sprints with story point estimation, capacity planning,
+  and velocity tracking.
 version: 1.0.0
-tags: [pm, product-management, execution]
+tags:
+- pm
+- product-management
+- execution
 category: productivity
 source: https://github.com/phuryn/pm-skills
+min_hermes_version: 0.13.0
 ---
 
 ---

@@ -1,11 +1,12 @@
 ---
-
 name: powerpoint
-description: "Create, read, edit .pptx decks, slides, notes, templates."
+description: Create, read, edit .pptx decks, slides, notes, templates.
 license: Proprietary. LICENSE.txt has complete terms
 metadata:
   hermes:
     molin_owner: 墨迹（内容工厂）
+version: 1.0.0
+min_hermes_version: 0.13.0
 ---
 
 # Powerpoint Skill

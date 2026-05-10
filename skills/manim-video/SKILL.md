@@ -1,11 +1,11 @@
 ---
-
 name: manim-video
-description: "Manim CE animations: 3Blue1Brown math/algo videos."
+description: 'Manim CE animations: 3Blue1Brown math/algo videos.'
 version: 1.0.0
 metadata:
   hermes:
     molin_owner: 墨迹（内容工厂）
+min_hermes_version: 0.13.0
 ---
 
 # Manim Video Production Pipeline

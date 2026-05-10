@@ -1,14 +1,19 @@
 ---
-
 name: pm-brainstorm-ideas-new
-description: "Brainstorm feature ideas for a new product in initial discovery from PM, Designer, and Engineer perspectives. Use when starting product discovery for a new product, exploring features for a startup id"
+description: Brainstorm feature ideas for a new product in initial discovery from
+  PM, Designer, and Engineer perspectives. Use when starting product discovery for
+  a new product, exploring features for a startup id
 version: 1.0.0
-tags: [pm, product-management, product-discovery]
+tags:
+- pm
+- product-management
+- product-discovery
 category: productivity
 source: https://github.com/phuryn/pm-skills
 metadata:
   hermes:
     molin_owner: 墨品（产品设计）
+min_hermes_version: 0.13.0
 ---
 
 ---

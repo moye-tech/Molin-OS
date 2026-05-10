@@ -1,12 +1,24 @@
 ---
 name: yuanbao
-description: "Yuanbao (元宝) groups: @mention users, query info/members."
+description: 'Yuanbao (元宝) groups: @mention users, query info/members.'
 version: 1.0.0
-platforms: [linux, macos, windows]
+platforms:
+- linux
+- macos
+- windows
 metadata:
   hermes:
-    tags: [yuanbao, mention, at, group, members, 元宝, 派, 艾特]
+    tags:
+    - yuanbao
+    - mention
+    - at
+    - group
+    - members
+    - 元宝
+    - 派
+    - 艾特
     related_skills: []
+min_hermes_version: 0.13.0
 ---
 
 # Yuanbao Group Interaction

@@ -1,10 +1,14 @@
 ---
 name: ag-seo-aeo-content-quality-auditor
-description: "Audits content for SEO and AEO performance with scored reports, severity-ranked fix lists, and projected scores after fixes. Activate when the user wa"
+description: Audits content for SEO and AEO performance with scored reports, severity-ranked
+  fix lists, and projected scores after fixes. Activate when the user wa
 version: 1.0.0
-tags: [antigravity, planning]
+tags:
+- antigravity
+- planning
 category: software-development
 source: https://github.com/sickn33/antigravity-awesome-skills
+min_hermes_version: 0.13.0
 ---
 
 ---

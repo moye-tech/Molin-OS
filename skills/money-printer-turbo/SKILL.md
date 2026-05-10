@@ -2,13 +2,20 @@
 name: money-printer-turbo
 description: 一键短视频生成工具 — 基于 MoneyPrinterTurbo (57K⭐)，提供主题即可自动生成脚本、素材、字幕、配音和完整视频
 version: 0.1.0
-tags: [video, short-video, automation, tts, subtitle, ai]
+tags:
+- video
+- short-video
+- automation
+- tts
+- subtitle
+- ai
 metadata:
   hermes:
     molin_owner: 墨播短视频
     source: https://github.com/harry0703/MoneyPrinterTurbo
     stars: 57000
     repo_path: /home/ubuntu/MoneyPrinterTurbo
+min_hermes_version: 0.13.0
 ---
 
 # MoneyPrinterTurbo — 一键短视频生成

@@ -2,18 +2,27 @@
 name: molin-growth-marketing
 description: 墨增增长营销引擎 — 整合GitHub增长项目的精华，填补墨增子公司"空技能"短板。覆盖增长策略/AARRR漏斗/社媒自动化/获客引擎/转化优化。
 version: 1.0.0
-tags: [growth, marketing, acquisition, retention, funnel, social-media, seo, automation]
+tags:
+- growth
+- marketing
+- acquisition
+- retention
+- funnel
+- social-media
+- seo
+- automation
 category: business
 metadata:
   hermes:
     molin_owner: 墨增（增长引擎）
     sources:
-      - https://github.com/coreyhaines31/marketingskills (26313⭐) ✅ 已有 marketing-skills-copywriting/cro
-      - https://github.com/EdoStra/Marketing-for-Founders (6153⭐) — SaaS增长实战
-      - https://github.com/phodal/growth-ebook (7811⭐) — 中文增长工程指南
-      - https://github.com/growchief/growchief (3323⭐) — 社媒自动化平台
-      - https://github.com/YILS-LIN/short-video-factory (3893⭐) — 营销短视频
-      - https://github.com/draftdev/startup-marketing-checklist (5609⭐) — 启动营销清单
+    - https://github.com/coreyhaines31/marketingskills (26313⭐) ✅ 已有 marketing-skills-copywriting/cro
+    - https://github.com/EdoStra/Marketing-for-Founders (6153⭐) — SaaS增长实战
+    - https://github.com/phodal/growth-ebook (7811⭐) — 中文增长工程指南
+    - https://github.com/growchief/growchief (3323⭐) — 社媒自动化平台
+    - https://github.com/YILS-LIN/short-video-factory (3893⭐) — 营销短视频
+    - https://github.com/draftdev/startup-marketing-checklist (5609⭐) — 启动营销清单
+min_hermes_version: 0.13.0
 ---
 
 # 墨增增长营销引擎

@@ -1,14 +1,19 @@
 ---
-
 name: pm-opportunity-solution-tree
-description: "Build an Opportunity Solution Tree (OST) to structure product discovery — map a desired outcome to opportunities, solutions, and experiments. Based on Teresa Torres' Continuous Discovery Habits. Use w"
+description: Build an Opportunity Solution Tree (OST) to structure product discovery
+  — map a desired outcome to opportunities, solutions, and experiments. Based on Teresa
+  Torres' Continuous Discovery Habits. Use w
 version: 1.0.0
-tags: [pm, product-management, product-discovery]
+tags:
+- pm
+- product-management
+- product-discovery
 category: productivity
 source: https://github.com/phuryn/pm-skills
 metadata:
   hermes:
     molin_owner: 墨品（产品设计）
+min_hermes_version: 0.13.0
 ---
 
 ---

@@ -1,10 +1,14 @@
 ---
 name: ag-kpi-dashboard-design
-description: "Comprehensive patterns for designing effective Key Performance Indicator (KPI) dashboards that drive business decisions."
+description: Comprehensive patterns for designing effective Key Performance Indicator
+  (KPI) dashboards that drive business decisions.
 version: 1.0.0
-tags: [antigravity, devops]
+tags:
+- antigravity
+- devops
 category: software-development
 source: https://github.com/sickn33/antigravity-awesome-skills
+min_hermes_version: 0.13.0
 ---
 
 ---

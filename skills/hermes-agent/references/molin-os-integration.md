@@ -54,17 +54,10 @@ cd ~/Molin-OS
 
 ## 技能迁移
 
-Molin-OS 的 155 个技能在 `~/Molin-OS/skills/` 中按类别分目录（`content/`, `growth/`, `meta/` 等），需要扁平化复制到 `~/.hermes/skills/`：
+Molin-OS 的 329 个技能在 `~/Molin-OS/skills/` 中扁平化存放，直接复制即可：
 
 ```bash
-for cat_dir in ~/Molin-OS/skills/*/; do
-    cat_name=$(basename "$cat_dir")
-    [ "$cat_name" = "absorbed" ] && continue
-    for skill_dir in "$cat_dir"/*/; do
-        skill_name=$(basename "$skill_dir")
-        [ ! -d ~/.hermes/skills/"$skill_name" ] && cp -r "$skill_dir" ~/.hermes/skills/"$skill_name"
-    done
-done
+cp -r ~/Molin-OS/skills/* ~/.hermes/skills/
 ```
 
 ## feishu-cli 并行安装
@@ -111,3 +104,44 @@ SDK: firecrawl-py v4.25.2
 CLI: python -m molib intel firecrawl scrape --url URL
 Cron: 墨思情报银行 (bf670fd0a49d) 已加载 firecrawl 技能
 ```
+
+## 双轨备份系统
+
+系统每日凌晨 3:00 自动执行双轨备份，通过 `~/.hermes/scripts/molin_backup.sh`：
+
+### 备份目标
+
+```
+1. GitHub (moye-tech/Molin-OS) — 代码、技能（329个）、配置模板、REPO 备份脚本
+   不含：.env 密钥、auth.json、sessions、日志
+
+2. 本地硬盘 (/Volumes/MolinOS/hermes/) — ~/.hermes/ 完整镜像
+   含：全部密钥、Cookies、技能、配置、molin 源码
+   不含：venv、sessions、日志、缓存
+```
+
+### 还原流程
+
+```bash
+# 从本地硬盘（含密钥，推荐）
+bash /Volumes/MolinOS/Molin-OS/scripts/restore.sh
+
+# 从 GitHub（需手动输入密钥）
+git clone https://github.com/moye-tech/Molin-OS.git ~/Molin-OS
+cd ~/Molin-OS && bash scripts/restore.sh
+```
+
+### 关键文件
+
+- 备份脚本: `~/Molin-OS/scripts/backup.sh`（也复制到 `~/.hermes/scripts/molin_backup.sh`）
+- 还原脚本: `~/Molin-OS/scripts/restore.sh`
+- 环境清单: `~/Molin-OS/ENVIRONMENT.md`（全部软件版本和路径）
+- Cron: `0efd1c5f13d0` — 墨麟OS每日系统备份 (0 3 * * *)
+
+### .gitignore 保护
+
+以下内容绝不进入 GitHub：
+- `backup/cron.db`（含 delivery token）
+- `*.key`, `*.pem`, `*secret*`, `*token*`, `credentials*`
+- `**/auth.*`, `**/.env.*`（除 `.env.example`）
+- `sessions/`, `logs/`, `cache/`

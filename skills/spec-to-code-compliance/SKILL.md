@@ -1,10 +1,14 @@
 ---
 name: ag-spec-to-code-compliance
-description: "Verifies code implements exactly what documentation specifies for blockchain audits. Use when comparing code against whitepapers, finding gaps between"
+description: Verifies code implements exactly what documentation specifies for blockchain
+  audits. Use when comparing code against whitepapers, finding gaps between
 version: 1.0.0
-tags: [antigravity, devops]
+tags:
+- antigravity
+- devops
 category: software-development
 source: https://github.com/sickn33/antigravity-awesome-skills
+min_hermes_version: 0.13.0
 ---
 
 ---

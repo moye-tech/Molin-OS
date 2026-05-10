@@ -1,10 +1,14 @@
 ---
 name: ag-sql-injection-testing
-description: "Execute comprehensive SQL injection vulnerability assessments on web applications to identify database security flaws, demonstrate exploitation techni"
+description: Execute comprehensive SQL injection vulnerability assessments on web
+  applications to identify database security flaws, demonstrate exploitation techni
 version: 1.0.0
-tags: [antigravity, security]
+tags:
+- antigravity
+- security
 category: software-development
 source: https://github.com/sickn33/antigravity-awesome-skills
+min_hermes_version: 0.13.0
 ---
 
 ---

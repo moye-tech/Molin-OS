@@ -1,15 +1,33 @@
 ---
-
 name: content-strategy
-description: "When the user wants to plan a content strategy, decide what content to create, or figure out what topics to cover. Trigger phrases: 'content strategy,' 'what should I write about,' 'content ideas,' 'blog strategy,' 'topic clusters,' 'content planning,' 'editorial calendar,' 'content marketing,' 'content roadmap,' 'what content should I create,' 'blog topics,' 'content pillars,' 'I don't know what to write.' For writing individual pieces, see copywriting. For SEO-specific audits, see seo-audit. For social media content specifically, see social-content."
+description: 'When the user wants to plan a content strategy, decide what content
+  to create, or figure out what topics to cover. Trigger phrases: ''content strategy,''
+  ''what should I write about,'' ''content ideas,'' ''blog strategy,'' ''topic clusters,''
+  ''content planning,'' ''editorial calendar,'' ''content marketing,'' ''content roadmap,''
+  ''what content should I create,'' ''blog topics,'' ''content pillars,'' ''I don''t
+  know what to write.'' For writing individual pieces, see copywriting. For SEO-specific
+  audits, see seo-audit. For social media content specifically, see social-content.'
 version: 1.1.0
 author: coreyhaines31
 metadata:
   hermes:
-    tags: [marketing, content-strategy, content-marketing, blogging, seo-content, editorial]
-    related_skills: [copywriting, seo-audit, ai-seo, programmatic-seo, social-content, email-sequence]
-    source: "https://github.com/coreyhaines31/marketingskills"
+    tags:
+    - marketing
+    - content-strategy
+    - content-marketing
+    - blogging
+    - seo-content
+    - editorial
+    related_skills:
+    - copywriting
+    - seo-audit
+    - ai-seo
+    - programmatic-seo
+    - social-content
+    - email-sequence
+    source: https://github.com/coreyhaines31/marketingskills
     molin_owner: 墨增（增长引擎）
+min_hermes_version: 0.13.0
 ---
 
 # Content Strategy

@@ -1,14 +1,19 @@
 ---
-
 name: pm-brainstorm-experiments-existing
-description: "Design experiments to test assumptions for an existing product — prototypes, A/B tests, spikes, and other low-effort validation methods. Use when validating assumptions, testing feature ideas cheaply,"
+description: Design experiments to test assumptions for an existing product — prototypes,
+  A/B tests, spikes, and other low-effort validation methods. Use when validating
+  assumptions, testing feature ideas cheaply,
 version: 1.0.0
-tags: [pm, product-management, product-discovery]
+tags:
+- pm
+- product-management
+- product-discovery
 category: productivity
 source: https://github.com/phuryn/pm-skills
 metadata:
   hermes:
     molin_owner: 墨品（产品设计）
+min_hermes_version: 0.13.0
 ---
 
 ---

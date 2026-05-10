@@ -1,10 +1,14 @@
 ---
 name: ag-event-store-design
-description: "Design and implement event stores for event-sourced systems. Use when building event sourcing infrastructure, choosing event store technologies, or im"
+description: Design and implement event stores for event-sourced systems. Use when
+  building event sourcing infrastructure, choosing event store technologies, or im
 version: 1.0.0
-tags: [antigravity, devops]
+tags:
+- antigravity
+- devops
 category: software-development
 source: https://github.com/sickn33/antigravity-awesome-skills
+min_hermes_version: 0.13.0
 ---
 
 ---

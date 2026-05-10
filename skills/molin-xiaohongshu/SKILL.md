@@ -1,14 +1,27 @@
 ---
 name: molin-xiaohongshu
-description: "墨影 · 小红书AI发布引擎 — 智能内容创作、AI驱动封面生成、热点采集、定时发布、多账户管理。基于 BetaStreetOmnis/xhs_ai_publisher ⭐1.9k。Use when: 用户需要发布小红书笔记、采集热点、生成封面图片、管理多个账号。"
+description: '墨影 · 小红书AI发布引擎 — 智能内容创作、AI驱动封面生成、热点采集、定时发布、多账户管理。基于 BetaStreetOmnis/xhs_ai_publisher
+  ⭐1.9k。Use when: 用户需要发布小红书笔记、采集热点、生成封面图片、管理多个账号。'
 version: 1.0.0
 author: Hermes Agent + xhs_ai_publisher
 license: MIT
 metadata:
   hermes:
-    tags: [xiaohongshu, social-media, content-publishing, ai-content, image-generation, automation, molin]
-    related_skills: [molin-wechat, content-creation, seo-content-optimizer, image-generation]
+    tags:
+    - xiaohongshu
+    - social-media
+    - content-publishing
+    - ai-content
+    - image-generation
+    - automation
+    - molin
+    related_skills:
+    - molin-wechat
+    - content-creation
+    - seo-content-optimizer
+    - image-generation
     molin_owner: 墨影（IP孵化）
+min_hermes_version: 0.13.0
 ---
 
 # 墨影 · 小红书AI发布引擎

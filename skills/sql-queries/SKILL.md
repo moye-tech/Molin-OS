@@ -1,14 +1,19 @@
 ---
-
 name: pm-sql-queries
-description: "Generate SQL queries from natural language descriptions. Supports BigQuery, PostgreSQL, MySQL, and other dialects. Reads database schemas from uploaded diagrams or documentation. Use when writing SQL,"
+description: Generate SQL queries from natural language descriptions. Supports BigQuery,
+  PostgreSQL, MySQL, and other dialects. Reads database schemas from uploaded diagrams
+  or documentation. Use when writing SQL,
 version: 1.0.0
-tags: [pm, product-management, data-analytics]
+tags:
+- pm
+- product-management
+- data-analytics
 category: productivity
 source: https://github.com/phuryn/pm-skills
 metadata:
   hermes:
     molin_owner: 墨品（产品设计）
+min_hermes_version: 0.13.0
 ---
 
 ---

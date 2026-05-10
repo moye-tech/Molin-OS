@@ -1,10 +1,15 @@
 ---
 name: pm-growth-loops
-description: "Design viral, content, and paid growth loops with acquisition, activation, and retention mechanics."
+description: Design viral, content, and paid growth loops with acquisition, activation,
+  and retention mechanics.
 version: 1.0.0
-tags: [pm, product-management, go-to-market]
+tags:
+- pm
+- product-management
+- go-to-market
 category: productivity
 source: https://github.com/phuryn/pm-skills
+min_hermes_version: 0.13.0
 ---
 
 ---

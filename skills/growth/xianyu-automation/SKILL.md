@@ -12,6 +12,35 @@ metadata:
 
 ## Xianyu Automation — 闲鱼接单自动化
 
+### Prerequisites & Setup
+
+Before the message pipeline can function, these must be in place:
+
+| Item | Check | Detail |
+|------|-------|--------|
+| **Python 3.12 venv** | `~/xianyu_agent/.venv/bin/python3 --version` | Required for asyncio features. `brew install python@3.12` then create venv. |
+| **XianyuApis project** | `~/xianyu_agent/` symlink → `Molin-OS/molib/xianyu/` | Must contain `goofish_apis.py`, `goofish_live.py`, `utils/goofish_utils.py`, `static/goofish_js_version_2.js` |
+| **Cookies file** | `~/.xianyu_cookies_new.txt` | **Must be semicolon-separated `key=value` format**, NOT JSON. See pitfall below. |
+| **Token valid** | Run `xianyu_bot.py cron` | Verifies cookies → token → API connectivity. |
+
+**⚠️ Cookies format pitfall:** `trans_cookies()` in `goofish_utils.py` parses cookies by splitting on `"; "` and expects `key1=val1; key2=val2` format. If cookies are saved as JSON (`{"key": "val"}`), the API call will fail with an opaque cookie-parsing error. Convert JSON cookies to `key=value; key=value` format before saving. See `references/cookies-format-fix.md` for the exact conversion script.
+
+### Running Modes
+
+The xianyu_bot.py has two distinct modes — know which one you're using:
+
+| Mode | Command | Purpose | Duration |
+|------|---------|---------|----------|
+| **cron** | `python3.12 xianyu_bot.py cron` | Health check: validate token, report state. Does NOT poll messages. | ~3s, exits |
+| **ws** | `python3.12 xianyu_bot.py ws` | WebSocket listener: real-time message polling, deal-signal detection, auto-reply. | Long-running daemon |
+
+**For cron jobs (every 15-30 min):** Run `cron` mode for connectivity health check. The ws listener should already be running as a background daemon — cron mode just verifies it's healthy.
+
+**To start real-time message handling:** Launch the ws listener as a daemon:
+```bash
+cd ~/xianyu_agent && nohup .venv/bin/python3 ~/.hermes/molin/bots/xianyu_bot.py ws > ~/.hermes/xianyu_bot/ws.log 2>&1 &
+```
+
 ### Overview
 
 This skill encodes the Molin XianyuListener v6.6 architecture as an agent-executable workflow. You act as the Xianyu message-processing pipeline: poll for incoming messages, maintain per-conversation memory, detect buy/refund signals in buyer messages, and route each message through the appropriate response pipeline.
@@ -389,9 +418,83 @@ Requires `OPENROUTER_API_KEY` in environment. Falls back to keyword-matching tem
 
 ---
 
-## 6. AUTOMATION PATTERN — 轮询自动化模式
+## 5. AUTOMATION PATTERN — 运行模式
 
-### Cron Job Mode (30-minute intervals)
+### Two-Tier Architecture
+
+闲鱼自动化采用双层架构。消息只能通过 WebSocket 获取，闲鱼 REST API 不提供消息端点。
+
+### Tier 1: WebSocket 监听模式（实时消息处理）
+
+这是**唯一能检测并回复消息**的模式。必须作为常驻守护进程运行。
+
+```
+启动: cd ~/xianyu_agent && python3.12 ~/Molin-OS/bots/xianyu_bot.py ws
+
+WebSocket 生命周期:
+    1. 初始化 API (cookies → trans_cookies → token → device_id)
+    2. 连接 wss://wss-goofish.dingtalk.com/
+    3. 注册 + 同步状态初始化
+    4. 循环接收消息:
+        a. /s/chat → 新消息 → AI 生成回复(千问 qwen-plus) → WS 发回闲鱼 → 飞书通知
+        b. /s/sync → ACK 回复
+        c. /!    → 心跳(每 15 秒发送)
+    5. 断开 → 5 秒后自动重连
+    6. Token 每 600 秒自动刷新
+```
+
+WS 模式功能：实时消息检测、AI 自动回复、飞书卡片通知、自动重连。
+
+### Tier 2: Cron 巡检模式（健康检查）
+
+Cron 只能验证 API 连通性和汇报统计，**不能拉取消息**。
+
+```
+启动: python3.12 ~/Molin-OS/bots/xianyu_bot.py cron
+功能: Token 验证 + 读取状态文件汇报统计
+限制: 无消息检测能力，无自动回复能力
+```
+
+巡检报告必须遵循 feishu-message-formatter cron 模板（纯文本 + emoji + ━━━ 分隔，禁止 Markdown）。
+
+### 治理级别映射
+
+| 操作 | 级别 | 说明 |
+|------|------|------|
+| AI 自动回复（正常消息） | L0 自动 | 千问生成回复，直接通过 WS 发回闲鱼 |
+| 首次联系通知 | L1 通知 | 发送飞书卡片告知有新买家 |
+| 成交信号 / BD 报价 | L2 审批 | 需要老板确认价格/承诺后报价 |
+| 退款/投诉 | L2 审批 | 绝不自动回复，上报等待老板决策 |
+| 涉及真实现金/支付 | L4 禁止 | 直接拒绝 |
+
+### Polling Loop (30-second interval)
+
+In the Hermes agent context, Xianyu automation uses two tiers:
+
+**Tier 1: WS Listener (long-running daemon)**
+```
+cd ~/xianyu_agent && .venv/bin/python3 ~/.hermes/molin/bots/xianyu_bot.py ws
+```
+- Connects to Xianyu WebSocket for real-time message events
+- Runs deal-signal detection on every incoming message
+- Auto-replies via LLM (DeepSeek) or fallback templates
+- Sends Feishu notifications for L2 escalations
+- This is the **actual message processor** — must run as background daemon
+
+**Tier 2: Cron Health Check (every 15-30 min)**
+```
+cd ~/xianyu_agent && .venv/bin/python3 ~/.hermes/molin/bots/xianyu_bot.py cron
+```
+- Validates Xianyu token is still fresh
+- Reports `messages_handled` / `replies_sent` from state.json
+- Alerts if token expired or cookies missing
+- Does NOT poll messages — just verifies the WS listener is healthy
+
+> See `references/cookies-format-fix.md` for the cookies JSON→semicolon conversion pitfall.
+
+### Production Polling Loop (reference)
+
+In full production (Redis-backed, not current agent mode):
 
 When running as a scheduled cron job (no interactive user), the agent MUST first perform the pre-flight health check (Section 0), then attempt message fetching only if the API is ready.
 
@@ -598,7 +701,8 @@ Additional state files:
 When processing Xianyu messages as the agent, follow this exact order:
 
 1. **Load state:** If `~/.hermes/state/xianyu_conversations.json` exists, load it into conversation memory.
-2. **For each incoming message:**
+2. **Verify connectivity (cron mode):** Run `xianyu_bot.py cron` to validate token. If it fails with a cookie-parsing error, the cookies file is likely in JSON format — convert to `key=value; key=value` (see `references/cookies-format-fix.md`).
+3. **For each incoming message:**
    - [ ] Derive `conversation_id` (use native ID or `{from_user}:{item_id}`)
    - [ ] Check `is_first_contact(conversation_id)`
    - [ ] Run deal signal detection (refund keywords first, then buy keywords)
@@ -740,14 +844,110 @@ Key rules:
 | `~/.hermes/state/xianyu_cron_report_latest.json` | Full structured report (api_connected, blockers, resolved, stats) |
 | `~/.hermes/xianyu_bot/activity.log` | Appended timestamped log line |
 | `~/.hermes/xianyu_bot/state.json` | Cumulative counters (messages_handled, replies_sent) |
-| `~/.hermes/state/xianyu_conversations.json` | Per-conversation memory (only when messages processed) |
+## 6. CRON MODE VS WEBSOCKET MODE — 两种运行模式
 
-This skill is derived from `/integrations/xianyu/listener.py` in the Molin AI Intelligent System. In production:
-- Messages are queued via **Redis** (`xianyu:incoming_queue` and `xianyu:processed` pub/sub)
-- The listener runs as an **async coroutine** with `asyncio.sleep(30)`
-- The `XianyuListener` class is a **singleton** accessed via `get_xianyu_listener()`
-- Logging uses **loguru** at INFO/ERROR levels
+闲鱼消息系统有两种截然不同的运行模式，混用会导致功能缺失。
 
-For the agent, these are replaced with equivalent in-session patterns (described in Section 5) without requiring Redis or async infrastructure.
+### WebSocket 模式（实时处理）
+
+消息通过 WebSocket 长连接实时推送。这是**唯一能真正检测和回复消息**的模式。
+
+```
+启动: cd ~/xianyu_agent && python3.12 bots/xianyu_bot.py ws
+特点: 常驻进程，断线自动重连，AI 自动回复（千问 qwen-plus）
+消息流: WebSocket (/s/chat) → 飞书通知 → AI 生成回复 → WebSocket 发回闲鱼
+```
+
+**WebSocket 模式功能：**
+- 实时检测买家新消息
+- AI 自动回复（千问 qwen-plus，扮演卖家宋玉）
+- 飞书通知（卡片+文本）
+- 自动 Token 刷新（每 600 秒）
+- 断线自动重连
+
+### Cron 模式（健康检查）
+
+Cron 只能检查 API 连通性和运行状态。**不能拉取未读消息**，因为闲鱼 REST API 不提供消息端点（所有 `/imweb/im/*` 路径返回 404）。
+
+```
+cron 调用: python3.12 bots/xianyu_bot.py cron
+功能: Token 验证 + 状态汇报
+限制: 无消息检测能力，无自动回复能力
+```
+
+**Cron 巡检报告格式**（遵循 feishu-message-formatter）：
+- 统计项：新消息数、自动回复数、成交信号数、待审批数
+- 状态项：API 连通、Cookies 有效、WS 监听状态、依赖状态
+- 当 WS 监听未运行时必须标注 ⚠️ 阻塞项
+
+### 治理级别映射
+
+| 操作 | 级别 | 说明 |
+|------|------|------|
+| AI 自动回复（正常消息） | L0 自动 | 千问生成回复，直接通过 WS 发回闲鱼 |
+| 首次联系通知 | L1 通知 | 发送飞书卡片告知有新买家 |
+| 成交信号 / BD 报价 | L2 审批 | 需要老板确认价格/承诺后报价 |
+| 退款/投诉 | L2 审批 | 绝不自动回复，上报等待老板决策 |
+| 涉及真实现金/支付 | L4 禁止 | 直接拒绝 |
+
+---
+
+## 7. DEPENDENCIES — 环境依赖
+
+运行 xianyu_bot.py 需要以下 Python 包（Python 3.12+）：
+
+```
+# 核心依赖
+pip install --break-system-packages \
+    websockets \
+    requests \
+    pydantic \
+    blackboxprotobuf \
+    typing_extensions
+
+# pyexecjs 运行环境需要 Node.js（用于闲鱼签名算法）
+# goofish_js_version_2.js 需放在 xianyu_agent/static/ 目录
+```
+
+**常见缺失修复：**
+```bash
+pip3.12 install --break-system-packages blackboxprotobuf pydantic typing_extensions
+```
+
+---
+
+## 8. PITFALLS — 常见坑
+
+| 坑 | 现象 | 解决 |
+|----|------|------|
+| **REST API 无消息端点** | 任何 `/imweb/im/*` GET 请求返回 404 | 消息只能通过 WebSocket 获取，不能用 REST 轮询 |
+| **cron 误以为能检测消息** | Cron 报告新消息始终为 0 | Cron 仅是健康检查，消息检测必须启动 WS 模式 |
+| **WS 监听未运行** | 状态文件 `messages_handled=0` 持续不变 | `python3.12 bots/xianyu_bot.py ws` 启动监听 |
+| **`ModuleNotFoundError: blackboxprotobuf`** | 导入 goofish_utils 时报错 | 安装缺失依赖（见 Section 7） |
+| **`ModuleNotFoundError: pydantic`** | 导入 goofish_apis 时报错 | `pip3.12 install --break-system-packages pydantic` |
+| **Cookies JSON 格式** | `trans_cookies()` 要求 `key=value; key=value` 格式 | 如果 cookies 存为 JSON，需先转换为分号分隔格式 |
+| **Token 过期** | API 返回非 SUCCESS 状态 | 重新扫码登录获取新的 cookies |
+
+---
+
+## Reference: Production Integration
+
+实际的闲鱼自动化实现位于：
+
+| 文件 | 用途 |
+|------|------|
+| `~/Molin-OS/bots/xianyu_bot.py` | 主机器人：WS 监听 + 飞书通知 + AI 自动回复 + cron 检测 |
+| `~/Molin-OS/bots/xianyu_enhanced.py` | 增强模块：浏览触达 + 催评 + 动态定价 + 仪表盘 |
+| `~/Molin-OS/molib/xianyu/xianyu_helper.py` | 闲鱼工具：千问 AI + 图片生成 + 发布商品 |
+| `~/Molin-OS/molib/publish/xianyu.py` | 发布管线 |
+| `~/xianyu_agent/` | goofish SDK 目录（goofish_apis, utils, message） |
+
+状态文件位置：
+- `~/.hermes/xianyu_bot/state.json` — 消息处理统计
+- `~/.hermes/xianyu_bot/config.json` — 飞书通知配置
+- `~/.hermes/xianyu_bot/activity.log` — 运行日志
+- `~/.hermes/xianyu_bot/cookies.json` — Cookies 缓存
+- `~/.hermes/state/xianyu_cron_report_latest.json` — 最新 cron 巡检报告
+- `~/.xianyu_cookies_new.txt` — 闲鱼登录 Cookies
 
 The production bot scripts live at `~/.hermes/molin/bots/xianyu_bot.py` (WebSocket listener) and `xianyu_enhanced.py` (CH5 enhancements). See `references/setup.md` for full installation guide.

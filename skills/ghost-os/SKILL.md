@@ -1,8 +1,14 @@
 ---
 name: ghost-os
-description: 本机 GUI 自动化参考 — 基于 ghostwright/ghost-os (1.4K⭐)。AI Agent 全计算机控制，自学习工作流，原生 macOS 操作。墨维（运维）的本机自动化参考方案。
+description: 本机 GUI 自动化参考 — 基于 ghostwright/ghost-os (1.4K⭐)。AI Agent 全计算机控制，自学习工作流，原生
+  macOS 操作。墨维（运维）的本机自动化参考方案。
 version: 1.0.0
-tags: [gui-automation, macos, mcp, self-learning, workflow]
+tags:
+- gui-automation
+- macos
+- mcp
+- self-learning
+- workflow
 category: devops
 metadata:
   hermes:
@@ -13,6 +19,7 @@ metadata:
     language: Swift
     mcp_compatible: true
     molin_owner: 墨维（运维）
+min_hermes_version: 0.13.0
 ---
 
 # Ghost OS — 本机 GUI 自动化参考
