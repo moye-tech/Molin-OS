@@ -1,0 +1,367 @@
+# 线索转化SOP
+# 标准化线索转化和销售流程
+
+id: lead_conversion
+name: 线索转化标准化流程
+description: 从线索获取到成交转化的全流程管理
+category: sales
+version: "1.0"
+enabled: true
+owner: order_agency
+estimated_time_minutes: 240  # 4小时
+
+# 触发条件
+triggers:
+  - type: metric
+    metric: "new_leads"
+    operator: ">"
+    threshold: 10
+  - type: event
+    event: "lead_received"
+    source: ["ads", "website", "referral"]
+  - type: manual
+    command: "process_leads"
+  - type: keyword
+    keywords: ["线索", "转化", "销售", "成交", "跟进"]
+
+# 流程变量
+variables:
+  target_conversion_rate: 20.0  # 目标转化率百分比
+  max_lead_age_hours: 24  # 线索最大处理时间
+  qualification_score_threshold: 70  # 线索合格分数阈值
+  sales_team_size: 3
+  follow_up_sequence: ["immediate", "1h", "24h", "72h"]
+
+# 步骤定义
+steps:
+  # 步骤1: 线索接收与去重
+  - name: 线索接收与去重
+    type: automated
+    description: 接收新线索并进行去重处理
+    action: receive_and_dedupe_leads
+    parameters:
+      sources: ["api", "webhook", "csv_upload"]
+      dedupe_fields: ["email", "phone", "company"]
+      dedupe_window: "30d"
+    critical: true
+    timeout: 300  # 5分钟
+
+  # 步骤2: 线索评分与分级
+  - name: 线索评分与分级
+    type: automated
+    description: 根据线索质量进行评分和分级
+    action: score_and_grade_leads
+    parameters:
+      scoring_model: "lead_scoring_v2"
+      factors:
+        - demographic: 30
+        - behavior: 40
+        - engagement: 30
+      grades:
+        - name: "hot"
+          min_score: 85
+          priority: "immediate"
+        - name: "warm"
+          min_score: 70
+          priority: "high"
+        - name: "cold"
+          min_score: 50
+          priority: "medium"
+        - name: "unqualified"
+          min_score: 0
+          priority: "low"
+    depends_on: [0]  # 依赖步骤1
+
+  # 步骤3: 自动分配
+  - name: 自动分配
+    type: automated
+    description: 根据规则自动分配线索给销售代表
+    action: auto_assign_leads
+    parameters:
+      assignment_rules:
+        - rule: "round_robin"
+          enabled: true
+        - rule: "skill_based"
+          skills: ["enterprise", "smb", "technical"]
+        - rule: "workload_balanced"
+          max_leads_per_rep: 10
+      reassignment_timeout: 3600  # 1小时无人跟进重新分配
+    depends_on: [1]  # 依赖步骤2
+
+  # 步骤4: 合规检查
+  - name: 合规检查
+    type: automated
+    description: 检查线索合规性和数据隐私
+    action: compliance_check
+    parameters:
+      checks:
+        - type: "data_privacy"
+          regulations: ["gdpr", "ccpa", "pip"]
+        - type: "consent"
+          required: true
+          fields: ["marketing_consent", "data_processing_consent"]
+        - type: "blacklist"
+          lists: ["internal_blacklist", "external_suppression"]
+      auto_quarantine: true
+      quarantine_reasons: ["no_consent", "blacklisted", "invalid_data"]
+    depends_on: [1]  # 依赖步骤2
+    parallel_with: [2]  # 与自动分配并行
+
+  # 步骤5: 即时跟进（自动化）
+  - name: 即时跟进（自动化）
+    type: automated
+    description: 自动发送即时跟进消息
+    action: send_immediate_followup
+    parameters:
+      templates:
+        - channel: "email"
+          template: "lead_welcome"
+          delay: 0  # 立即发送
+        - channel: "sms"
+          template: "lead_sms_welcome"
+          delay: 300  # 5分钟后发送
+      personalization: true
+      tracking: true
+    depends_on: [3]  # 依赖自动分配
+    condition: "{{ steps.1.result.grade in ['hot', 'warm'] }}"
+
+  # 步骤6: 人工初次联系
+  - name: 人工初次联系
+    type: manual
+    description: 销售代表进行初次人工联系
+    instructions: |
+      1. 查看线索信息和评分
+      2. 准备个性化沟通内容
+      3. 通过电话或即时通讯工具联系
+      4. 记录沟通内容和结果
+    assigned_to: "{{ steps.2.result.assigned_rep }}"
+    estimated_time: 15  # 15分钟
+    depends_on: [4]  # 依赖合规检查
+    condition: "{{ steps.1.result.grade in ['hot', 'warm'] and steps.3.result.passed }}"
+    sla: 3600  # 1小时内必须完成
+
+  # 步骤7: 需求挖掘
+  - name: 需求挖掘
+    type: decision
+    description: 挖掘客户需求并确定产品匹配度
+    logic:
+      type: "needs_analysis"
+      questions:
+        - question: "预算范围"
+          importance: "high"
+        - question: "决策时间线"
+          importance: "high"
+        - question: "关键需求"
+          importance: "critical"
+        - question: "决策者"
+          importance: "medium"
+      qualification_criteria:
+        - criterion: "budget_adequate"
+          weight: 30
+        - criterion: "timeline_aligned"
+          weight: 25
+        - criterion: "need_match"
+          weight: 35
+        - criterion: "decision_maker_identified"
+          weight: 10
+    depends_on: [5]  # 依赖人工初次联系
+
+  # 步骤8: 方案演示与报价
+  - name: 方案演示与报价
+    type: manual
+    description: 提供定制化方案演示和报价
+    instructions: |
+      1. 根据需求准备定制化方案
+      2. 安排演示会议
+      3. 准备报价单
+      4. 回答客户疑问
+    assigned_to: "{{ steps.2.result.assigned_rep }}"
+    estimated_time: 60  # 60分钟
+    depends_on: [6]  # 依赖需求挖掘
+    condition: "{{ steps.6.result.qualification_score >= variables.qualification_score_threshold }}"
+    tools: ["presentation_tool", "quoting_system", "calendar"]
+
+  # 步骤9: 谈判与异议处理
+  - name: 谈判与异议处理
+    type: decision
+    description: 处理客户异议并进行价格谈判
+    logic:
+      type: "negotiation_engine"
+      common_objections:
+        - type: "price"
+          responses: ["value_proposition", "payment_terms", "bundling"]
+        - type: "timing"
+          responses: ["urgency_creation", "limited_offer", "implementation_timeline"]
+        - type: "competition"
+          responses: ["differentiation", "case_studies", "trial_offer"]
+      negotiation_rules:
+        - max_discount: 15  # 最大折扣百分比
+        - require_approval_above: 10
+        - bundle_options: true
+    depends_on: [7]  # 依赖方案演示
+
+  # 步骤10: 成交审批
+  - name: 成交审批
+    type: approval
+    description: 审批成交条件和特殊条款
+    approvers: ["sales_manager", "finance_controller"]
+    approval_type: "sequential"
+    min_approvals: 2
+    timeout: 7200  # 2小时
+    depends_on: [8]  # 依赖谈判
+    variables:
+      deal_size: "{{ steps.7.result.proposed_amount }}"
+      special_terms: "{{ steps.8.result.special_terms }}"
+
+  # 步骤11: 合同签署
+  - name: 合同签署
+    type: automated
+    description: 生成并发送合同进行电子签署
+    action: generate_and_send_contract
+    parameters:
+      template: "standard_sales_contract"
+      e_sign_provider: "docusign"
+      auto_reminder: true
+      reminder_schedule: ["24h", "72h", "168h"]
+    depends_on: [9]  # 依赖成交审批
+    condition: "{{ steps.9.result.approved }}"
+
+  # 步骤12: 支付处理
+  - name: 支付处理
+    type: automated
+    description: 处理首次支付和开票
+    action: process_payment
+    parameters:
+      payment_methods: ["bank_transfer", "credit_card", "alipay", "wechat_pay"]
+      invoice_generation: true
+      receipt_auto_send: true
+    depends_on: [10]  # 依赖合同签署
+    condition: "{{ steps.10.result.signed }}"
+
+  # 步骤13: 客户入职
+  - name: 客户入职
+    type: automated
+    description: 自动执行客户入职流程
+    action: customer_onboarding
+    parameters:
+      welcome_sequence: true
+      account_setup: true
+      training_scheduled: true
+      success_manager_assigned: true
+    depends_on: [11]  # 依赖支付处理
+
+  # 步骤14: 转化分析与反馈
+  - name: 转化分析与反馈
+    type: automated
+    description: 分析转化过程并收集反馈
+    action: analyze_conversion
+    parameters:
+      metrics: ["conversion_rate", "sales_cycle_length", "deal_size", "win_reason", "loss_reason"]
+      feedback_survey: true
+      kpi_calculation: true
+    depends_on: [12]  # 依赖客户入职
+
+# 成功标准
+success_criteria:
+  - metric: "conversion_rate"
+    target: "{{ variables.target_conversion_rate }}"
+    operator: ">="
+    timeframe: "30d"
+  - metric: "average_sales_cycle"
+    target: 7  # 天
+    operator: "<="
+  - metric: "customer_satisfaction_score"
+    target: 8.0  # 10分制
+    operator: ">="
+  - metric: "lead_response_time"
+    target: 1  # 小时
+    operator: "<="
+
+# 合规与质量控制
+compliance_qa:
+  enabled: true
+  checks:
+    - type: "call_recording"
+      sample_rate: 20  # 抽查20%的通话录音
+    - type: "email_compliance"
+      check_all: true
+    - type: "data_privacy"
+      audit_trail: true
+  approval_required_for:
+    - "special_discounts > 10%"
+    - "custom_contract_terms"
+    - "enterprise_deals > 50000"
+
+# 知识库更新
+knowledge_base:
+  enabled: true
+  update_triggers:
+    - "new_objection_handled"
+    - "successful_negotiation_tactic"
+    - "conversion_insight"
+    - "lost_deal_analysis"
+  storage_backends:
+    - "vector_db"
+    - "sqlite"
+  sharing:
+    - teams: ["sales", "marketing", "product"]
+      access_level: "read_write"
+    - teams: ["management"]
+      access_level: "read_only"
+
+# 失败处理与升级
+failure_handling:
+  retry_policy:
+    max_retries: 3
+    retry_delay: 3600  # 1小时
+  escalation_path:
+    - level: "senior_sales_rep"
+      threshold: "lead_age > 24h"
+    - level: "sales_manager"
+      threshold: "deal_stalled > 72h"
+    - level: "sales_director"
+      threshold: "strategic_account_at_risk"
+  win_back_strategies:
+    - action: "special_offer"
+      condition: "price_objection"
+    - action: "executive_sponsor"
+      condition: "strategic_account"
+    - action: "product_demo"
+      condition: "feature_mismatch"
+
+# 通知与提醒
+notifications:
+  realtime_alerts:
+    - event: "hot_lead_assigned"
+      channels: ["feishu", "sms"]
+      urgency: "high"
+    - event: "deal_at_risk"
+      channels: ["feishu", "email"]
+      urgency: "medium"
+    - event: "sla_breach_imminent"
+      channels: ["feishu"]
+      urgency: "high"
+  daily_digest:
+    channels: ["feishu", "email"]
+    metrics: ["leads_received", "conversions_today", "pipeline_value"]
+  weekly_report:
+    channels: ["email"]
+    recipients: ["sales_team", "management"]
+
+# 绩效追踪
+performance_tracking:
+  individual_metrics:
+    - "conversion_rate"
+    - "average_deal_size"
+    - "sales_cycle_length"
+    - "customer_satisfaction"
+  team_metrics:
+    - "team_conversion_rate"
+    - "pipeline_velocity"
+    - "win_loss_ratio"
+    - "forecast_accuracy"
+  incentives:
+    - type: "commission"
+      calculation: "revenue * commission_rate"
+    - type: "bonus"
+      criteria: ["overachievement", "high_cs_score", "short_sales_cycle"]

@@ -1,0 +1,138 @@
+{
+  "dashboard": {
+    "title": "墨麟AI智能系统 KPI仪表板",
+    "description": "墨麟AI智能系统 v6.6关键绩效指标监控",
+    "tags": ["hermes", "kpi", "business", "monitoring"],
+    "style": "dark",
+    "timezone": "browser",
+    "editable": true,
+    "refresh": "30s",
+    "time": {
+      "from": "now-7d",
+      "to": "now"
+    },
+    "timepicker": {
+      "refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"],
+      "time_options": ["5m", "15m", "1h", "6h", "12h", "24h", "2d", "7d", "30d"]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "收入指标",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0},
+        "targets": [
+          {
+            "datasource": {"type": "frser-sqlite-datasource", "uid": "${DS_HERMES-SQLITE}"},
+            "rawSql": "SELECT SUM(amount) as revenue FROM deals WHERE created_at >= datetime('now', '-1 day')",
+            "format": "table"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyCNY",
+            "decimals": 2,
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "orange", "value": 1000},
+                {"color": "green", "value": 5000}
+              ]
+            }
+          }
+        },
+        "options": {
+          "reduceOptions": {"values": false, "calcs": ["lastNotNull"]},
+          "orientation": "horizontal",
+          "textMode": "value",
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto"
+        }
+      },
+      {
+        "id": 2,
+        "title": "用户增长",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 6, "x": 6, "y": 0},
+        "targets": [
+          {
+            "datasource": {"type": "frser-sqlite-datasource", "uid": "${DS_HERMES-SQLITE}"},
+            "rawSql": "SELECT COUNT(*) as users FROM users WHERE created_at >= datetime('now', '-1 day')",
+            "format": "table"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "none",
+            "decimals": 0,
+            "color": {"mode": "palette-classic"}
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "决策成功率",
+        "type": "gauge",
+        "gridPos": {"h": 8, "w": 6, "x": 12, "y": 0},
+        "targets": [
+          {
+            "datasource": {"type": "frser-sqlite-datasource", "uid": "${DS_HERMES-SQLITE}"},
+            "rawSql": "SELECT ROUND(100.0 * SUM(CASE WHEN action = 'GO' THEN 1 ELSE 0 END) / COUNT(*), 2) as success_rate FROM decisions WHERE created_at >= datetime('now', '-7 day')",
+            "format": "table"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "orange", "value": 50},
+                {"color": "green", "value": 80}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "API成本与收入比",
+        "type": "barchart",
+        "gridPos": {"h": 10, "w": 18, "x": 0, "y": 8},
+        "targets": [
+          {
+            "datasource": {"type": "frser-sqlite-datasource", "uid": "${DS_HERMES-SQLITE}"},
+            "rawSql": "SELECT date(created_at) as date, SUM(cost) as api_cost FROM model_logs WHERE created_at >= datetime('now', '-7 day') GROUP BY date(created_at)",
+            "format": "table"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyCNY",
+            "decimals": 2
+          }
+        }
+      }
+    ],
+    "version": 1,
+    "links": [
+      {
+        "title": "墨麟API文档",
+        "url": "http://localhost:8000/docs",
+        "targetBlank": true
+      },
+      {
+        "title": "Grafana官方文档",
+        "url": "https://grafana.com/docs/",
+        "targetBlank": true
+      }
+    ]
+  },
+  "folderTitle": "墨麟AI智能系统",
+  "message": "Hermes KPI仪表板已创建",
+  "overwrite": true
+}

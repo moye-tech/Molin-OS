@@ -1,0 +1,73 @@
+id: bd_development
+name: 商务拓展标准化流程
+description: 从客户分析到签约合作的全流程
+category: bd
+version: "1.0"
+enabled: true
+owner: bd_agency
+estimated_time_minutes: 90
+
+triggers:
+  - type: keyword
+    keywords: ["合作", "报价", "谈判", "BD", "外包", "客户", "签约"]
+
+variables:
+  min_deal_probability: 0.5
+  max_negotiation_rounds: 3
+  target_response_time_hours: 24
+
+steps:
+  - name: 客户分析
+    type: automated
+    description: 分析客户背景和合作机会
+    action: call_agency
+    parameters:
+      agency: bd_agency
+      task_type: client_analysis
+    critical: true
+    timeout: 600
+
+  - name: 报价方案制定
+    type: automated
+    description: 根据客户需求制定报价
+    action: call_agency
+    parameters:
+      agency: bd_agency
+      task_type: quotation
+    depends_on: [0]
+
+  - name: 谈判策略制定
+    type: automated
+    description: 制定谈判策略和底线
+    action: call_agency
+    parameters:
+      agency: bd_agency
+      task_type: negotiation_strategy
+    depends_on: [1]
+
+  - name: 合作方案评审
+    type: approval
+    description: 审批合作方案
+    approvers: ["bd_manager", "finance_manager"]
+    approval_type: "sequential"
+    timeout: 7200
+    depends_on: [2]
+
+  - name: 跟进计划
+    type: automated
+    description: 创建客户跟进计划
+    action: call_agency
+    parameters:
+      agency: bd_agency
+      task_type: followup_plan
+    depends_on: [3]
+
+success_criteria:
+  - metric: "deal_probability"
+    target: "{{ variables.min_deal_probability }}"
+    operator: ">="
+
+notifications:
+  on_completion:
+    channels: ["feishu"]
+    template: "bd_completed"

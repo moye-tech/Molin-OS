@@ -1,0 +1,38 @@
+name: 财务月度复盘与预算规划
+description: 每月1日自动执行的全局财务审计与下月预算规划流程
+version: 1.0
+agency: finance
+type: cron
+schedule: "0 0 1 * *"
+status: active
+steps:
+  - id: cost_audit
+    name: 全局成本核算
+    type: automated
+    worker: cost_analyst
+    description: 汇总计算上月所有的API开销、运营成本和系统基础设施费用。
+    timeout: 300
+    
+  - id: roi_calculation
+    name: 投资回报分析
+    type: automated
+    worker: roi_calculator
+    description: 关联上月的所有广告投放数据和私域转化数据，计算综合ROI和各渠道ROAS。
+    depends_on: [cost_audit]
+    timeout: 300
+    
+  - id: budget_planning
+    name: 下月预算规划
+    type: automated
+    worker: budget_monitor
+    description: 基于上月的ROI表现和当前的系统结余，动态调整各子公司（尤其是Ads）的下月可用预算。
+    depends_on: [roi_calculation]
+    timeout: 300
+    
+  - id: monthly_report
+    name: 生成财务简报
+    type: approval
+    worker: report_generator
+    description: 生成完整的Markdown格式月度财务分析简报，并提交CEO审批。
+    depends_on: [budget_planning]
+    timeout: 600

@@ -1,0 +1,277 @@
+# 广告优化SOP
+# 标准化广告投放优化流程
+
+id: ads_optimization
+name: 广告投放优化标准化流程
+description: 从数据分析到持续优化的广告投放全流程
+category: ads
+version: "1.0"
+enabled: true
+owner: ads_agency
+estimated_time_minutes: 90
+
+# 触发条件
+triggers:
+  - type: metric
+    metric: "cac"
+    operator: ">"
+    threshold: 100
+  - type: metric
+    metric: "roi"
+    operator: "<"
+    threshold: 1.5
+  - type: manual
+    command: "optimize_ads"
+  - type: keyword
+    keywords: ["广告优化", "优化广告", "提高ROI", "降低CAC"]
+
+# 流程变量
+variables:
+  target_cac: 80.0
+  target_roi: 3.0
+  optimization_budget: 1000
+  timeframe: "7d"
+  channels: ["search", "social", "display"]
+
+# 步骤定义
+steps:
+  # 步骤1: 数据收集与分析
+  - name: 数据收集与分析
+    type: automated
+    description: 收集广告平台数据并进行初步分析
+    action: call_agency
+    parameters:
+      agency: ads_agency
+      task_type: daily_report
+      timeframe: "{{ variables.timeframe }}"
+    critical: true
+    timeout: 600  # 10分钟
+
+  # 步骤2: 问题诊断
+  - name: 问题诊断
+    type: decision
+    description: 诊断广告表现问题根源
+    logic:
+      type: "rule_based"
+      rules:
+        - condition: "cac > variables.target_cac * 1.5"
+          diagnosis: "获客成本过高"
+          priority: "high"
+        - condition: "roi < 1.0"
+          diagnosis: "投资回报率为负"
+          priority: "high"
+        - condition: "ctr < 1.0"
+          diagnosis: "点击率过低"
+          priority: "medium"
+        - condition: "cvr < 3.0"
+          diagnosis: "转化率过低"
+          priority: "medium"
+        - condition: "creative_fatigue > 0.7"
+          diagnosis: "创意疲劳"
+          priority: "low"
+    depends_on: [0]  # 依赖步骤1
+
+  # 步骤3: 优化策略制定
+  - name: 优化策略制定
+    type: automated
+    description: 基于诊断结果制定优化策略
+    action: call_agency
+    parameters:
+      agency: ads_agency
+      task_type: optimize
+      diagnosis: "{{ steps.1.result.diagnosis }}"
+      priority: "{{ steps.1.result.priority }}"
+    depends_on: [1]  # 依赖步骤2
+
+  # 步骤4: 策略审批
+  - name: 策略审批
+    type: approval
+    description: 审批优化策略和预算
+    approvers: ["ads_manager", "finance_manager"]
+    approval_type: "sequential"
+    min_approvals: 2
+    timeout: 3600  # 1小时
+    depends_on: [2]  # 依赖步骤3
+    variables:
+      budget_required: "{{ steps.2.result.estimated_budget | default(variables.optimization_budget) }}"
+
+  # 步骤5: A/B测试执行
+  - name: A/B测试执行
+    type: automated
+    description: 执行A/B测试验证优化效果
+    action: call_agency
+    parameters:
+      agency: ads_agency
+      task_type: creative_analysis
+      test_variants: 3
+      test_duration: "48h"
+    depends_on: [3]  # 依赖步骤4
+    condition: "{{ steps.3.result.approved }}"
+
+  # 步骤6: 出价策略调整
+  - name: 出价策略调整
+    type: automated
+    description: 调整广告出价策略
+    action: call_api
+    parameters:
+      endpoint: "/api/ads/bid_strategy"
+      method: "POST"
+      data:
+        strategy: "{{ steps.2.result.recommended_bid_strategy | default('tCPA') }}"
+        target: "{{ variables.target_cac }}"
+    depends_on: [3]  # 依赖步骤4
+    condition: "{{ steps.3.result.approved }}"
+    parallel_with: [4]  # 与A/B测试并行
+
+  # 步骤7: 受众定向优化
+  - name: 受众定向优化
+    type: automated
+    description: 优化广告受众定向
+    action: call_api
+    parameters:
+      endpoint: "/api/ads/targeting"
+      method: "POST"
+      data:
+        channels: "{{ variables.channels }}"
+        lookalike_expansion: true
+        exclusion_lists: ["existing_customers"]
+    depends_on: [3]  # 依赖步骤4
+    condition: "{{ steps.3.result.approved }}"
+    parallel_with: [4, 5]  # 与其他优化步骤并行
+
+  # 步骤8: 实时监控与调整
+  - name: 实时监控与调整
+    type: automated
+    description: 实时监控优化效果并进行调整
+    action: monitor_optimization
+    parameters:
+      metrics: ["cac", "roi", "ctr", "cvr", "impressions", "spend"]
+      frequency: "30m"
+      alert_thresholds:
+        cac: "{{ variables.target_cac * 1.2 }}"
+        roi: "{{ variables.target_roi * 0.8 }}"
+    depends_on: [4, 5, 6]  # 依赖A/B测试、出价调整、受众优化
+    delay_after: 1800  # 30分钟后开始监控
+
+  # 步骤9: 优化效果评估
+  - name: 优化效果评估
+    type: decision
+    description: 评估优化效果并决定下一步行动
+    logic:
+      type: "performance_review"
+      criteria:
+        - metric: "cac"
+          improvement: "decrease"
+          threshold: 10  # 至少降低10%
+        - metric: "roi"
+          improvement: "increase"
+          threshold: 20  # 至少提高20%
+      decisions:
+        - condition: "all_criteria_met"
+          action: "scale_optimization"
+          message: "优化效果显著，建议扩大应用范围"
+        - condition: "partial_criteria_met"
+          action: "continue_testing"
+          message: "部分指标达标，建议继续测试"
+        - condition: "no_criteria_met"
+          action: "reassess_strategy"
+          message: "优化效果不佳，建议重新评估策略"
+    depends_on: [7]  # 依赖实时监控
+    delay_after: 86400  # 24小时后评估
+
+  # 步骤10: 报告生成与归档
+  - name: 报告生成与归档
+    type: automated
+    description: 生成优化报告并归档到知识库
+    action: generate_optimization_report
+    parameters:
+      format: "detailed"
+      include_data: true
+      store_to_kb: true
+    depends_on: [8]  # 依赖效果评估
+
+# 成功标准
+success_criteria:
+  - metric: "cac"
+    target: "{{ variables.target_cac }}"
+    operator: "<="
+    timeframe: "7d"
+  - metric: "roi"
+    target: "{{ variables.target_roi }}"
+    operator: ">="
+    timeframe: "7d"
+  - metric: "optimization_roi"
+    target: 200  # 优化投入产出比
+    operator: ">="
+
+# 预算控制
+budget_controls:
+  total_budget: "{{ variables.optimization_budget }}"
+  allocation:
+    testing: 30  # 30%用于测试
+    media: 60    # 60%用于媒体投放
+    contingency: 10  # 10%应急
+  alerts:
+    - threshold: 70
+      action: "notify"
+      recipients: ["ads_manager"]
+    - threshold: 90
+      action: "pause"
+      requires_approval: true
+
+# 合规检查
+compliance:
+  enabled: true
+  checks:
+    - type: "ad_policy"
+      platforms: "{{ variables.channels }}"
+      automated: true
+    - type: "data_privacy"
+      regulations: ["gdpr", "ccpa", "pip"]
+    - type: "financial"
+      max_spend_per_day: 5000
+  approval_required: true
+  approvers: ["compliance_officer"]
+
+# 知识库更新
+knowledge_base:
+  enabled: true
+  update_triggers:
+    - "optimization_completed"
+    - "new_best_practice"
+    - "failure_analysis"
+  storage_backends:
+    - "vector_db"
+    - "sqlite"
+  tags: ["advertising", "optimization", "best_practices"]
+
+# 失败处理
+failure_handling:
+  retry_policy:
+    max_retries: 2
+    retry_delay: 900  # 15分钟
+  escalation_path:
+    - level: "team_lead"
+      threshold: 2
+    - level: "department_head"
+      threshold: 3
+  fallback_actions:
+    - action: "revert_changes"
+      condition: "performance_degradation > 20%"
+    - action: "manual_intervention"
+      condition: "automated_optimization_failed"
+
+# 通知配置
+notifications:
+  on_start:
+    channels: ["feishu"]
+    template: "ads_optimization_started"
+  on_milestone:
+    channels: ["feishu"]
+    milestones: ["strategy_approved", "testing_completed", "evaluation_done"]
+  on_completion:
+    channels: ["feishu", "email"]
+    template: "ads_optimization_completed"
+  on_failure:
+    channels: ["feishu", "email", "sms"]
+    escalation_level: 2

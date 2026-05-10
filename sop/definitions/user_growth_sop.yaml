@@ -1,0 +1,197 @@
+# 用户增长SOP
+# 标准化用户获取和激活流程
+
+id: user_growth
+name: 用户增长标准化流程
+description: 从获客到激活的用户增长全流程
+category: growth
+version: "1.0"
+enabled: true
+owner: growth_agency
+estimated_time_minutes: 180
+
+# 触发条件
+triggers:
+  - type: metric
+    metric: "daily_new_users"
+    operator: "<"
+    threshold: 50
+  - type: manual
+    command: "start_growth_campaign"
+
+# 流程变量
+variables:
+  target_audience: "tech_professionals"
+  budget: 5000
+  campaign_duration: "7d"
+  kpi_target_cvr: 3.0  # 转化率目标
+
+# 步骤定义
+steps:
+  # 步骤1: 市场分析
+  - name: 市场分析
+    type: automated
+    description: 分析目标市场和竞品
+    action: market_analysis
+    parameters:
+      target_audience: "{{ variables.target_audience }}"
+      competitors: 5
+      timeframe: "30d"
+    critical: true
+
+  # 步骤2: 渠道选择
+  - name: 渠道选择
+    type: decision
+    description: 选择最佳获客渠道
+    logic:
+      type: "cost_effective"
+      criteria: ["cpa", "quality", "scale"]
+    options:
+      - name: "搜索引擎广告"
+        id: "search_ads"
+        estimated_cpa: 15.0
+      - name: "社交媒体广告"
+        id: "social_ads"
+        estimated_cpa: 8.5
+      - name: "内容营销"
+        id: "content_marketing"
+        estimated_cpa: 5.0
+    depends_on: [0]
+
+  # 步骤3: 创意制作
+  - name: 创意制作
+    type: automated
+    description: 制作广告创意和素材
+    action: create_ad_creatives
+    parameters:
+      formats: ["image", "video", "carousel"]
+      count: 3
+      style: "{{ variables.target_audience }}"
+    depends_on: [1]
+    delay_after: 5
+
+  # 步骤4: 预算分配
+  - name: 预算分配
+    type: approval
+    description: 审批广告预算分配
+    approvers: ["growth_manager", "finance"]
+    approval_type: "sequential"  # 顺序审批
+    min_approvals: 2
+    timeout: 7200  # 2小时
+    depends_on: [2]
+
+  # 步骤5: 广告投放
+  - name: 广告投放
+    type: automated
+    description: 执行广告投放
+    action: launch_campaign
+    parameters:
+      channels: "{{ steps.1.result.selected_option.id }}"
+      budget: "{{ variables.budget }}"
+      duration: "{{ variables.campaign_duration }}"
+    depends_on: [3]
+    condition: "{{ steps.3.result.approved }}"
+
+  # 步骤6: 实时监控
+  - name: 实时监控
+    type: automated
+    description: 实时监控广告表现
+    action: monitor_campaign
+    parameters:
+      metrics: ["impressions", "clicks", "conversions", "cpa", "roas"]
+      frequency: "15m"
+      alerts: true
+    depends_on: [4]
+    delay_after: 300  # 5分钟后开始监控
+
+  # 步骤7: A/B测试
+  - name: A/B测试
+    type: automated
+    description: 运行A/B测试优化表现
+    action: run_ab_test
+    parameters:
+      variants: 3
+      test_duration: "48h"
+      confidence_level: 95
+    depends_on: [5]
+    condition: "{{ steps.5.result.impressions > 1000 }}"
+
+  # 步骤8: 优化调整
+  - name: 优化调整
+    type: decision
+    description: 基于数据优化广告
+    logic:
+      type: "performance_based"
+      rules:
+        - condition: "cpa > 20"
+          action: "pause_adset"
+        - condition: "ctr < 1.0"
+          action: "refresh_creative"
+        - condition: "cvr < variables.kpi_target_cvr"
+          action: "adjust_targeting"
+    depends_on: [6, 7]  # 依赖步骤6和7
+
+  # 步骤9: 用户激活
+  - name: 用户激活
+    type: automated
+    description: 激活新用户提高留存
+    action: user_activation
+    parameters:
+      sequence: ["welcome_email", "onboarding", "first_task", "reward"]
+      timeframe: "7d"
+    depends_on: [4]  # 依赖广告投放
+    parallel_with: [5, 6, 7, 8]  # 与监控、测试、优化并行
+
+  # 步骤10: 效果报告
+  - name: 效果报告
+    type: automated
+    description: 生成效果报告和分析
+    action: generate_report
+    parameters:
+      metrics: ["total_users", "cac", "ltv", "roi", "retention_rate"]
+      format: "dashboard"
+      recipients: ["growth_team", "management"]
+    depends_on: [8, 9]  # 依赖优化和激活
+
+# 成功标准
+success_criteria:
+  - metric: "cac"
+    target: 12.0
+    operator: "<="
+  - metric: "day1_retention"
+    target: 40.0  # 百分比
+    operator: ">="
+  - metric: "roi"
+    target: 150.0  # 百分比
+    operator: ">="
+
+# 预算控制
+budget_controls:
+  daily_limit: 1000
+  alerts:
+    - threshold: 80  # 百分比
+      action: "notify"
+    - threshold: 100
+      action: "pause"
+  auto_optimization: true
+
+# 合规检查
+compliance:
+  enabled: true
+  checks:
+    - type: "data_privacy"
+      regulations: ["gdpr", "pip"]
+    - type: "ad_policy"
+      platforms: ["google", "facebook", "tiktok"]
+    - type: "financial"
+      threshold: 10000
+
+# 知识库更新
+knowledge_base:
+  enabled: true
+  update_triggers:
+    - "new_insights"
+    - "best_practices"
+    - "failure_analysis"
+  storage: "vector_db"
+  embedding_model: "bge-large-zh"

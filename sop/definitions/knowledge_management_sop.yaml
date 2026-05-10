@@ -1,0 +1,69 @@
+id: knowledge_management
+name: 知识管理标准化流程
+description: 从知识提取到归档沉淀的全流程
+category: knowledge
+version: "1.0"
+enabled: true
+owner: knowledge_agency
+estimated_time_minutes: 60
+
+triggers:
+  - type: keyword
+    keywords: ["知识库", "总结", "复盘", "文档", "SOP更新", "经验沉淀"]
+
+variables:
+  min_quality_score: 6.0
+  auto_extract_threshold: 8.0
+
+steps:
+  - name: 知识提取
+    type: automated
+    description: 从任务结果中提取知识
+    action: call_agency
+    parameters:
+      agency: knowledge_agency
+      task_type: extraction
+    critical: true
+    timeout: 600
+
+  - name: 知识分类
+    type: automated
+    description: 对提取的知识进行分类和标签化
+    action: call_agency
+    parameters:
+      agency: knowledge_agency
+      task_type: classification
+    depends_on: [0]
+
+  - name: 知识质量评审
+    type: decision
+    description: 评审知识质量
+    logic:
+      type: "rule_based"
+      rules:
+        - condition: "quality_score >= variables.auto_extract_threshold"
+          result: "自动归档"
+        - condition: "quality_score >= variables.min_quality_score"
+          result: "需审核"
+        - condition: "quality_score < variables.min_quality_score"
+          result: "需重写"
+    depends_on: [1]
+
+  - name: 知识归档
+    type: automated
+    description: 将知识归档到知识库
+    action: generate_report
+    parameters:
+      format: "structured"
+      store_to_kb: true
+    depends_on: [2]
+
+success_criteria:
+  - metric: "knowledge_count"
+    target: 1
+    operator: ">="
+
+notifications:
+  on_completion:
+    channels: ["feishu"]
+    template: "knowledge_archived"

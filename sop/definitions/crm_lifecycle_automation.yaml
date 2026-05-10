@@ -1,0 +1,30 @@
+name: 私域生命周期自动转化
+description: 每日执行的私域用户RFM分层与激活策略下发
+version: 1.0
+agency: crm
+type: event
+event_trigger: "daily_user_sync"
+status: active
+steps:
+  - id: rfm_analysis
+    name: RFM模型更新
+    type: automated
+    worker: user_analyst
+    description: 抽取昨日所有的交易和行为数据，重新计算全量用户的RFM得分和分层标签。
+    timeout: 600
+    
+  - id: churn_detection
+    name: 流失风险扫描
+    type: automated
+    worker: churn_predictor
+    description: 针对高价值标签用户，扫描其近期活跃度，识别流失风险超过70%的用户名单。
+    depends_on: [rfm_analysis]
+    timeout: 300
+    
+  - id: campaign_dispatch
+    name: 营销策略下发
+    type: automated
+    worker: campaign_designer
+    description: 针对不同生命周期的用户（特别是流失风险用户），自动匹配并下发专属的激活活动或优惠券。
+    depends_on: [churn_detection]
+    timeout: 300

@@ -1,0 +1,74 @@
+id: order_processing
+name: 订单处理与交付标准化流程
+description: 从询盘接收到交付完成的全流程
+category: order
+version: "1.0"
+enabled: true
+owner: order_agency
+estimated_time_minutes: 90
+
+triggers:
+  - type: keyword
+    keywords: ["询盘", "报价", "交付", "订单", "支付", "合同"]
+
+variables:
+  max_quote_time_minutes: 30
+  target_response_time_minutes: 60
+  max_payment_terms_days: 30
+
+steps:
+  - name: 询盘接收与分析
+    type: automated
+    description: 分析询盘内容和客户需求
+    action: call_agency
+    parameters:
+      agency: order_agency
+      task_type: inquiry_analysis
+    critical: true
+    timeout: 600
+
+  - name: 报价方案生成
+    type: automated
+    description: 生成详细报价方案
+    action: call_agency
+    parameters:
+      agency: order_agency
+      task_type: quotation
+    depends_on: [0]
+
+  - name: 报价审批
+    type: approval
+    description: 审批报价方案
+    approvers: ["order_manager"]
+    approval_type: "single"
+    timeout: 3600
+    depends_on: [1]
+
+  - name: 交付计划制定
+    type: automated
+    description: 制定项目交付计划和时间线
+    action: call_agency
+    parameters:
+      agency: order_agency
+      task_type: delivery_plan
+    depends_on: [2]
+
+  - name: 交付跟踪
+    type: automated
+    description: 跟踪交付进度
+    action: call_agency
+    parameters:
+      agency: order_agency
+      task_type: delivery_tracking
+    depends_on: [3]
+    delay_after: 86400
+
+success_criteria:
+  - metric: "quote_response_time"
+    target: "{{ variables.max_quote_time_minutes }}"
+    operator: "<="
+
+notifications:
+  on_completion:
+    channels: ["feishu"]
+    template: "order_completed"

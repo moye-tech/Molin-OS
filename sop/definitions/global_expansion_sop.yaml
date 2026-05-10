@@ -1,0 +1,74 @@
+id: global_expansion
+name: 海外拓展标准化流程
+description: 从市场调研到海外落地的全流程
+category: global_market
+version: "1.0"
+enabled: true
+owner: global_market_agency
+estimated_time_minutes: 150
+
+triggers:
+  - type: keyword
+    keywords: ["出海", "海外", "英文", "翻译", "东南亚", "TikTok", "国际化", "本地化"]
+
+variables:
+  target_markets: ["东南亚", "北美", "欧洲"]
+  languages: ["en", "zh-TW", "ja"]
+  min_quality_score: 7.0
+
+steps:
+  - name: 目标市场分析
+    type: automated
+    description: 分析目标市场规模和竞争格局
+    action: call_agency
+    parameters:
+      agency: global_market_agency
+      task_type: market_analysis
+    critical: true
+    timeout: 900
+
+  - name: 合规审查
+    type: automated
+    description: 检查目标市场的合规要求
+    action: call_agency
+    parameters:
+      agency: global_market_agency
+      task_type: compliance_check
+    depends_on: [0]
+
+  - name: 本地化策略制定
+    type: automated
+    description: 制定本地化和翻译策略
+    action: call_agency
+    parameters:
+      agency: global_market_agency
+      task_type: localization_strategy
+    depends_on: [1]
+
+  - name: 平台适配
+    type: automated
+    description: 适配目标市场的主流平台
+    action: call_agency
+    parameters:
+      agency: global_market_agency
+      task_type: platform_adaptation
+    depends_on: [2]
+
+  - name: 出海方案归档
+    type: automated
+    description: 出海方案归档
+    action: generate_report
+    parameters:
+      format: "detailed"
+      store_to_kb: true
+    depends_on: [3]
+
+success_criteria:
+  - metric: "quality_score"
+    target: "{{ variables.min_quality_score }}"
+    operator: ">="
+
+notifications:
+  on_completion:
+    channels: ["feishu"]
+    template: "global_expansion_completed"

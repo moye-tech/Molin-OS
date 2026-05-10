@@ -1,0 +1,79 @@
+id: ai_solution
+name: AI解决方案设计标准化流程
+description: 从需求分析到AI方案落地的全流程
+category: ai
+version: "1.0"
+enabled: true
+owner: ai_agency
+estimated_time_minutes: 120
+
+triggers:
+  - type: keyword
+    keywords: ["prompt", "rag", "agent", "模型", "工作流", "Embedding", "向量", "微调", "LLM"]
+
+variables:
+  max_cost_per_call_cny: 0.5
+  min_quality_score: 7.0
+  response_time_seconds: 5
+
+steps:
+  - name: 需求分析
+    type: automated
+    description: 分析AI系统需求
+    action: call_agency
+    parameters:
+      agency: ai_agency
+      task_type: requirement_analysis
+    critical: true
+    timeout: 600
+
+  - name: 模型选型
+    type: decision
+    description: 选择最合适的模型
+    logic:
+      type: "rule_based"
+      rules:
+        - condition: "task_type == 'text_generation'"
+          recommendation: "qwen3.6-plus"
+        - condition: "task_type == 'image_generation'"
+          recommendation: "qwen-image-2.0"
+        - condition: "task_type == 'reasoning'"
+          recommendation: "deepseek-v3.2"
+    depends_on: [0]
+
+  - name: 方案架构设计
+    type: automated
+    description: 设计AI系统架构方案
+    action: call_agency
+    parameters:
+      agency: ai_agency
+      task_type: architecture_design
+    depends_on: [1]
+
+  - name: Prompt模板设计
+    type: automated
+    description: 设计Prompt模板
+    action: call_agency
+    parameters:
+      agency: ai_agency
+      task_type: prompt_design
+    depends_on: [2]
+
+  - name: 方案评审与归档
+    type: automated
+    description: 方案评审并归档到知识库
+    action: generate_report
+    parameters:
+      format: "detailed"
+      store_to_kb: true
+    depends_on: [3]
+
+success_criteria:
+  - metric: "quality_score"
+    target: "{{ variables.min_quality_score }}"
+    operator: ">="
+
+notifications:
+  on_completion:
+    channels: ["feishu"]
+    template: "ai_solution_completed"

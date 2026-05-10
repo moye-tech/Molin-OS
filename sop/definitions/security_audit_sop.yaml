@@ -1,0 +1,83 @@
+id: security_audit
+name: 安全审计标准化流程
+description: 安全审查、风险评估、合规检查的全流程
+category: secure
+version: "1.0"
+enabled: true
+owner: secure_agency
+estimated_time_minutes: 120
+
+triggers:
+  - type: keyword
+    keywords: ["安全", "权限", "合规", "风控", "审计", "漏洞"]
+  - type: scheduled
+    cron: "0 9 * * 1"
+
+variables:
+  risk_levels: ["low", "medium", "high", "critical"]
+  max_critical_fix_time_hours: 24
+  audit_frequency_days: 7
+
+steps:
+  - name: 安全扫描
+    type: automated
+    description: 执行安全扫描和漏洞检测
+    action: call_agency
+    parameters:
+      agency: secure_agency
+      task_type: security_scan
+    critical: true
+    timeout: 900
+
+  - name: 风险评估
+    type: decision
+    description: 评估安全风险等级
+    logic:
+      type: "rule_based"
+      rules:
+        - condition: "risk_level == 'critical'"
+          priority: "immediate"
+        - condition: "risk_level == 'high'"
+          priority: "high"
+        - condition: "risk_level == 'medium'"
+          priority: "medium"
+        - condition: "risk_level == 'low'"
+          priority: "low"
+    depends_on: [0]
+
+  - name: 合规检查
+    type: automated
+    description: 检查合规要求
+    action: call_agency
+    parameters:
+      agency: secure_agency
+      task_type: compliance_check
+    depends_on: [1]
+
+  - name: 修复建议
+    type: automated
+    description: 生成修复建议
+    action: call_agency
+    parameters:
+      agency: secure_agency
+      task_type: remediation
+    depends_on: [2]
+
+  - name: 安全报告归档
+    type: automated
+    description: 安全审计报告归档
+    action: generate_report
+    parameters:
+      format: "detailed"
+      store_to_kb: true
+    depends_on: [3]
+
+success_criteria:
+  - metric: "critical_vuln_count"
+    target: 0
+    operator: "=="
+
+notifications:
+  on_failure:
+    channels: ["feishu"]
+    template: "security_critical_alert"

@@ -1,0 +1,76 @@
+id: customer_service
+name: 客服响应标准化流程
+description: 从用户反馈到问题解决的全流程
+category: cs
+version: "1.0"
+enabled: true
+owner: cs_agency
+estimated_time_minutes: 30
+
+triggers:
+  - type: keyword
+    keywords: ["客服", "用户反馈", "投诉", "退款", "咨询", "售后", "不满意"]
+
+variables:
+  max_response_time_minutes: 10
+  max_resolution_time_hours: 24
+  min_satisfaction_score: 4.0
+
+steps:
+  - name: 问题分类
+    type: automated
+    description: 分类用户问题和情感分析
+    action: call_agency
+    parameters:
+      agency: cs_agency
+      task_type: classification
+    critical: true
+    timeout: 300
+
+  - name: 问题处理
+    type: decision
+    description: 根据问题类型选择处理方式
+    logic:
+      type: "rule_based"
+      rules:
+        - condition: "category == 'complaint'"
+          action: "escalate"
+          priority: "high"
+        - condition: "category == 'inquiry'"
+          action: "respond"
+          priority: "medium"
+        - condition: "category == 'refund'"
+          action: "escalate"
+          priority: "high"
+        - condition: "category == 'feedback'"
+          action: "record"
+          priority: "low"
+    depends_on: [0]
+
+  - name: 生成回复
+    type: automated
+    description: 生成个性化回复
+    action: call_agency
+    parameters:
+      agency: cs_agency
+      task_type: response_generation
+    depends_on: [1]
+
+  - name: 工单记录
+    type: automated
+    description: 创建或更新工单
+    action: call_agency
+    parameters:
+      agency: cs_agency
+      task_type: ticket_update
+    depends_on: [2]
+
+success_criteria:
+  - metric: "response_time"
+    target: "{{ variables.max_response_time_minutes }}"
+    operator: "<="
+
+notifications:
+  on_completion:
+    channels: ["feishu"]
+    template: "cs_resolved"

@@ -1,0 +1,73 @@
+id: shop_sales_conversion
+name: 销售转化标准化流程
+description: 从线索识别到成交转化的全流程
+category: shop
+version: "1.0"
+enabled: true
+owner: shop_agency
+estimated_time_minutes: 60
+
+triggers:
+  - type: keyword
+    keywords: ["报价", "合作", "成交", "怎么买", "价格", "感兴趣", "报名"]
+
+variables:
+  min_intent_score: 0.5
+  target_conversion_rate: 0.15
+  max_response_time_minutes: 5
+
+steps:
+  - name: 意向识别
+    type: automated
+    description: 分析用户意向层级和意向分数
+    action: call_agency
+    parameters:
+      agency: shop_agency
+      task_type: sales
+    critical: true
+    timeout: 300
+
+  - name: 产品推荐
+    type: decision
+    description: 根据意向分数推荐产品档位
+    logic:
+      type: "rule_based"
+      rules:
+        - condition: "intent_score >= 0.8"
+          recommendation: "premium"
+          priority: "high"
+        - condition: "intent_score >= 0.5"
+          recommendation: "mid"
+          priority: "medium"
+        - condition: "intent_score < 0.5"
+          recommendation: "entry"
+          priority: "low"
+    depends_on: [0]
+
+  - name: 话术生成
+    type: automated
+    description: 生成个性化回复话术
+    action: call_agency
+    parameters:
+      agency: shop_agency
+      task_type: response_generation
+    depends_on: [1]
+
+  - name: 跟进计划
+    type: automated
+    description: 创建后续跟进任务
+    action: call_agency
+    parameters:
+      agency: crm_agency
+      task_type: followup
+    depends_on: [2]
+
+success_criteria:
+  - metric: "conversion_rate"
+    target: "{{ variables.target_conversion_rate }}"
+    operator: ">="
+
+notifications:
+  on_completion:
+    channels: ["feishu"]
+    template: "shop_sales_completed"

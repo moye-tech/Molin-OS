@@ -1,0 +1,74 @@
+id: product_design
+name: 产品设计标准化流程
+description: 从需求到MVP再到产品落地的全流程
+category: product
+version: "1.0"
+enabled: true
+owner: product_agency
+estimated_time_minutes: 120
+
+triggers:
+  - type: keyword
+    keywords: ["产品", "MVP", "功能", "标准化", "套餐", "定价", "版本"]
+
+variables:
+  max_mvp_features: 5
+  target_timeline_weeks: 4
+  min_quality_score: 7.0
+
+steps:
+  - name: 需求分析
+    type: automated
+    description: 分析产品需求和目标用户
+    action: call_agency
+    parameters:
+      agency: product_agency
+      task_type: requirement_analysis
+    critical: true
+    timeout: 600
+
+  - name: MVP范围定义
+    type: automated
+    description: 定义MVP范围和功能优先级
+    action: call_agency
+    parameters:
+      agency: product_agency
+      task_type: mvp_definition
+    depends_on: [0]
+
+  - name: 功能设计
+    type: automated
+    description: 设计核心功能和用户体验
+    action: call_agency
+    parameters:
+      agency: product_agency
+      task_type: feature_design
+    depends_on: [1]
+
+  - name: 定价策略
+    type: automated
+    description: 制定产品套餐和定价
+    action: call_agency
+    parameters:
+      agency: product_agency
+      task_type: pricing_strategy
+    depends_on: [2]
+
+  - name: 方案评审与归档
+    type: automated
+    description: 方案评审并归档
+    action: generate_report
+    parameters:
+      format: "detailed"
+      store_to_kb: true
+    depends_on: [3]
+
+success_criteria:
+  - metric: "quality_score"
+    target: "{{ variables.min_quality_score }}"
+    operator: ">="
+
+notifications:
+  on_completion:
+    channels: ["feishu"]
+    template: "product_design_completed"

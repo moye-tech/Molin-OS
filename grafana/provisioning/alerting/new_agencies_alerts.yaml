@@ -1,0 +1,64 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: hermes_v66_extended_alerts
+    folder: "墨麟 Alerts"
+    interval: 1m
+    rules:
+      - uid: alert_finance_budget_exceeded
+        title: "[墨算财务] 日预算超支告警"
+        condition: A
+        data:
+          - refId: A
+            datasourceUid: "${DS_HERMES-SQLITE}"
+            model:
+              rawSql: "SELECT SUM(cost) as used_budget FROM model_logs WHERE created_at >= datetime('now', '-1 day')"
+              format: table
+        noDataState: OK
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: "API 预算超支"
+          description: "过去 24 小时内 API 成本已超过日预算红线，请立刻检查流量。"
+        labels:
+          severity: critical
+          agency: finance
+
+      - uid: alert_devops_service_down
+        title: "[墨维运维] 系统 API 异常率偏高"
+        condition: B
+        data:
+          - refId: B
+            datasourceUid: "${DS_HERMES-SQLITE}"
+            model:
+              rawSql: "SELECT ROUND(100.0 * SUM(CASE WHEN status != 'success' THEN 1 ELSE 0 END) / COUNT(*), 2) as error_rate FROM model_logs WHERE created_at >= datetime('now', '-5 minute')"
+              format: table
+        noDataState: OK
+        execErrState: Error
+        for: 2m
+        annotations:
+          summary: "API 错误率超 10%"
+          description: "最近 5 分钟内大模型 API 调用错误率极高，可能节点已宕机。"
+        labels:
+          severity: critical
+          agency: devops
+
+      - uid: alert_cs_complaint_spike
+        title: "[墨声客服] 投诉量激增"
+        condition: C
+        data:
+          - refId: C
+            datasourceUid: "${DS_HERMES-SQLITE}"
+            model:
+              rawSql: "SELECT COUNT(*) as complaints FROM events WHERE event = 'complaint_escalated' AND created_at >= datetime('now', '-1 hour')"
+              format: table
+        noDataState: OK
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: "1小时内投诉升级激增"
+          description: "客服系统在过去1小时内收到大量被判定为需要升级的严重客诉。"
+        labels:
+          severity: warning
+          agency: cs

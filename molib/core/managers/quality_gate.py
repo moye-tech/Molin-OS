@@ -2,18 +2,13 @@
 质量门控与降级策略模块
 在 Manager 层对 Worker 执行结果进行质量评估，
 低质量结果自动升级模型重试，超过重试上限则推送人工介入。
-
-Source: core/managers/quality_gate.py (from molin-os-ultra)
-Adapted for Hermes OS: loguru→logging, removed model_upgrade_map/TERMINAL_MODELS,
-removed AgencyResult/Task dependency, _llm_review_async downgraded to rule-based scoring.
 """
 
 import time
-import re
 from typing import Dict, Any, Optional, Tuple
-import logging
+from loguru import logger
 
-logger = logging.getLogger(__name__)
+from molib.agencies.base import Task, AgencyResult
 
 
 class QualityGate:
@@ -21,6 +16,14 @@ class QualityGate:
 
     MIN_SCORE: float = 6.0
     MAX_RETRIES: int = 2
+    MODEL_UPGRADE_MAP: Dict[str, str] = {
+        # 升序链：百炼模型从弱到强
+        "qwen3.6-flash": "qwen3.6-plus",
+        "qwen3.6-plus": "deepseek-v4-pro",
+        "deepseek-v4-pro": "deepseek-v4-pro",  # qwen disabled (400 errors)
+    }
+    # 终端哨兵：百炼最强旗舰，到达后不再升级
+    TERMINAL_MODELS = set()  # qwen disabled
 
     # 各子公司质量审查标准（LLM 驱动审查时使用）
     AGENCY_REVIEW_CRITERIA: Dict[str, str] = {
@@ -49,19 +52,20 @@ class QualityGate:
         config = config or {}
         self.min_score = config.get("min_score", self.MIN_SCORE)
         self.max_retries = config.get("max_retries", self.MAX_RETRIES)
+        self.model_upgrade_map = config.get("model_upgrade_map", self.MODEL_UPGRADE_MAP)
         self.metrics = {
             "total_evaluations": 0, "passed": 0,
             "retried": 0, "escalated_to_human": 0,
         }
 
-    def extract_score(self, result: Dict[str, Any]) -> float:
+    def extract_score(self, result: AgencyResult) -> float:
         """从 Worker 执行结果中提取质量分数。无数字分数时返回 sentinel (-1.0)，触发 LLM 审查。"""
-        if result.get("status") == "error":
+        if result.status == "error":
             return 0.0
-        if result.get("status") == "pending_approval":
+        if result.status == "pending_approval":
             return 5.0
 
-        output = result.get("output") or {}
+        output = result.output or {}
         for field in ("confidence", "score", "quality_score"):
             if field in output:
                 raw = output[field]
@@ -73,30 +77,30 @@ class QualityGate:
             return -1.0
 
         # 尝试从文本中提取分数
-        score_match = re.search(r'(?:score|quality|评分)[:\s]*(\d+(?:\.\d+)?)', str(result_text), re.IGNORECASE)
+        import re as _re3
+        score_match = _re3.search(r'(?:score|quality|评分)[:\s]*(\d+(?:\.\d+)?)', str(result_text), _re3.IGNORECASE)
         if score_match:
             score = float(score_match.group(1))
             return score * 10 if score <= 1.0 else min(score, 10.0)
 
         return -1.0
 
-    async def _llm_review_async(self, result: Dict[str, Any], task: Dict[str, Any]) -> float:
+    async def _llm_review_async(self, result: AgencyResult, task: Task) -> float:
         """
-        质量审查 — 降级为纯规则评分。
-        原实现使用 ModelRouter 调用 LLM 审查，现已替换为规则评分。
-
-        TODO: 如需要 LLM 审查，可取消注释下方代码并使用 requests 调用
-              https://api.supermemory.ai 或其他 LLM API 端点。
+        LLM 驱动的质量审查。异步、非阻塞。
+        使用各子公司独立审查标准，返回 0-10 的评分。
         """
         try:
-            # 原 LLM 审查实现（已禁用）：
-            # from molib.core.ceo.model_router import ModelRouter
-            # router = ModelRouter()
-            # ... 调用 LLM 进行审查 ...
-            # 现降级为纯规则评分
+            from molib.core.ceo.model_router import ModelRouter
+            router = ModelRouter()
 
-            # 提取内容文本
-            output = result.get("output") or {}
+            agency_id = result.agency_id.replace("_manager", "").replace("_agency", "")
+            criteria = self.AGENCY_REVIEW_CRITERIA.get(
+                agency_id, "评估标准：内容完整性、准确性、可操作性。"
+            )
+
+            # 提取待审查内容
+            output = result.output or {}
             content = ""
             for key in ("result", "report", "content", "summary", "text"):
                 val = output.get(key, "")
@@ -106,16 +110,31 @@ class QualityGate:
             if not content:
                 content = str(output)[:3000]
 
-            # 纯规则评分：文本长度 > 200 返回 7.0，否则返回 5.0
-            if len(content) > 200:
-                return 7.0
-            return 5.0
+            review_prompt = (
+                f"请评估以下任务的执行结果质量（1-10分）：\n\n"
+                f"任务ID: {task.task_id}\n"
+                f"子公司: {agency_id}\n\n"
+                f"{criteria}\n\n"
+                f"执行输出:\n{content}\n\n"
+                f'请返回纯JSON：{{"score": 7.5, "reasoning": "评估理由（一句话）"}}'
+            )
+
+            review_result = await router.call_async(
+                prompt=review_prompt,
+                system="你是质量评估专家。给出0-10的分数，严格评估，不浮夸。",
+                task_type="quality_review",
+            )
+            text = review_result.get("text", "")
+            import re as _re2, json as _json2
+            match = _re2.search(r'\{[\s\S]*\}', text)
+            if match:
+                parsed = _json2.loads(match.group())
+                return float(parsed.get("score", 5.0))
         except Exception as e:
             logger.debug(f"[QualityGate] LLM review failed: {e}")
         return 5.0
 
-    async def evaluate(self, result: Dict[str, Any], task: Dict[str, Any],
-                       retry_count=0, retry_callback=None, start_time=None):
+    async def evaluate(self, result, task, retry_count=0, retry_callback=None, start_time=None):
         """评估执行结果质量，必要时自动重试或升级人工。"""
         if start_time is None:
             start_time = time.time()
@@ -124,57 +143,70 @@ class QualityGate:
         # 总时间上限保护：超过 120 秒直接放行，避免飞书超时
         elapsed = time.time() - start_time
         if elapsed > 120:
-            logger.warning(f"[QualityGate] 总耗时 {elapsed:.0f}s 超过 120s 上限，强制放行 task={task.get('task_id')}")
+            logger.warning(f"[QualityGate] 总耗时 {elapsed:.0f}s 超过 120s 上限，强制放行 task={task.task_id}")
             return result, {"score": -1, "min_score": self.min_score, "retry_count": retry_count, "action": "timeout_force_pass"}
 
         score = self.extract_score(result)
 
-        # Sentinels: -1.0 触发审查评分
+        # Sentinels: -1.0 触发 LLM 审查评分
         if score < 0:
             score = await self._llm_review_async(result, task)
-            logger.info(f"[QualityGate] Review score: {score:.1f} for {task.get('task_id')}")
+            logger.info(f"[QualityGate] LLM review score: {score:.1f} for {task.task_id}")
 
         eval_meta = {"score": score, "min_score": self.min_score,
-                     "retry_count": retry_count, "action": "pass"}
+                      "retry_count": retry_count, "action": "pass"}
 
         if score >= self.min_score:
             self.metrics["passed"] += 1
-            logger.debug(f"[QualityGate] PASS task={task.get('task_id')} score={score:.1f}")
+            logger.debug(f"[QualityGate] PASS task={task.task_id} score={score:.1f}")
             return result, eval_meta
 
         if retry_count < self.max_retries and retry_callback is not None:
-            self.metrics["retried"] += 1
-            logger.warning(
-                f"[QualityGate] RETRY task={task.get('task_id')} score={score:.1f} "
-                f"retry_count={retry_count}"
-            )
-            eval_meta["action"] = "retry"
-            try:
-                new_result = await retry_callback(task, None)
-                return await self.evaluate(new_result, task, retry_count + 1, retry_callback, start_time)
-            except Exception as e:
-                logger.error(f"[QualityGate] Retry failed: {e}")
-                eval_meta["retry_error"] = str(e)
+            current_model = (result.output or {}).get("model_used", "qwen3.6-plus")
+            # 终端哨兵：最强模型不重试，直接升级到人工
+            if current_model in getattr(self, "TERMINAL_MODELS", set()):
+                logger.warning(
+                    f"[QualityGate] 已是终端模型 {current_model}，跳过重试直接升级人工 "
+                    f"task={task.task_id} score={score:.1f}"
+                )
+                eval_meta["action"] = "terminal_skip"
+            else:
+                self.metrics["retried"] += 1
+                upgraded_model = self.model_upgrade_map.get(current_model, current_model)
+                if upgraded_model == current_model:
+                    logger.warning(
+                        f"[QualityGate] 无可用升级模型 for {current_model}，升级人工 "
+                        f"task={task.task_id} score={score:.1f}"
+                    )
+                    eval_meta["action"] = "no_upgrade_path"
+                else:
+                    logger.warning(
+                        f"[QualityGate] RETRY task={task.task_id} score={score:.1f} "
+                        f"model: {current_model} → {upgraded_model}"
+                    )
+                    eval_meta["action"] = "retry"
+                    eval_meta["model_upgrade"] = f"{current_model} → {upgraded_model}"
+                    try:
+                        new_result = await retry_callback(task, upgraded_model)
+                        return await self.evaluate(new_result, task, retry_count + 1, retry_callback, start_time)
+                    except Exception as e:
+                        logger.error(f"[QualityGate] Retry failed: {e}")
+                        eval_meta["retry_error"] = str(e)
 
         # 超过重试上限，升级到人工介入
         self.metrics["escalated_to_human"] += 1
         eval_meta["action"] = "escalate_to_human"
-        logger.error(f"[QualityGate] ESCALATE task={task.get('task_id')} score={score:.1f}")
+        logger.error(f"[QualityGate] ESCALATE task={task.task_id} score={score:.1f}")
 
-        escalation_result = {
-            "task_id": result.get("task_id"),
-            "agency_id": result.get("agency_id"),
-            "status": "pending_approval",
-            "output": {
-                **(result.get("output") or {}),
-                "quality_gate": eval_meta,
-                "escalation_reason": f"质量评分 {score:.1f} < {self.min_score}，重试 {retry_count} 次仍未达标",
-            },
-            "needs_approval": True,
-            "approval_reason": f"质量门控升级: 评分 {score:.1f}/{self.min_score}",
-            "cost": result.get("cost", 0),
-            "latency": result.get("latency", 0),
-        }
+        escalation_result = AgencyResult(
+            task_id=result.task_id, agency_id=result.agency_id,
+            status="pending_approval",
+            output={**(result.output or {}), "quality_gate": eval_meta,
+                    "escalation_reason": f"质量评分 {score:.1f} < {self.min_score}，重试 {retry_count} 次仍未达标"},
+            needs_approval=True,
+            approval_reason=f"质量门控升级: 评分 {score:.1f}/{self.min_score}",
+            cost=result.cost, latency=result.latency,
+        )
         return escalation_result, eval_meta
 
     def get_metrics(self) -> Dict[str, Any]:

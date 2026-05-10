@@ -1,0 +1,72 @@
+apiVersion: 1
+
+# 墨麟AI智能系统 v6.6 - 数据源配置
+# 包含SQLite、Prometheus、Loki、Redis等数据源
+
+datasources:
+  # SQLite数据源（用于事务数据）
+  - name: 墨麟-SQLite
+    type: frser-sqlite-datasource
+    access: proxy
+    url: /var/lib/grafana/sqlite
+    isDefault: true
+    version: 1
+    editable: true
+    jsonData:
+      storage: file
+      path: /app/data/hermes.db
+      enableSecureSocksProxy: false
+
+  # Prometheus数据源（用于指标监控）
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: false
+    version: 1
+    editable: true
+    jsonData:
+      timeInterval: 30s
+      queryTimeout: 60s
+      httpMethod: POST
+
+  # Loki数据源（用于日志）
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    version: 1
+    editable: true
+    jsonData:
+      maxLines: 1000
+
+  # Redis数据源（用于缓存监控）
+  - name: Redis
+    type: redis-datasource
+    access: proxy
+    url: redis:6379
+    isDefault: false
+    version: 1
+    editable: true
+    jsonData:
+      poolSize: 5
+      timeout: 10
+      pingInterval: 30
+      pipelineWindow: 50
+      readTimeout: 10
+      connectTimeout: 10
+    secureJsonData:
+      password: ${REDIS_PASSWORD}
+
+  # Qdrant数据源（用于向量数据库监控）
+  - name: Qdrant
+    type: prometheus
+    access: proxy
+    url: http://qdrant:6333
+    isDefault: false
+    version: 1
+    editable: true
+    jsonData:
+      timeInterval: 30s
+      queryTimeout: 30s
+      httpMethod: GET

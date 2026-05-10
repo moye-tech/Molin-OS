@@ -1,0 +1,74 @@
+id: data_analysis
+name: 数据分析标准化流程
+description: 从数据需求到分析结论的全流程
+category: data
+version: "1.0"
+enabled: true
+owner: data_agency
+estimated_time_minutes: 90
+
+triggers:
+  - type: keyword
+    keywords: ["报表", "数据", "归因", "分析", "漏斗", "指标", "可视化"]
+
+variables:
+  max_data_sources: 10
+  chart_types: ["bar", "line", "pie", "scatter"]
+  min_quality_score: 6.0
+
+steps:
+  - name: 数据需求确认
+    type: automated
+    description: 确认分析目标和关键指标
+    action: call_agency
+    parameters:
+      agency: data_agency
+      task_type: requirement_confirmation
+    critical: true
+    timeout: 300
+
+  - name: 数据源聚合
+    type: automated
+    description: 聚合多数据源数据
+    action: call_agency
+    parameters:
+      agency: data_agency
+      task_type: data_aggregation
+    depends_on: [0]
+
+  - name: 数据分析
+    type: automated
+    description: 执行数据分析
+    action: call_agency
+    parameters:
+      agency: data_agency
+      task_type: analysis
+    depends_on: [1]
+
+  - name: 可视化报告生成
+    type: automated
+    description: 生成可视化分析报告
+    action: call_agency
+    parameters:
+      agency: data_agency
+      task_type: report_generation
+    depends_on: [2]
+
+  - name: 洞察归档
+    type: automated
+    description: 将分析洞察归档到知识库
+    action: generate_report
+    parameters:
+      format: "visual"
+      store_to_kb: true
+    depends_on: [3]
+
+success_criteria:
+  - metric: "insight_count"
+    target: 3
+    operator: ">="
+
+notifications:
+  on_completion:
+    channels: ["feishu"]
+    template: "data_analysis_completed"

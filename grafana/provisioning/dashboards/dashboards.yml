@@ -1,0 +1,30 @@
+apiVersion: 1
+
+# 墨麟AI智能系统 v6.6 - 仪表板配置
+# 自动加载预配置的仪表板
+
+providers:
+  # 预配置仪表板
+  - name: '墨麟预配置仪表板'
+    orgId: 1
+    folder: '墨麟AI智能系统'
+    type: file
+    disableDeletion: false
+    editable: true
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/dashboards
+      foldersFromFilesStructure: true
+
+  # 从文件系统加载仪表板
+  - name: '文件系统仪表板'
+    orgId: 1
+    folder: '文件系统'
+    type: file
+    disableDeletion: false
+    editable: true
+    updateIntervalSeconds: 30
+    options:
+      path: /etc/grafana/dashboards/custom
+      foldersFromFilesStructure: true

@@ -1,0 +1,79 @@
+id: dev_delivery
+name: 研发交付标准化流程
+description: 从需求接收到代码交付的全流程
+category: dev
+version: "1.0"
+enabled: true
+owner: dev_agency
+estimated_time_minutes: 180
+
+triggers:
+  - type: keyword
+    keywords: ["开发", "代码", "脚本", "自动化", "接口", "部署", "API"]
+
+variables:
+  max_complexity_score: 80
+  code_quality_threshold: 7.0
+  review_required: true
+
+steps:
+  - name: 需求分析
+    type: automated
+    description: 分析开发需求和可行性
+    action: call_agency
+    parameters:
+      agency: dev_agency
+      task_type: requirement_analysis
+    critical: true
+    timeout: 600
+
+  - name: 方案设计
+    type: automated
+    description: 设计技术实现方案
+    action: call_agency
+    parameters:
+      agency: dev_agency
+      task_type: design
+    depends_on: [0]
+
+  - name: 代码实现
+    type: automated
+    description: 编写代码实现
+    action: call_agency
+    parameters:
+      agency: dev_agency
+      task_type: code_execution
+    depends_on: [1]
+
+  - name: 代码审查
+    type: decision
+    description: 代码质量审查
+    logic:
+      type: "rule_based"
+      rules:
+        - condition: "quality_score >= variables.code_quality_threshold"
+          result: "通过"
+        - condition: "quality_score < variables.code_quality_threshold"
+          result: "需修改"
+    depends_on: [2]
+    condition: "{{ variables.review_required }}"
+
+  - name: 交付归档
+    type: automated
+    description: 将代码交付物归档
+    action: generate_report
+    parameters:
+      format: "detailed"
+      store_to_kb: true
+    depends_on: [3]
+    condition: "{{ steps.3.result == '通过' }}"
+
+success_criteria:
+  - metric: "quality_score"
+    target: "{{ variables.code_quality_threshold }}"
+    operator: ">="
+
+notifications:
+  on_completion:
+    channels: ["feishu"]
+    template: "dev_delivery_completed"

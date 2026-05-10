@@ -1,0 +1,43 @@
+description: 用于集成测试的简单工作流
+id: test_integration_workflow
+name: 集成测试工作流
+steps:
+- action:
+    parameters:
+      message: 开始集成测试
+    skill_name: echo_skill
+    type: skill
+  description: 初始化测试环境
+  id: step_1
+  name: 初始化步骤
+  parameters:
+    timeout: 30
+  type: automated
+- action:
+    parameters:
+      input: '{{test_user}} 的数据'
+    skill_name: process_skill
+    type: skill
+  conditions:
+  - expression: '{{max_retries}} > 0'
+    type: expression
+  description: 处理测试数据
+  id: step_2
+  name: 处理步骤
+  type: automated
+- description: 发送完成通知
+  id: step_3
+  name: 通知步骤
+  parameters:
+    content: 工作流执行完成
+    recipients:
+    - test_recipient@example.com
+    type: message
+  type: notification
+triggers:
+  cron: null
+  manual: true
+variables:
+  max_retries: 3
+  test_user: integration_tester
+version: '1.0'

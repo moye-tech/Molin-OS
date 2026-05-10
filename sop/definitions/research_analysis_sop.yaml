@@ -1,0 +1,83 @@
+id: research_analysis
+name: 行业研究标准化流程
+description: 从研究主题确定到报告输出的全流程
+category: research
+version: "1.0"
+enabled: true
+owner: research_agency
+estimated_time_minutes: 150
+
+triggers:
+  - type: keyword
+    keywords: ["研究", "竞品", "趋势", "情报", "行业", "调研"]
+
+variables:
+  min_sources: 5
+  max_report_pages: 20
+  min_quality_score: 7.0
+
+steps:
+  - name: 研究范围确认
+    type: automated
+    description: 确认研究主题和范围
+    action: call_agency
+    parameters:
+      agency: research_agency
+      task_type: scope_definition
+    critical: true
+    timeout: 300
+
+  - name: 信息收集
+    type: automated
+    description: 多渠道信息收集
+    action: call_agency
+    parameters:
+      agency: research_agency
+      task_type: information_gathering
+    depends_on: [0]
+
+  - name: 竞品分析
+    type: automated
+    description: 竞品分析和对标
+    action: call_agency
+    parameters:
+      agency: research_agency
+      task_type: competitor_analysis
+    depends_on: [1]
+
+  - name: 趋势分析
+    type: automated
+    description: 行业趋势分析
+    action: call_agency
+    parameters:
+      agency: research_agency
+      task_type: trend_analysis
+    depends_on: [1]
+
+  - name: 研究报告生成
+    type: automated
+    description: 生成结构化研究报告
+    action: call_agency
+    parameters:
+      agency: research_agency
+      task_type: report_generation
+    depends_on: [2, 3]
+
+  - name: 报告归档
+    type: automated
+    description: 研究报告归档
+    action: generate_report
+    parameters:
+      format: "detailed"
+      store_to_kb: true
+    depends_on: [4]
+
+success_criteria:
+  - metric: "sources_count"
+    target: "{{ variables.min_sources }}"
+    operator: ">="
+
+notifications:
+  on_completion:
+    channels: ["feishu"]
+    template: "research_completed"

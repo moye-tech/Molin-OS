@@ -1,0 +1,174 @@
+# 内容创作SOP
+# 标准化内容创作流程
+
+id: content_creation
+name: 内容创作标准化流程
+description: 从创意到发布的内容创作全流程
+category: content
+version: "1.0"
+enabled: true
+owner: ip_agency
+estimated_time_minutes: 120
+
+# 触发条件
+triggers:
+  - type: keyword
+    keywords: ["创作", "内容", "文案", "文章", "视频"]
+  - type: agency
+    agency: ip_agency
+
+# 流程变量
+variables:
+  content_type: "article"
+  target_platform: "wechat"
+  quality_level: "high"
+
+# 步骤定义
+steps:
+  # 步骤1: 需求分析
+  - name: 需求分析
+    type: automated
+    description: 分析用户需求，确定内容方向和目标
+    action: call_api
+    parameters:
+      endpoint: "/api/analyze"
+      method: "POST"
+      data_key: "requirements"
+    critical: true
+    timeout: 300  # 5分钟
+
+  # 步骤2: 大纲生成
+  - name: 大纲生成
+    type: automated
+    description: 使用AI生成内容大纲
+    action: call_ai
+    parameters:
+      model: "glm-5"
+      prompt_template: "content_outline"
+      temperature: 0.7
+    depends_on: [0]  # 依赖步骤1
+    delay_after: 2  # 2秒延迟
+
+  # 步骤3: 内容创作
+  - name: 内容创作
+    type: automated
+    description: 基于大纲进行详细内容创作
+    action: call_ai
+    parameters:
+      model: "claude-opus"
+      prompt_template: "content_generation"
+      max_tokens: 2000
+    depends_on: [1]  # 依赖步骤2
+    critical: true
+
+  # 步骤4: 内容审核
+  - name: 内容审核
+    type: approval
+    description: 人工审核内容质量
+    approvers: ["content_manager", "compliance_officer"]
+    approval_type: "parallel"  # 并行审批
+    timeout: 3600  # 1小时
+    depends_on: [2]  # 依赖步骤3
+
+  # 步骤5: SEO优化
+  - name: SEO优化
+    type: automated
+    description: 优化内容SEO元素
+    action: call_api
+    parameters:
+      endpoint: "/api/seo/optimize"
+      method: "POST"
+    depends_on: [3]  # 依赖步骤4
+    condition: "{{ steps.3.result.approved }}"  # 只有审核通过才执行
+
+  # 步骤6: 多平台适配
+  - name: 多平台适配
+    type: automated
+    description: 根据不同平台调整内容格式
+    action: transform_content
+    parameters:
+      platforms: ["wechat", "zhihu", "toutiao", "bilibili"]
+      format_per_platform: true
+    depends_on: [4]  # 依赖步骤5
+
+  # 步骤7: 发布准备
+  - name: 发布准备
+    type: manual
+    description: 准备发布所需的素材和配置
+    instructions: |
+      1. 准备封面图片（尺寸符合平台要求）
+      2. 设置合适的标签和分类
+      3. 配置发布时间和可见性
+      4. 准备推广文案
+    estimated_time: 15  # 15分钟
+    depends_on: [5]  # 依赖步骤6
+
+  # 步骤8: 发布执行
+  - name: 发布执行
+    type: automated
+    description: 执行发布到目标平台
+    action: publish_content
+    parameters:
+      platforms: "{{ variables.target_platform }}"
+      schedule: "immediate"
+    depends_on: [6]  # 依赖步骤7
+
+  # 步骤9: 效果监控
+  - name: 效果监控
+    type: automated
+    description: 监控内容发布后的表现
+    action: monitor_performance
+    parameters:
+      metrics: ["views", "likes", "shares", "comments"]
+      duration: "7d"
+    depends_on: [7]  # 依赖步骤8
+    delay_after: 300  # 5分钟后开始监控
+
+# 成功标准
+success_criteria:
+  - metric: "views"
+    target: 1000
+    timeframe: "24h"
+  - metric: "engagement_rate"
+    target: 5.0  # 百分比
+    timeframe: "7d"
+  - metric: "conversion_rate"
+    target: 2.0  # 百分比
+    timeframe: "30d"
+
+# 失败处理
+failure_handling:
+  retry_policy:
+    max_retries: 2
+    retry_delay: 300  # 5分钟
+    backoff_factor: 2
+  fallback_actions:
+    - action: "notify_team"
+      channels: ["feishu", "email"]
+      recipients: ["content_team"]
+    - action: "escalate"
+      level: "manager"
+      threshold: 3  # 3次失败后升级
+
+# 通知配置
+notifications:
+  on_start:
+    channels: ["feishu"]
+    template: "sop_started"
+  on_completion:
+    channels: ["feishu", "email"]
+    template: "sop_completed"
+  on_failure:
+    channels: ["feishu", "email", "sms"]
+    template: "sop_failed"
+
+# 数据记录
+data_collection:
+  enabled: true
+  metrics:
+    - "execution_time"
+    - "step_success_rate"
+    - "quality_score"
+    - "roi"
+  storage: "sqlite"
+  retention_days: 90

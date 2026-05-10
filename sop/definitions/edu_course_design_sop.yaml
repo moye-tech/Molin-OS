@@ -1,0 +1,79 @@
+id: edu_course_design
+name: 教育课程设计与招生标准化流程
+description: 从需求分析到课程设计再到招生方案的全流程
+category: edu
+version: "1.0"
+enabled: true
+owner: edu_agency
+estimated_time_minutes: 120
+
+triggers:
+  - type: keyword
+    keywords: ["课程设计", "培训课程", "训练营", "招生方案", "知识付费"]
+
+variables:
+  target_students: 100
+  course_duration_hours: 40
+  max_price_cny: 9999
+  min_quality_score: 7.0
+
+steps:
+  - name: 需求分析
+    type: automated
+    description: 分析学员需求和目标人群画像
+    action: call_agency
+    parameters:
+      agency: edu_agency
+      task_type: course_design
+    critical: true
+    timeout: 600
+
+  - name: 课程大纲生成
+    type: automated
+    description: 根据需求分析生成课程大纲和章节结构
+    action: call_agency
+    parameters:
+      agency: edu_agency
+      task_type: syllabus_generation
+    depends_on: [0]
+
+  - name: 质量评审
+    type: decision
+    description: 评审课程方案质量
+    logic:
+      type: "rule_based"
+      rules:
+        - condition: "quality_score >= variables.min_quality_score"
+          result: "通过"
+        - condition: "quality_score < variables.min_quality_score"
+          result: "需优化"
+    depends_on: [1]
+
+  - name: 招生方案制定
+    type: automated
+    description: 制定招生方案和定价策略
+    action: call_agency
+    parameters:
+      agency: edu_agency
+      task_type: enrollment_plan
+    depends_on: [2]
+    condition: "{{ steps.2.result == '通过' }}"
+
+  - name: 方案归档
+    type: automated
+    description: 将最终方案归档到知识库
+    action: generate_report
+    parameters:
+      format: "detailed"
+      store_to_kb: true
+    depends_on: [3]
+
+success_criteria:
+  - metric: "quality_score"
+    target: "{{ variables.min_quality_score }}"
+    operator: ">="
+
+notifications:
+  on_completion:
+    channels: ["feishu"]
+    template: "edu_course_completed"

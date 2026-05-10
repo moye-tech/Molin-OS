@@ -1,0 +1,30 @@
+name: 严重故障应急响应
+description: 系统检测到服务不可用时自动触发的降级与恢复流程
+version: 1.0
+agency: devops
+type: event
+event_trigger: "service_down"
+status: active
+steps:
+  - id: fault_localization
+    name: 故障快速定位
+    type: automated
+    worker: incident_responder
+    description: 通过扫描最新的错误日志和进程状态，快速定位宕机的原因（如OOM、网络阻断等）。
+    timeout: 60
+    
+  - id: auto_recovery
+    name: 自动恢复尝试
+    type: automated
+    worker: deploy_engineer
+    description: 尝试重启崩溃的Docker容器或切换到备用API节点。
+    depends_on: [fault_localization]
+    timeout: 300
+    
+  - id: ceo_escalation
+    name: 升级告警
+    type: automated
+    worker: health_monitor
+    description: 如果自动恢复失败，立刻整理故障上下文并通过高优渠道（如飞书/钉钉）向CEO发出强提醒。
+    depends_on: [auto_recovery]
+    timeout: 120

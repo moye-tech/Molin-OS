@@ -1,0 +1,81 @@
+id: legal_compliance
+name: 法务合规标准化流程
+description: 从合同审查到合规检查的全流程
+category: legal
+version: "1.0"
+enabled: true
+owner: legal_agency
+estimated_time_minutes: 120
+
+triggers:
+  - type: keyword
+    keywords: ["合同", "协议", "版权", "合规", "法律", "NDA", "授权", "知识产权"]
+
+variables:
+  max_review_time_hours: 48
+  risk_threshold: "high"
+  compliance_frameworks: ["PIPL", "广告法", "数据安全法"]
+
+steps:
+  - name: 法律需求分析
+    type: automated
+    description: 分析法律需求和适用法规
+    action: call_agency
+    parameters:
+      agency: legal_agency
+      task_type: legal_analysis
+    critical: true
+    timeout: 600
+
+  - name: 合同审查
+    type: automated
+    description: 审查合同条款和风险
+    action: call_agency
+    parameters:
+      agency: legal_agency
+      task_type: contract_review
+    depends_on: [0]
+
+  - name: 合规检查
+    type: automated
+    description: 检查合规要求
+    action: call_agency
+    parameters:
+      agency: legal_agency
+      task_type: compliance_check
+    depends_on: [0]
+
+  - name: 风险评估
+    type: decision
+    description: 评估法律风险等级
+    logic:
+      type: "rule_based"
+      rules:
+        - condition: "risk_level == 'critical'"
+          action: "立即上报"
+        - condition: "risk_level == 'high'"
+          action: "高优处理"
+        - condition: "risk_level == 'medium'"
+          action: "常规处理"
+        - condition: "risk_level == 'low'"
+          action: "归档记录"
+    depends_on: [1, 2]
+
+  - name: 法务报告生成
+    type: automated
+    description: 生成法务合规报告
+    action: generate_report
+    parameters:
+      format: "detailed"
+      store_to_kb: true
+    depends_on: [3]
+
+success_criteria:
+  - metric: "critical_risk_count"
+    target: 0
+    operator: "=="
+
+notifications:
+  on_failure:
+    channels: ["feishu"]
+    template: "legal_critical_alert"

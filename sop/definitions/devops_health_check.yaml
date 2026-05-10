@@ -1,0 +1,30 @@
+name: 生产环境深度巡检
+description: 每日定时执行的系统底层与API健康度深度检查
+version: 1.0
+agency: devops
+type: cron
+schedule: "0 2 * * *"
+status: active
+steps:
+  - id: api_latency_check
+    name: 核心API延迟检测
+    type: automated
+    worker: health_monitor
+    description: 对接所有LLM Provider的API，测试联通性和响应延迟，记录性能基线。
+    timeout: 120
+    
+  - id: performance_analysis
+    name: 性能瓶颈分析
+    type: automated
+    worker: performance_tuner
+    description: 分析过去24小时的慢查询日志和高负载记录，识别潜在的内存泄漏或性能瓶颈。
+    depends_on: [api_latency_check]
+    timeout: 300
+    
+  - id: optimization_report
+    name: 优化建议生成
+    type: manual
+    worker: deploy_engineer
+    description: 生成基础设施优化和扩容建议，推送到Dev团队进行人工评审和实施。
+    depends_on: [performance_analysis]
+    timeout: 0
