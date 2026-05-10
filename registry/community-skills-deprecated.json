@@ -1,0 +1,8 @@
+{
+  "$schema": "https://moye-tech.github.io/Molin-Skills-Registry/schema.json",
+  "_meta": {
+    "description": "已下架/废弃的技能列表。对应 Obsidian community-plugins-removed.json。",
+    "policy": "技能不再维护、存在安全漏洞、或违反开发者政策时移入此文件。"
+  },
+  "removed": []
+}

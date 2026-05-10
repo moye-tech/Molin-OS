@@ -1,0 +1,14 @@
+{
+  "name": "molin-skills",
+  "description": "Agent Skills for Molin-OS — teach your agent to use Molin Markdown, Bases, JSON Canvas, and MQL queries.",
+  "version": "1.0.0",
+  "author": "墨麟AI集团",
+  "repository": "moye-tech/molin-skills",
+  "skills": [
+    "molin-markdown",
+    "molin-cli",
+    "molin-bases",
+    "molin-canvas",
+    "molin-query"
+  ]
+}

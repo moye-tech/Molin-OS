@@ -1,0 +1,76 @@
+---
+name: Submit Skill
+description: 提交新技能到墨麟OS社区技能注册中心
+title: "[Skill Submission] "
+labels: ["skill-submission"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 墨麟OS 技能提交清单
+        对标 Obsidian community-plugins.json PR 流程。
+        请完成以下所有检查项。
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: 提交前检查
+      options:
+        - label: 这是我的原创作品（或已获得原作者授权）
+          required: true
+        - label: SKILL.md 包含完整的 YAML frontmatter（name/description/version/min_hermes_version）
+          required: true
+        - label: 版本号使用语义化版本（SemVer）
+          required: true
+        - label: 已测试技能在 Hermes Agent 中正常运行
+          required: true
+        - label: 不包含任何用户隐私数据收集
+          required: true
+        - label: 已阅读并同意 [Developer Policies](DEVELOPER_POLICIES.md)
+          required: true
+
+  - type: input
+    id: skill-name
+    attributes:
+      label: 技能名称
+      placeholder: "my-awesome-skill"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 技能描述
+      description: 简短描述技能的功能（50-200字）
+    validations:
+      required: true
+
+  - type: input
+    id: repo
+    attributes:
+      label: GitHub 仓库
+      placeholder: "username/repo-name"
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: 版本号
+      placeholder: "1.0.0"
+    validations:
+      required: true
+
+  - type: textarea
+    id: usage
+    attributes:
+      label: 使用说明
+      description: 如何安装和使用该技能
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: 截图/演示（可选）
+      description: 如有截图或演示链接，请在此提供

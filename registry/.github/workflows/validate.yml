@@ -1,0 +1,133 @@
+name: Validate Community Skills
+
+on:
+  pull_request:
+    paths:
+      - 'community-skills.json'
+  push:
+    branches: [main]
+    paths:
+      - 'community-skills.json'
+  schedule:
+    - cron: '0 */8 * * *'  # 每8小时自动更新统计
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate JSON Schema
+        run: |
+          python3 -c "
+          import json, sys
+          with open('community-skills.json') as f:
+              data = json.load(f)
+
+          errors = []
+          # Check top-level structure
+          if 'skills' not in data:
+              errors.append('Missing \"skills\" array')
+              print(json.dumps({'errors': errors}, ensure_ascii=False))
+              sys.exit(1)
+
+          skills = data['skills']
+          seen_ids = set()
+
+          for i, skill in enumerate(skills):
+              idx = f'skills[{i}]'
+              # Required fields
+              for field in ['id', 'name', 'author', 'description', 'repo', 'version']:
+                  if field not in skill or not skill[field]:
+                      errors.append(f'{idx}: Missing required field \"{field}\"')
+
+              # Unique ID
+              sid = skill.get('id', '')
+              if sid in seen_ids:
+                  errors.append(f'{idx}: Duplicate ID \"{sid}\"')
+              seen_ids.add(sid)
+
+              # Semver check
+              import re
+              ver = skill.get('version', '')
+              if ver and not re.match(r'^\d+\.\d+\.\d+', str(ver)):
+                  errors.append(f'{idx}: Invalid version \"{ver}\" (must be semver)')
+
+              # Repo format
+              repo = skill.get('repo', '')
+              if repo and '/' not in repo:
+                  errors.append(f'{idx}: Invalid repo format \"{repo}\" (must be user/repo)')
+
+          if errors:
+              print(f'❌ {len(errors)} validation errors:')
+              for e in errors:
+                  print(f'  - {e}')
+              sys.exit(1)
+
+          print(f'✅ Valid: {len(skills)} skills, {len(set(s[\"author\"] for s in skills))} authors')
+          "
+
+      - name: Update Stats
+        if: github.event_name == 'schedule' || github.event_name == 'push'
+        run: |
+          python3 -c "
+          import json
+          from datetime import datetime
+
+          with open('community-skills.json') as f:
+              data = json.load(f)
+
+          data['_meta']['updated'] = datetime.now().isoformat()
+          data['_meta']['total_skills'] = len(data['skills'])
+          data['_meta']['total_authors'] = len(set(s['author'] for s in data['skills']))
+
+          with open('community-skills.json', 'w') as f:
+              json.dump(data, f, ensure_ascii=False, indent=2)
+              f.write('\n')
+
+          print(f'Stats updated: {data[\"_meta\"][\"total_skills\"]} skills, {data[\"_meta\"][\"total_authors\"]} authors')
+          "
+
+      - name: Generate Stats JSON
+        if: github.event_name == 'schedule' || github.event_name == 'push'
+        run: |
+          python3 -c "
+          import json
+          from collections import Counter
+
+          with open('community-skills.json') as f:
+              data = json.load(f)
+
+          skills = data['skills']
+          categories = Counter(s.get('category', 'uncategorized') for s in skills)
+          tags = Counter(tag for s in skills for tag in s.get('tags', []))
+
+          stats = {
+              'total': len(skills),
+              'authors': len(set(s['author'] for s in skills)),
+              'categories': dict(categories.most_common(20)),
+              'top_tags': dict(tags.most_common(30)),
+              'latest': [s['id'] for s in skills[-10:]],
+              'updated': data['_meta']['updated']
+          }
+
+          with open('community-skills-stats.json', 'w') as f:
+              json.dump(stats, f, ensure_ascii=False, indent=2)
+              f.write('\n')
+
+          print('Stats generated: community-skills-stats.json')
+          "
+
+      - name: Commit Stats Update
+        if: github.event_name == 'schedule' || github.event_name == 'push'
+        run: |
+          git config user.name "Molin Bot"
+          git config user.email "bot@molin-os.ai"
+          git add community-skills.json community-skills-stats.json
+          git diff --staged --quiet || git commit -m "chore: Update skill stats [skip ci]"
+          git push

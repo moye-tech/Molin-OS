@@ -1,0 +1,132 @@
+{
+  "$schema": "https://moye-tech.github.io/Molin-Skills-Registry/schema.json",
+  "_meta": {
+    "version": "1.0.0",
+    "updated": "2026-05-10T18:10:00+08:00",
+    "total_skills": 290,
+    "total_authors": 1,
+    "spec": "https://github.com/agent-skills/specification"
+  },
+  "skills": [
+    {
+      "id": "molin-mql",
+      "name": "MQL Query Engine",
+      "author": "墨麟AI集团",
+      "description": "Molin Query Language — 结构化知识查询引擎，对标 Obsidian Dataview。支持 FROM/WHERE/SORT/GROUP BY/FLATTEN/LIMIT 语法。",
+      "repo": "moye-tech/Molin-OS",
+      "version": "1.0.0",
+      "min_hermes_version": "0.13.0",
+      "tags": ["query", "knowledge", "search", "infrastructure"],
+      "category": "infrastructure",
+      "added": "2026-05-10"
+    },
+    {
+      "id": "molin-manifest",
+      "name": "Manifest Standardization",
+      "author": "墨麟AI集团",
+      "description": "Manifest 标准化工具 — 为所有技能提供统一的版本管理标准，对标 Obsidian manifest.json。",
+      "repo": "moye-tech/Molin-OS",
+      "version": "1.0.0",
+      "min_hermes_version": "0.13.0",
+      "tags": ["manifest", "versioning", "standardization", "infrastructure"],
+      "category": "infrastructure",
+      "added": "2026-05-10"
+    },
+    {
+      "id": "obsidian",
+      "name": "Obsidian Vault Integration",
+      "author": "墨麟AI集团",
+      "description": "Read, search, create, and edit notes in the Obsidian vault. 与 Obsidian 知识库双向集成。",
+      "repo": "moye-tech/Molin-OS",
+      "version": "1.0.0",
+      "min_hermes_version": "0.10.0",
+      "tags": ["obsidian", "notes", "knowledge", "markdown"],
+      "category": "note-taking",
+      "added": "2026-03-15"
+    },
+    {
+      "id": "feishu-cli",
+      "name": "Feishu CLI",
+      "author": "墨麟AI集团",
+      "description": "飞书文档操作 CLI — 创建/读取/更新飞书文档、多维表格、审批。",
+      "repo": "moye-tech/Molin-OS",
+      "version": "1.0.0",
+      "min_hermes_version": "0.10.0",
+      "tags": ["feishu", "lark", "documents", "api"],
+      "category": "productivity",
+      "added": "2026-03-15"
+    },
+    {
+      "id": "xianyu-automation",
+      "name": "Xianyu Automation",
+      "author": "墨麟AI集团",
+      "description": "闲鱼自动化客服 — 消息检测、AI自动回复、订单管理。",
+      "repo": "moye-tech/Molin-OS",
+      "version": "1.0.0",
+      "min_hermes_version": "0.10.0",
+      "tags": ["xianyu", "customer-service", "automation", "ecommerce"],
+      "category": "ecommerce",
+      "added": "2026-03-20"
+    },
+    {
+      "id": "molin-ceo-persona",
+      "name": "墨麟CEO Persona",
+      "author": "墨麟AI集团",
+      "description": "墨麟CEO认知框架 — 公司治理、决策模型、子公司映射。",
+      "repo": "moye-tech/Molin-OS",
+      "version": "2.0.0",
+      "min_hermes_version": "0.12.0",
+      "tags": ["molin-os", "ceo", "governance", "persona"],
+      "category": "molin-os",
+      "added": "2026-04-01"
+    },
+    {
+      "id": "firecrawl",
+      "name": "Firecrawl Web Intelligence",
+      "author": "墨麟AI集团",
+      "description": "Firecrawl 网页抓取 — scrape/crawl/search/extract/map/deep_research 10 个 API。",
+      "repo": "moye-tech/Molin-OS",
+      "version": "1.0.0",
+      "min_hermes_version": "0.13.0",
+      "tags": ["firecrawl", "scraping", "research", "intelligence"],
+      "category": "intelligence",
+      "added": "2026-05-05"
+    },
+    {
+      "id": "supermemory",
+      "name": "Supermemory Integration",
+      "author": "墨麟AI集团",
+      "description": "Supermemory 长期记忆集成 — 跨境向量记忆存储与检索。",
+      "repo": "moye-tech/Molin-OS",
+      "version": "1.0.0",
+      "min_hermes_version": "0.13.0",
+      "tags": ["memory", "vector", "rag", "supermemory"],
+      "category": "infrastructure",
+      "added": "2026-05-06"
+    },
+    {
+      "id": "molin-growth-marketing",
+      "name": "墨增增长引擎",
+      "author": "墨麟AI集团",
+      "description": "SEO优化、增长分析、A/B测试、用户分层。",
+      "repo": "moye-tech/Molin-OS",
+      "version": "1.0.0",
+      "min_hermes_version": "0.13.0",
+      "tags": ["growth", "marketing", "seo", "analytics"],
+      "category": "growth",
+      "added": "2026-05-01"
+    },
+    {
+      "id": "molin-trading",
+      "name": "墨投交易引擎",
+      "author": "墨麟AI集团",
+      "description": "量化交易策略 — 信号生成、回测、市场分析、研究报告。",
+      "repo": "moye-tech/Molin-OS",
+      "version": "1.0.0",
+      "min_hermes_version": "0.13.0",
+      "tags": ["trading", "quant", "crypto", "finance"],
+      "category": "finance",
+      "added": "2026-05-01"
+    }
+  ]
+}
