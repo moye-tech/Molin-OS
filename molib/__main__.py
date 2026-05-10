@@ -31,6 +31,9 @@ Hermes（大脑）通过 terminal（神经）调用本 CLI。
     python -m molib bitable schema         # 飞书多维表格表结构
     python -m molib bitable write <table>  # 飞书多维表格写入记录
     python -m molib bitable list <table>   # 飞书多维表格查询记录
+    python -m molib avatar create --text "你好" --image pic.jpg  # 数字人视频(Tier 1: ffmpeg+say)
+    python -m molib avatar list-voices     # 列出可用语音
+    python -m molib avatar check           # 检测 Tier 1/2 引擎状态
 """
 
 import sys
@@ -549,6 +552,60 @@ def cmd_memory(args: list[str]) -> dict:
     return {"output": buf.getvalue()}
 
 
+def cmd_avatar(args: list[str]) -> dict:
+    """数字人视频生成 — create / list-voices / check"""
+    from molib.infra.digital_human import (
+        cmd_avatar_create, cmd_avatar_list_voices, cmd_avatar_check,
+    )
+
+    if not args:
+        return {"error": "子命令: create | list-voices | check"}
+
+    subcmd = args[0]
+    rest = args[1:]
+
+    text = ""
+    image = ""
+    voice = ""
+    rate = 200
+    resolution = "720p"
+    lang = ""
+    i = 0
+    while i < len(rest):
+        if rest[i] == "--text" and i + 1 < len(rest):
+            text = rest[i + 1]; i += 2
+        elif rest[i] == "--image" and i + 1 < len(rest):
+            image = rest[i + 1]; i += 2
+        elif rest[i] == "--voice" and i + 1 < len(rest):
+            voice = rest[i + 1]; i += 2
+        elif rest[i] == "--rate" and i + 1 < len(rest):
+            rate = int(rest[i + 1]); i += 2
+        elif rest[i] == "--resolution" and i + 1 < len(rest):
+            resolution = rest[i + 1]; i += 2
+        elif rest[i] == "--lang" and i + 1 < len(rest):
+            lang = rest[i + 1]; i += 2
+        else:
+            i += 1
+
+    import io, sys
+    old_stdout = sys.stdout
+    buf = io.StringIO()
+    sys.stdout = buf
+    try:
+        if subcmd == "create":
+            cmd_avatar_create(text, image, voice, rate, resolution)
+        elif subcmd == "list-voices":
+            cmd_avatar_list_voices(lang)
+        elif subcmd == "check":
+            cmd_avatar_check()
+        else:
+            return {"error": f"未知子命令: {subcmd}"}
+    finally:
+        sys.stdout = old_stdout
+
+    return {"output": buf.getvalue()}
+
+
 async def cmd_cost(args: list[str]) -> dict:
     """API成本追踪 — report / check / reset / track"""
     from molib.infra.budget_guard import BudgetGuard
@@ -732,6 +789,7 @@ async def run(command: str, args: list[str]) -> dict:
         "bitable": cmd_bitable,
         "swarm": cmd_swarm,
         "memory": cmd_memory,
+        "avatar": cmd_avatar,
     }
     # 异步命令映射（返回 coroutine）
     async_commands = {
