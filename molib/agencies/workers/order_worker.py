@@ -32,7 +32,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from molib.agencies.workers.base import (
-    SubsidiaryWorker,
+    SmartSubsidiaryWorker,
     Task,
     WorkerResult,
 )
@@ -44,7 +44,7 @@ from molib.business.order_engine import (
 )
 
 
-class OrderWorker(_Base):
+class OrderWorker(SmartSubsidiaryWorker):
     worker_id = "order_worker"
     worker_name = "墨单订单"
     description = "订单 Worker：询盘处理、报价生成、交付跟踪、状态管理、发票与支付"

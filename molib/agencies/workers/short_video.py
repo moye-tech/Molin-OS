@@ -4,7 +4,7 @@
 - MoneyPrinterTurbo ⭐57K: 批量模板视频（Pexels素材+LLM脚本+TTS）
 - Pixelle-Video ⭐13K: AI创意视频（ComfyUI生图+LLM脚本+TTS）
 
-使用方式: python -m molib video generate --topic "主题" --engine mpt
+v2.0: SmartSubsidiaryWorker + 上下文注入 + 主动协作(Research/VoiceActor)
 """
 
 import json
@@ -41,11 +41,45 @@ class ShortVideo(_Base):
             engine = task.payload.get("engine", "mpt")
             duration = task.payload.get("duration", 60)
 
+            # ── v2.0: 上下文注入 ──
+            exp_hint = (context or {}).get("exp_hint", "")
+            chain_ctx = task.payload.get("__context__", "")
+
+            # ── v2.0: 主动查热门趋势（Research协作）──
+            trend_ctx = ""
+            voice_spec = ""
+            try:
+                r = await self.request_collaboration(
+                    "research",
+                    {"action": "trend_scan", "topic": topic, "platform": "抖音"}
+                )
+                trend_ctx = r.get("summary", "") if isinstance(r, dict) else ""
+            except Exception:
+                pass
+
+            # ── v2.0: 查询配音建议（VoiceActor协作）──
+            if mode == "generate":
+                try:
+                    v = await self.request_collaboration(
+                        "voice_actor",
+                        {"action": "recommend_voice", "topic": topic, "style": "短视频"}
+                    )
+                    voice_spec = v.get("recommendation", "") if isinstance(v, dict) else ""
+                except Exception:
+                    pass
+
             # ── LLM 注入：用结构化输出生成脚本 ──
             system_prompt = (
                 "你是一位资深的短视频脚本创作专家，擅长抖音/快手/小红书等平台的爆款脚本创作。"
                 "请根据用户需求生成完整、有吸引力的短视频脚本。"
             )
+            if trend_ctx:
+                system_prompt += f"\n\n【热门趋势】\n{trend_ctx}"
+            if exp_hint:
+                system_prompt += f"\n\n【历史成功经验】\n{exp_hint}"
+            if chain_ctx:
+                system_prompt += f"\n\n【上游协作背景】\n{chain_ctx}"
+
             prompt = (
                 f"请为以下主题生成一个{duration}秒的短视频脚本：\n"
                 f"主题：{topic}\n"
@@ -80,9 +114,9 @@ class ShortVideo(_Base):
             else:
                 # ── fallback：原有 mock 逻辑 ──
                 script = (
-                    f"【{topic}】短视频脚本 - {duration}秒版本\\n"
-                    f"开场：吸引注意力的开场白（3秒）\\n"
-                    f"正文：核心内容阐述（{duration-10}秒）\\n"
+                    f"【{topic}】短视频脚本 - {duration}秒版本\n"
+                    f"开场：吸引注意力的开场白（3秒）\n"
+                    f"正文：核心内容阐述（{duration-10}秒）\n"
                     f"结尾：引导互动和关注（7秒）"
                 )
                 output = {
@@ -92,6 +126,9 @@ class ShortVideo(_Base):
                     "duration_seconds": duration,
                     "source": "mock",
                 }
+
+            if voice_spec:
+                output["voice_spec"] = voice_spec
 
             if mode == "generate":
                 video_result = await self._render_video(script, engine, topic)

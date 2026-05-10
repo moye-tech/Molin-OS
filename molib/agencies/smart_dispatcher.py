@@ -18,8 +18,22 @@ class SmartDispatcher:
         "出海":     ["research", "global_marketing", "legal"],
         "课程":     ["research", "education", "content_writer"],
         "视频":     ["content_writer", "short_video"],
-        "闲鱼商品": ["content_writer", "customer_service"],
+        "短视频":   ["research", "content_writer", "short_video", "voice_actor"],
+        "闲鱼商品": ["content_writer", "customer_service", "ecommerce"],
         "AI设计":   ["designer", "developer"],
+        # ── v2.1 扩展 ──
+        "安全审计": ["security", "developer", "ops"],
+        "财务分析": ["finance", "data_analyst"],
+        "客服":     ["customer_service", "knowledge"],
+        "私域运营": ["crm", "content_writer"],
+        "品牌管理": ["ip_manager", "designer", "content_writer"],
+        "部署上线": ["developer", "ops", "security"],
+        "数据分析": ["data_analyst", "research"],
+        "商务拓展": ["bd", "research", "content_writer"],
+        "知识管理": ["knowledge", "data_analyst"],
+        "语音合成": ["voice_actor", "content_writer"],
+        "交易策略": ["trading", "research", "data_analyst"],
+        "全球化":   ["global_marketing", "research", "legal"],
     }
 
     async def dispatch(self, task, context: dict = None):

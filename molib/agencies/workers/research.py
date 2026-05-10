@@ -1,4 +1,6 @@
-"""墨研竞情 Worker — 竞争情报 + 群体智能预测（基于MiroFish设计模式）"""
+"""墨研竞情 Worker — 竞争情报 + 群体智能预测（基于MiroFish设计模式）
+v2.0: SmartSubsidiaryWorker + 上下文注入（历史经验+链路上下文）
+"""
 from .base import SmartSubsidiaryWorker as _Base, Task, WorkerResult
 
 
@@ -33,13 +35,24 @@ class Research(_Base):
             context_info = task.payload.get("context", "")
             competitors = task.payload.get("competitors", [])
 
+            # ── v2.0: 上下文注入 ──
+            exp_hint = (context or {}).get("exp_hint", "")
+            chain_ctx = task.payload.get("__context__", "")
+
+            # 构建增强上下文（传给子方法）
+            enriched_ctx = context_info
+            if exp_hint:
+                enriched_ctx = f"{context_info}\n【历史成功经验】\n{exp_hint}"
+            if chain_ctx:
+                enriched_ctx = f"{enriched_ctx}\n【上游协作背景】\n{chain_ctx}"
+
             if action == "predict":
                 # 群体智能预测（基于MiroFish设计模式）
                 try:
                     from molib.intelligence.predictor import predict
                     result = await predict(
                         topic=topic or domain,
-                        context=context_info,
+                        context=enriched_ctx,
                         num_agents=task.payload.get("num_agents", 5),
                     )
                     output = {
@@ -52,11 +65,14 @@ class Research(_Base):
                     }
                 except Exception:
                     # fallback: LLM生成预测
-                    output = await self._llm_predict(topic or domain, context_info)
+                    output = await self._llm_predict(topic or domain, enriched_ctx)
             elif action == "trending":
-                output = await self._analyze_trends(domain)
+                output = await self._analyze_trends(domain, enriched_ctx)
+            elif action == "trend_scan":
+                # ── v2.0: ContentWriter 主动调用的热词扫描 ──
+                output = await self._trend_scan(topic or domain, task.payload.get("platform", ""))
             else:
-                output = await self._analyze_competitors(competitors, domain)
+                output = await self._analyze_competitors(competitors, domain, enriched_ctx)
 
             return WorkerResult(
                 task_id=task.task_id,
@@ -72,13 +88,42 @@ class Research(_Base):
                 output={"error": str(e)},
             )
 
-    async def _analyze_competitors(self, competitors: list, domain: str) -> dict:
+    async def _trend_scan(self, topic: str, platform: str) -> dict:
+        """v2.0: 热词/趋势扫描 — 供 ContentWriter 等协作调用"""
+        system = (
+            "你是墨研竞情——墨麟AI集团旗下的竞争情报与战略研究子公司。"
+            "请对给定主题进行快速热词/趋势扫描，输出可用于内容创作的洞察。"
+        )
+        prompt = (
+            f"请扫描以下主题在{platform or '全网'}的热词和趋势：\n\n"
+            f"主题：{topic}\n\n"
+            f"请输出JSON格式，包含：\n"
+            f"- summary（一句话趋势摘要）\n"
+            f"- hot_keywords（热词列表，每项含 word 和热度高/中/低）\n"
+            f"- trending_angles（热门切入角度列表）\n"
+            f"- competitor_headlines（竞品爆款标题列表）\n"
+            f"- status（固定为'trend_scan_done'）"
+        )
+        result = await self.llm_chat_json(prompt, system=system)
+        if result:
+            return {**result, "source": "llm"}
+        return {
+            "summary": f"{topic}在{platform}上热度稳定",
+            "hot_keywords": [{"word": topic, "热度": "高"}],
+            "trending_angles": ["专业科普角度", "实用教程角度"],
+            "status": "trend_scan_done",
+            "source": "mock",
+        }
+
+    async def _analyze_competitors(self, competitors: list, domain: str, enriched_ctx: str = "") -> dict:
         system = (
             "你是墨研竞情——墨麟AI集团旗下的竞争情报与战略研究子公司。"
             "你的专长是：竞品监控与竞争力分析、行业趋势扫描与热点追踪、"
             "群体智能预测、情报日报生成。你能从碎片化信息中提炼出可行动的洞察。"
             "请输出结构化的竞品分析报告。"
         )
+        if enriched_ctx:
+            system += f"\n\n【增强上下文】\n{enriched_ctx}"
         prompt = (
             f"请对以下领域进行竞品分析：\n\n"
             f"领域：{domain}\n"
@@ -103,13 +148,15 @@ class Research(_Base):
             "source": "mock",
         }
 
-    async def _analyze_trends(self, domain: str) -> dict:
+    async def _analyze_trends(self, domain: str, enriched_ctx: str = "") -> dict:
         system = (
             "你是墨研竞情——墨麟AI集团旗下的竞争情报与战略研究子公司。"
             "你的专长是：竞品监控与竞争力分析、行业趋势扫描与热点追踪、"
             "群体智能预测、情报日报生成。你能从碎片化信息中提炼出可行动的洞察。"
             "请输出结构化的行业趋势分析报告。"
         )
+        if enriched_ctx:
+            system += f"\n\n【增强上下文】\n{enriched_ctx}"
         prompt = (
             f"请对以下领域进行行业趋势分析：\n\n"
             f"领域：{domain}\n\n"
@@ -137,16 +184,18 @@ class Research(_Base):
             "source": "mock",
         }
 
-    async def _llm_predict(self, topic: str, context_info: str) -> dict:
+    async def _llm_predict(self, topic: str, enriched_ctx: str) -> dict:
         system = (
             "你是墨研竞情——墨麟AI集团旗下的竞争情报与战略研究子公司。"
             "你采用MiroFish设计模式进行群体智能预测。请综合多角度思考，"
             "给出结构化、有深度的预测报告。"
         )
+        if enriched_ctx:
+            system += f"\n\n【增强上下文】\n{enriched_ctx}"
         prompt = (
             f"请对以下主题进行深度预测分析：\n\n"
             f"主题：{topic}\n"
-            f"上下文：{context_info if context_info else '无额外上下文'}\n\n"
+            f"上下文：{enriched_ctx if enriched_ctx else '无额外上下文'}\n\n"
             f"请输出JSON格式，包含：\n"
             f"- action（固定为'prediction'）\n"
             f"- topic（预测主题）\n"

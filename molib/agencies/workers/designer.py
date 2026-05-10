@@ -2,6 +2,7 @@
 
 所属: VP营销
 技能: molin-design, excalidraw, pixel-art
+v2.0: SmartSubsidiaryWorker + 上下文注入 + 主动协作(Research)
 """
 from .base import SmartSubsidiaryWorker as _Base, Task, WorkerResult
 
@@ -35,12 +36,35 @@ class Designer(_Base):
             prompt_text = task.payload.get("prompt", "")
             count = task.payload.get("count", 1)
 
+            # ── v2.0: 上下文注入 ──
+            exp_hint = (context or {}).get("exp_hint", "")
+            chain_ctx = task.payload.get("__context__", "")
+
+            # ── v2.0: 营销类设计主动查趋势洞察 ──
+            trend_ctx = ""
+            if design_type in ("封面图", "海报", "banner", "营销图"):
+                try:
+                    r = await self.request_collaboration(
+                        "research",
+                        {"action": "trend_scan", "topic": prompt_text or design_type, "platform": "全平台"}
+                    )
+                    trend_ctx = r.get("summary", "") if isinstance(r, dict) else ""
+                except Exception:
+                    pass
+
             system = (
                 "你是墨图设计——墨麟AI集团旗下的专业视觉设计子公司。"
                 "你的专长是：封面图与海报设计、UI界面视觉设计、多风格输出（商务/卡通/插画/扁平/3D）、"
                 "批量化图片生成与排版。你精通设计规范、色彩理论和构图原则。"
                 "你协助生成结构化的设计规格书，用于后续实际出图。"
             )
+            if trend_ctx:
+                system += f"\n\n【趋势洞察】\n{trend_ctx}"
+            if exp_hint:
+                system += f"\n\n【历史成功经验】\n{exp_hint}"
+            if chain_ctx:
+                system += f"\n\n【上游协作背景】\n{chain_ctx}"
+
             prompt = (
                 f"请为以下设计需求生成详细的设计规格书：\n\n"
                 f"设计类型：{design_type}\n"
@@ -72,7 +96,6 @@ class Designer(_Base):
                     "source": "llm",
                 }
             else:
-                # fallback: 原有 mock 输出
                 output = {
                     "design_type": design_type,
                     "specs": specs,

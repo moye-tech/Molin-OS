@@ -196,12 +196,16 @@ class Ecommerce(_Base):
             action = task.payload.get("action", "list")
             platform = task.payload.get("platform", "闲鱼")
 
+            # ── v2.0: 上下文注入 ──
+            self._exp_hint = (context or {}).get("exp_hint", "")
+            self._chain_ctx = task.payload.get("__context__", "")
+
             if action == "add_product":
                 result = self._handle_add_product(task.payload)
             elif action == "list_products":
                 result = self._handle_list_products(task.payload)
             elif action == "generate_listing":
-                result = self._handle_generate_listing(task.payload)
+                result = await self._handle_generate_listing(task.payload)
             elif action == "create_order":
                 result = self._handle_create_order(task.payload)
             elif action == "list_orders":
@@ -256,7 +260,7 @@ class Ecommerce(_Base):
             "products": [p.to_dict() for p in products],
         }
 
-    def _handle_generate_listing(self, payload: dict) -> dict:
+    async def _handle_generate_listing(self, payload: dict) -> dict:
         product_id = payload.get("product_id", "")
         platform = payload.get("platform", "闲鱼")
         adapter = self.get_adapter(platform)
@@ -266,6 +270,28 @@ class Ecommerce(_Base):
             return {"error": f"Product {product_id} not found"}
 
         product_dict = p.to_dict()
+
+        # ── v2.0: 主动请求ContentWriter优化商品描述 ──
+        optimized_copy = ""
+        try:
+            cw = await self.request_collaboration(
+                "content_writer",
+                {
+                    "topic": product_dict.get("name", ""),
+                    "platform": platform,
+                    "style": "营销软文",
+                    "word_count": 200,
+                    "keywords": [product_dict.get("category", "")],
+                }
+            )
+            if isinstance(cw, dict) and cw.get("articles"):
+                optimized_copy = cw["articles"][0].get("content", "")[:500]
+        except Exception:
+            pass
+
+        if optimized_copy:
+            product_dict["description"] = optimized_copy
+
         formatted = adapter.format_product(product_dict)
         listing_text = adapter.format_listing(product_dict)
         tips = adapter.listing_tips(product_dict)
