@@ -16,6 +16,7 @@ Hermes（大脑）通过 terminal（神经）调用本 CLI。
     python -m molib intel <subcmd> [args]     # 情报
     python -m molib finance <subcmd> [args]   # 财务
     python -m molib order <subcmd> [args]     # 订单
+    python -m molib shop <subcmd> [args]      # 电商（商品+订单+上架）
     python -m molib data <subcmd> [args]      # 数据
     python -m molib proxy <subcmd> [args]     # AI代理（9Router）
     python -m molib scrap <subcmd> [args]    # Scrapling抓取
@@ -110,6 +111,13 @@ def cmd_help(args: list[str]) -> dict:
         "finance record --type T --amount A --note N": "记账（墨算财务）",
         "finance report": "财务报告（墨算财务）",
         "order list --status S": "订单列表（墨链电商）",
+        "order status --order-id ID": "订单详情（墨链电商）",
+        "order create --title T --source S --value V": "创建订单（墨链电商）",
+        "order invoice --order-id ID --customer C": "生成发票（墨链电商）",
+        "order payment --invoice-id ID --amount A --method M": "记录支付（墨链电商）",
+        "order transition --order-id ID --to STATUS": "推进订单状态（墨链电商）",
+        "order stats": "订单统计（墨链电商）",
+        "order report": "每日订单报告（墨链电商）",
         "crm segment --by B": "用户分群（墨域私域）",
         "proxy start": "启动AI代理（9Router，端口20128）",
         "proxy stop": "停止AI代理",
@@ -702,6 +710,174 @@ async def cmd_trading(args: list[str]) -> dict:
     return {"output": buf.getvalue()}
 
 
+async def cmd_order(args: list[str]) -> dict:
+    """订单命令 — create / invoice / payment / list / status / transition / stats / report"""
+    if not args:
+        return {
+            "error": "子命令: create | invoice | payment | list | status | transition | stats | report",
+            "examples": {
+                "create": 'python -m molib order create --title "项目名" --source direct --value 500',
+                "invoice": "python -m molib order invoice --order-id ORD-XXX --customer 客户名",
+                "payment": "python -m molib order payment --invoice-id INV-XXX --amount 500 --method wechat",
+                "list": "python -m molib order list --status won",
+                "status": "python -m molib order status --order-id ORD-XXX",
+                "transition": "python -m molib order transition --order-id ORD-XXX --to bidding",
+                "stats": "python -m molib order stats",
+                "report": "python -m molib order report",
+            },
+        }
+
+    subcmd = args[0]
+    rest = args[1:]
+
+    from molib.agencies.workers.order_worker import OrderWorker
+    worker = OrderWorker()
+
+    if subcmd == "create":
+        title = ""
+        source = "direct"
+        description = ""
+        value = 0.0
+        tags_str = ""
+        i = 0
+        while i < len(rest):
+            if rest[i] == "--title" and i + 1 < len(rest):
+                title = rest[i + 1]; i += 2
+            elif rest[i] == "--source" and i + 1 < len(rest):
+                source = rest[i + 1]; i += 2
+            elif rest[i] == "--description" and i + 1 < len(rest):
+                description = rest[i + 1]; i += 2
+            elif rest[i] == "--value" and i + 1 < len(rest):
+                value = float(rest[i + 1]); i += 2
+            elif rest[i] == "--tags" and i + 1 < len(rest):
+                tags_str = rest[i + 1]; i += 2
+            else:
+                i += 1
+        if not title:
+            return {"error": "请指定 --title 参数"}
+        tags = [t.strip() for t in tags_str.split(",")] if tags_str else []
+        return worker.create_order(
+            source=source, title=title, description=description,
+            estimated_value=value, tags=tags,
+        )
+
+    elif subcmd == "invoice":
+        order_id = ""
+        customer = ""
+        email = ""
+        notes = ""
+        tax_rate = 0.0
+        due_days = 30
+        items_json = ""
+        i = 0
+        while i < len(rest):
+            if rest[i] == "--order-id" and i + 1 < len(rest):
+                order_id = rest[i + 1]; i += 2
+            elif rest[i] == "--customer" and i + 1 < len(rest):
+                customer = rest[i + 1]; i += 2
+            elif rest[i] == "--email" and i + 1 < len(rest):
+                email = rest[i + 1]; i += 2
+            elif rest[i] == "--notes" and i + 1 < len(rest):
+                notes = rest[i + 1]; i += 2
+            elif rest[i] == "--tax-rate" and i + 1 < len(rest):
+                tax_rate = float(rest[i + 1]); i += 2
+            elif rest[i] == "--due-days" and i + 1 < len(rest):
+                due_days = int(rest[i + 1]); i += 2
+            elif rest[i] == "--items" and i + 1 < len(rest):
+                items_json = rest[i + 1]; i += 2
+            else:
+                i += 1
+        if not order_id:
+            return {"error": "请指定 --order-id 参数"}
+        items = None
+        if items_json:
+            try:
+                items = json.loads(items_json)
+            except json.JSONDecodeError:
+                return {"error": "items 参数必须是有效 JSON"}
+        return worker.create_invoice(
+            order_id=order_id, items=items, customer_name=customer,
+            customer_email=email, notes=notes, tax_rate=tax_rate,
+            due_days=due_days,
+        )
+
+    elif subcmd == "payment":
+        invoice_id = ""
+        amount = 0.0
+        method = "unknown"
+        note = ""
+        order_id = ""
+        i = 0
+        while i < len(rest):
+            if rest[i] == "--invoice-id" and i + 1 < len(rest):
+                invoice_id = rest[i + 1]; i += 2
+            elif rest[i] == "--amount" and i + 1 < len(rest):
+                amount = float(rest[i + 1]); i += 2
+            elif rest[i] == "--method" and i + 1 < len(rest):
+                method = rest[i + 1]; i += 2
+            elif rest[i] == "--note" and i + 1 < len(rest):
+                note = rest[i + 1]; i += 2
+            elif rest[i] == "--order-id" and i + 1 < len(rest):
+                order_id = rest[i + 1]; i += 2
+            else:
+                i += 1
+        if not invoice_id or amount <= 0:
+            return {"error": "请指定 --invoice-id 和 --amount 参数"}
+        return worker.record_payment(
+            invoice_id=invoice_id, amount=amount, method=method,
+            note=note, order_id=order_id,
+        )
+
+    elif subcmd == "list":
+        status = None
+        source = None
+        i = 0
+        while i < len(rest):
+            if rest[i] == "--status" and i + 1 < len(rest):
+                status = rest[i + 1]; i += 2
+            elif rest[i] == "--source" and i + 1 < len(rest):
+                source = rest[i + 1]; i += 2
+            else:
+                i += 1
+        return worker.list_orders(status=status, source=source)
+
+    elif subcmd == "status":
+        order_id = ""
+        i = 0
+        while i < len(rest):
+            if rest[i] == "--order-id" and i + 1 < len(rest):
+                order_id = rest[i + 1]; i += 2
+            else:
+                i += 1
+        if not order_id:
+            return {"error": "请指定 --order-id 参数"}
+        return worker.get_order_status(order_id)
+
+    elif subcmd == "transition":
+        order_id = ""
+        to_status = ""
+        i = 0
+        while i < len(rest):
+            if rest[i] == "--order-id" and i + 1 < len(rest):
+                order_id = rest[i + 1]; i += 2
+            elif rest[i] == "--to" and i + 1 < len(rest):
+                to_status = rest[i + 1]; i += 2
+            else:
+                i += 1
+        if not order_id or not to_status:
+            return {"error": "请指定 --order-id 和 --to 参数"}
+        return worker.transition_order(order_id, to_status)
+
+    elif subcmd == "stats":
+        return worker.stats()
+
+    elif subcmd == "report":
+        print(worker.daily_report())
+        return {"report": "printed"}
+
+    return {"error": f"未知子命令: {subcmd}"}
+
+
 async def cmd_handoff(args: list[str]) -> dict:
     """Handoff自动路由命令 — list / route / history"""
     from molib.agencies.handoff_register import register_all_handoffs
@@ -801,6 +977,7 @@ async def run(command: str, args: list[str]) -> dict:
         "handoff": cmd_handoff,
         "plan": cmd_plan,
         "cost": cmd_cost,
+        "order": cmd_order,
     }
 
     if command in sync_commands:

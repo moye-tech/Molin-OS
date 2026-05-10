@@ -247,6 +247,8 @@ After creating the skill, always update:
 6. **Skipping downstream docs** — molin-company-structure and system docs are the system's source of truth; out-of-date docs = broken mental model
 7. **Not checking for test contracts/samples** — Repos like ai-legal-claude come with `sample-contract.pdf` or `generate_sample_contract.py` — use these to verify the system works end-to-end
 8. **Parallel creation without explicit context** — `delegate_task` subagents have NO memory of the parent conversation. Pass ALL relevant info (exact file paths, YAML frontmatter format, star counts, owner name, install commands) in the context field. The 300-500 char summary is worth it.
+9. **delegate_task timeout on complex modules** — Subagents time out at 600s. For modules >300 lines with >15 API calls expected, write them directly instead of delegating. The overhead of setting up subagent context often exceeds direct writing time. Pattern: lightweight utilities (<200 lines) → delegate; complex frameworks (>300 lines) → write directly.
+10. **Mac M2 deployment evaluation** — System deploys on Mac M2 (8GB RAM, Python 3.11). Before adapting ANY project: (a) evaluate if it requires cloud services — skip if yes and no local alternative; (b) check memory footprint — skip if >2GB RAM needed; (c) verify Python 3.11 compatibility — test imports, not just README claims; (d) prefer stdlib-only implementations over pip dependencies. Cloud-heavy services (HeyGen, DSPy, cloud-backup) should be EXPLICITLY skipped with rationale documented. Never adapt blindly — each integration must be better than what it replaces.
 
 ## Verification Checklist
 

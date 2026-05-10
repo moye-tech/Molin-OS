@@ -78,7 +78,8 @@ curl -fsSL https://raw.githubusercontent.com/riba2534/feishu-cli/main/install.sh
 - 飞书 API 有 **429 频率限制**，大文档（含多个表格）导入时表格填充阶段可能触发
 - feishu-cli 内置了重试机制（最多 5 次），表格 429 错误会自动恢复
 - 批量导入建议用 `--verbose` 观察进度
-- 导入完成后应立即授权：`feishu-cli perm add <doc_id> --doc-type docx --member-type email --member-id fengye940708@gmail.com --perm full_access --notification`
+- 导入完成后应立即授权。⚠️ `--member-type email` 会返回 `1063001 Invalid parameter`，必须用 `--member-type open_id` 配合用户的 open_id：
+  `feishu-cli perm add <doc_id> --doc-type docx --member-type open_id --member-id ou_5b28c03558c82e5da78ea593d02a0a81 --perm full_access --notification`
 
 ### ⚠️ doc import vs content-update（重要）
 
@@ -277,7 +278,70 @@ feishu-cli mail send --to u@e.com --subject "主题" --body "内容"
 - `python3 tools/feishu_send_image.py <图片路径> [说明文字]`
 - chat_id 已硬编码当前对话
 
-## 墨麟自动化控制平台
+## 🔧 飞书网关故障诊断
+
+当用户报告「飞书不回复了」时，按以下流程系统排查：
+
+### 诊断步骤
+
+```bash
+# 1. 确认飞书客户端是否运行（macOS）
+pgrep -fl Feishu
+
+# 2. 确认 Hermes 网关进程是否在跑
+pgrep -fl "hermes.*gateway"
+
+# 3. 查看网关状态 API
+curl -s http://localhost:8648/api/status | python3 -m json.tool
+
+# 4. 查看最近的网关错误（重点关注 SSL/飞书 API 错误）
+grep -i "ssl\|SSLError\|open.feishu.cn\|feishu.*raised\|Send.*response" \
+  ~/.hermes/logs/agent.log | tail -30
+
+# 5. 测试飞书 API token 获取
+cd ~/ && source .hermes/.env 2>/dev/null && \
+  feishu-cli msg send oc_16b4568be8c63c198b2cd6c4d3d11b85 \
+  --msg-type text --content "ping test $(date +%H:%M:%S)" 2>&1
+
+# 6. 检查飞书网关收消息记录（确认收没收到用户消息）
+grep "Inbound dm message" ~/.hermes/logs/agent.log | tail -10
+```
+
+### 常见故障模式
+
+**模式 1 SSL EOF 瞬时错误（最常见）**
+```
+ssl.SSLEOFError: [SSL: UNEXPECTED_EOF_WHILE_READING]
+```
+- 表现：网关收到消息但添加「typing...」表情反应时 SSL 握手失败
+- 影响：仅影响 `_add_reaction`（表情反应），消息发送通常不受影响
+- 网关已 catch 该异常，不会崩溃
+- 原因：`open.feishu.cn` 间歇性 TLS 握手中断，过一会儿自动恢复
+- 验证：`openssl s_client -connect open.feishu.cn:443 -servername open.feishu.cn </dev/null 2>&1 | head -5`
+- 解决：通常无需处理，若持续出现则重启网关 `hermes gateway restart`
+
+**模式 2 网关进程异常退出**
+- 表现：`gateway.exit_nonzero` 在 `gateway-exit-diag.log` 中出现
+- 检查：`cat ~/.hermes/logs/gateway-exit-diag.log | python3 -m json.tool`
+- 解决：`hermes gateway restart`（已内置自动重启逻辑）
+
+**模式 3 Token 过期**
+- 表现：飞书 API 返回 401 或 token 相关错误
+- 验证：`feishu-cli msg send <chat_id> --msg-type text --content "test"`
+- 解决：检查 `~/.hermes/.env` 中的 `FEISHU_APP_ID` 和 `FEISHU_APP_SECRET` 是否有效
+
+**模式 4 消息已收到但回复被抑制**
+- 表现：日志显示 `Suppressing normal final send`——这是正常的，表示同一会话已有回复正在处理
+- 日志行示例：`Suppressing normal final send for session ... final delivery already confirmed`
+
+### 关键 ID 速查
+
+- CEO 私聊 chat_id: `oc_16b4568be8c63c198b2cd6c4d3d11b85`
+- 自动化控制群 chat_id: `oc_94c87f141e118b68c2da9852bf2f3bda`
+- 创始人 open_id: `ou_5b28c03558c82e5da78ea593d02a0a81`（用于 perm add 授权）
+- 创始人 email: `fengye940708@gmail.com`
+
+> 详见 `references/gateway-troubleshooting.md` — 2026-05-10 实战诊断记录及完整 SSL 错误栈。
 
 墨麟OS 有一个统一的飞书自动化通知群，所有定时作业结果推送至此：
 
@@ -336,9 +400,9 @@ write_file path=/tmp/hermes_report.md content="..."
 # 2. 导入飞书（Mermaid 图表自动转画板，表格智能处理）
 feishu-cli doc import /tmp/hermes_report.md --title "标题" --verbose
 
-# 3. 授权创始人
-feishu-cli perm add <doc_id> --doc-type docx --member-type email \
-  --member-id fengye940708@gmail.com --perm full_access --notification
+# 3. 授权创始人（⚠️ 必须用 open_id，email 会报 Invalid parameter）
+feishu-cli perm add <doc_id> --doc-type docx --member-type open_id \
+  --member-id ou_5b28c03558c82e5da78ea593d02a0a81 --perm full_access --notification
 ```
 
 ---

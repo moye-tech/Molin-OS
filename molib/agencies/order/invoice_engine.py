@@ -1,445 +1,391 @@
 """
-墨单订单 — 发票引擎 (Invoice Engine)
-=====================================
-吸收自 Invoice Ninja (github.com/invoiceninja/invoiceninja 9k stars)
-和 Kill Bill (github.com/killbill/killbill 4k stars)
+墨单订单 — 发票引擎
+===================
+吸收 invoiceninja (9K⭐) 设计模式：
+- 模板化发票生成
+- 在线支付状态追踪
+- 税务支持（中国增值税）
+- 客户门户数据导出
 
-纯标准库实现：
-- Invoice 数据模型
-- HTML / 纯文本 模板渲染
-- 序列化/反序列化
-- 税计算
-- 客户门面（Customer Portal 简化版）
+Mac M2: stdlib-only, 零外部依赖。
 
-零外部依赖。
+用法:
+    from molib.agencies.order.invoice_engine import InvoiceEngine
+    engine = InvoiceEngine()
+    inv = engine.create_invoice("客户A", [{"name": "服务费", "amount": 1000}])
 """
 
+from __future__ import annotations
+
 import json
+import os
 import uuid
-import time
-from datetime import datetime, timedelta
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Optional
 
-# ── 存储目录 ─────────────────────────────────────────────────
 INVOICE_DIR = Path.home() / ".molin" / "orders" / "invoices"
-INVOICE_DIR.mkdir(parents=True, exist_ok=True)
 
+TAX_RATES = {
+    "CN": 0.13,   # 中国增值税 13%
+    "CN_SMALL": 0.03,  # 小规模纳税人 3%
+    "NONE": 0.0,
+}
 
-# ═══════════════════════════════════════════════════════════════
-# 数据模型
-# ═══════════════════════════════════════════════════════════════
 
 @dataclass
 class InvoiceItem:
-    """发票行项目"""
-    description: str
-    quantity: float = 1.0
-    unit_price: float = 0.0
-    tax_rate: float = 0.0  # e.g. 0.06 for 6%
+    name: str
+    amount: float       # 不含税金额
+    quantity: int = 1
+    unit: str = "项"
+    tax_rate: float = 0.13
+    description: str = ""
 
     @property
     def subtotal(self) -> float:
-        return round(self.quantity * self.unit_price, 2)
+        return self.amount * self.quantity
 
     @property
-    def tax_amount(self) -> float:
+    def tax(self) -> float:
         return round(self.subtotal * self.tax_rate, 2)
 
     @property
     def total(self) -> float:
-        return round(self.subtotal + self.tax_amount, 2)
+        return round(self.subtotal + self.tax, 2)
+
+    def to_dict(self) -> dict:
+        return {
+            "name": self.name,
+            "amount": self.amount,
+            "quantity": self.quantity,
+            "unit": self.unit,
+            "tax_rate": self.tax_rate,
+            "description": self.description,
+            "subtotal": self.subtotal,
+            "tax": self.tax,
+            "total": self.total,
+        }
 
 
 @dataclass
 class Invoice:
-    """发票主体 — 吸收 Invoice Ninja 模板引擎设计"""
     invoice_id: str
     customer_name: str
     customer_email: str = ""
-    customer_address: str = ""
     items: list[InvoiceItem] = field(default_factory=list)
-    tax_rate: float = 0.0
-    status: str = "draft"  # draft | sent | paid | overdue | cancelled
+    status: str = "draft"  # draft → sent → paid → overdue → cancelled
     notes: str = ""
-    terms: str = "付款后 7 日内交付"
-    currency: str = "¥"
-    created_at: float = 0.0
-    due_date: str = ""  # ISO format
-    paid_at: Optional[float] = None
-    order_id: str = ""
-
-    def __post_init__(self):
-        if self.created_at == 0.0:
-            self.created_at = time.time()
-        if not self.due_date:
-            self.due_date = (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")
-        if not self.invoice_id:
-            self.invoice_id = f"INV-{uuid.uuid4().hex[:8].upper()}"
-
-    # ── 金额计算 ─────────────────────────────────────────
+    tax_regime: str = "CN"  # CN / CN_SMALL / NONE
+    created_at: str = ""
+    due_date: str = ""
+    paid_at: str = ""
+    payment_method: str = ""
 
     @property
-    def subtotal(self) -> float:
-        return round(sum(item.subtotal for item in self.items), 2)
+    def subtotal_amount(self) -> float:
+        return sum(i.subtotal for i in self.items)
 
     @property
-    def total_tax(self) -> float:
-        return round(sum(item.tax_amount for item in self.items), 2)
+    def tax_amount(self) -> float:
+        return sum(i.tax for i in self.items)
 
     @property
-    def total(self) -> float:
-        return round(self.subtotal + self.total_tax, 2)
+    def total_amount(self) -> float:
+        return round(self.subtotal_amount + self.tax_amount, 2)
 
-    @property
-    def balance_due(self) -> float:
-        """待付余额（后续接入 payment_tracker 后联动）"""
-        return self.total  # 默认全款未付
-
-    @property
-    def is_overdue(self) -> bool:
-        if self.status == "paid":
-            return False
-        try:
-            due = datetime.strptime(self.due_date, "%Y-%m-%d")
-            return datetime.now() > due
-        except ValueError:
-            return False
-
-    def add_item(self, description: str, quantity: float = 1.0,
-                 unit_price: float = 0.0, tax_rate: float | None = None) -> InvoiceItem:
-        """添加行项目"""
-        rate = tax_rate if tax_rate is not None else self.tax_rate
-        item = InvoiceItem(
-            description=description,
-            quantity=quantity,
-            unit_price=unit_price,
-            tax_rate=rate,
-        )
-        self.items.append(item)
-        return item
-
-    # ── 序列化 ───────────────────────────────────────────
-
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict:
         return {
             "invoice_id": self.invoice_id,
             "customer_name": self.customer_name,
             "customer_email": self.customer_email,
-            "customer_address": self.customer_address,
-            "items": [
-                {
-                    "description": i.description,
-                    "quantity": i.quantity,
-                    "unit_price": i.unit_price,
-                    "tax_rate": i.tax_rate,
-                }
-                for i in self.items
-            ],
-            "tax_rate": self.tax_rate,
+            "items": [i.to_dict() for i in self.items],
             "status": self.status,
             "notes": self.notes,
-            "terms": self.terms,
-            "currency": self.currency,
+            "tax_regime": self.tax_regime,
+            "subtotal": self.subtotal_amount,
+            "tax": self.tax_amount,
+            "total": self.total_amount,
             "created_at": self.created_at,
             "due_date": self.due_date,
             "paid_at": self.paid_at,
-            "order_id": self.order_id,
+            "payment_method": self.payment_method,
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "Invoice":
-        inv = cls(
-            invoice_id=data.get("invoice_id", ""),
-            customer_name=data.get("customer_name", ""),
+    def from_dict(cls, data: dict) -> Invoice:
+        items = [InvoiceItem(**i) for i in data.get("items", [])]
+        return cls(
+            invoice_id=data["invoice_id"],
+            customer_name=data["customer_name"],
             customer_email=data.get("customer_email", ""),
-            customer_address=data.get("customer_address", ""),
-            tax_rate=data.get("tax_rate", 0.0),
+            items=items,
             status=data.get("status", "draft"),
             notes=data.get("notes", ""),
-            terms=data.get("terms", "付款后 7 日内交付"),
-            currency=data.get("currency", "¥"),
-            created_at=data.get("created_at", 0.0),
+            tax_regime=data.get("tax_regime", "CN"),
+            created_at=data.get("created_at", ""),
             due_date=data.get("due_date", ""),
-            paid_at=data.get("paid_at"),
-            order_id=data.get("order_id", ""),
+            paid_at=data.get("paid_at", ""),
+            payment_method=data.get("payment_method", ""),
         )
-        for item_data in data.get("items", []):
-            inv.items.append(InvoiceItem(
-                description=item_data.get("description", ""),
-                quantity=item_data.get("quantity", 1.0),
-                unit_price=item_data.get("unit_price", 0.0),
-                tax_rate=item_data.get("tax_rate", 0.0),
-            ))
+
+
+class InvoiceEngine:
+    """发票生成引擎。"""
+
+    def __init__(self, storage_dir: Optional[Path] = None):
+        self.storage_dir = storage_dir or INVOICE_DIR
+        self.storage_dir.mkdir(parents=True, exist_ok=True)
+        self._cache: dict[str, Invoice] = {}
+
+    # ── CRUD ──────────────────────────────────────────
+
+    def create_invoice(
+        self,
+        customer_name: str,
+        items: list[dict],
+        *,
+        customer_email: str = "",
+        notes: str = "",
+        tax_regime: str = "CN_SMALL",
+        due_days: int = 30,
+    ) -> Invoice:
+        """创建发票。
+
+        items: [{"name": "服务费", "amount": 1000, "quantity": 1}, ...]
+        """
+        inv = Invoice(
+            invoice_id=f"INV-{datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}",
+            customer_name=customer_name,
+            customer_email=customer_email,
+            items=[InvoiceItem(
+                name=i["name"],
+                amount=i["amount"],
+                quantity=i.get("quantity", 1),
+                unit=i.get("unit", "项"),
+                tax_rate=TAX_RATES.get(tax_regime, TAX_RATES["CN"]),
+                description=i.get("description", ""),
+            ) for i in items],
+            status="draft",
+            notes=notes,
+            tax_regime=tax_regime,
+            created_at=datetime.now().isoformat(),
+            due_date=(datetime.now() + timedelta(days=due_days)).strftime("%Y-%m-%d"),
+        )
+        self._save(inv)
         return inv
 
-    def save(self) -> str:
-        """持久化到 JSON 文件"""
-        filepath = INVOICE_DIR / f"{self.invoice_id}.json"
-        filepath.write_text(
-            json.dumps(self.to_dict(), ensure_ascii=False, indent=2),
-            encoding="utf-8",
-        )
-        return str(filepath)
+    def get_invoice(self, invoice_id: str) -> Optional[Invoice]:
+        """获取发票。"""
+        if invoice_id in self._cache:
+            return self._cache[invoice_id]
+        filepath = self.storage_dir / f"{invoice_id}.json"
+        if filepath.exists():
+            with open(filepath) as f:
+                inv = Invoice.from_dict(json.load(f))
+                self._cache[invoice_id] = inv
+                return inv
+        return None
 
-    @classmethod
-    def load(cls, invoice_id: str) -> Optional["Invoice"]:
-        """从 JSON 文件加载"""
-        filepath = INVOICE_DIR / f"{invoice_id}.json"
-        if not filepath.exists():
-            return None
-        try:
-            data = json.loads(filepath.read_text(encoding="utf-8"))
-            return cls.from_dict(data)
-        except (json.JSONDecodeError, OSError):
-            return None
-
-    @classmethod
-    def list_all(cls) -> list["Invoice"]:
-        """列出所有发票"""
+    def list_invoices(self, status: str = "") -> list[Invoice]:
+        """列出所有发票。"""
         invoices = []
-        if INVOICE_DIR.exists():
-            for f in sorted(INVOICE_DIR.glob("INV-*.json")):
-                try:
-                    data = json.loads(f.read_text(encoding="utf-8"))
-                    invoices.append(cls.from_dict(data))
-                except (json.JSONDecodeError, OSError):
-                    pass
+        for fp in sorted(self.storage_dir.glob("*.json"), reverse=True):
+            try:
+                with open(fp) as f:
+                    data = json.load(f)
+                    inv = Invoice.from_dict(data)
+                    if not status or inv.status == status:
+                        invoices.append(inv)
+            except Exception:
+                continue
         return invoices
 
-    # ── HTML 模板渲染（吸收 Invoice Ninja 设计）───────────
+    def update_status(self, invoice_id: str, status: str, **kwargs) -> Optional[Invoice]:
+        """更新发票状态。
 
-    def generate_html(self) -> str:
-        """生成可打印的 HTML 发票"""
-        items_html = ""
-        for i, item in enumerate(self.items, 1):
-            items_html += f"""
-            <tr>
-                <td>{i}</td>
-                <td>{_escape(item.description)}</td>
-                <td style="text-align:center">{item.quantity}</td>
-                <td style="text-align:right">{self.currency}{item.unit_price:,.2f}</td>
-                <td style="text-align:right">{self.currency}{item.subtotal:,.2f}</td>
+        status: draft → sent → paid → overdue → cancelled
+        """
+        inv = self.get_invoice(invoice_id)
+        if not inv:
+            return None
+        inv.status = status
+        if status == "paid":
+            inv.paid_at = datetime.now().isoformat()
+            inv.payment_method = kwargs.get("payment_method", "")
+        self._save(inv)
+        return inv
+
+    def mark_sent(self, invoice_id: str) -> Optional[Invoice]:
+        return self.update_status(invoice_id, "sent")
+
+    def mark_paid(self, invoice_id: str, method: str = "bank_transfer") -> Optional[Invoice]:
+        return self.update_status(invoice_id, "paid", payment_method=method)
+
+    def cancel(self, invoice_id: str) -> Optional[Invoice]:
+        return self.update_status(invoice_id, "cancelled")
+
+    def check_overdue(self) -> list[Invoice]:
+        """检查逾期发票。"""
+        overdue = []
+        today = datetime.now().strftime("%Y-%m-%d")
+        for inv in self.list_invoices():
+            if inv.status in ("sent", "draft") and inv.due_date < today:
+                inv.status = "overdue"
+                self._save(inv)
+                overdue.append(inv)
+        return overdue
+
+    # ── Report ────────────────────────────────────────
+
+    def get_report(self, year: int = 0, month: int = 0) -> dict:
+        """生成发票汇总报告。"""
+        invoices = self.list_invoices()
+        report = {
+            "total_count": len(invoices),
+            "total_amount": 0.0,
+            "paid_amount": 0.0,
+            "unpaid_amount": 0.0,
+            "by_status": {},
+            "by_customer": {},
+        }
+        for inv in invoices:
+            report["total_amount"] += inv.total_amount
+            report["by_status"][inv.status] = report["by_status"].get(inv.status, 0) + 1
+            report["by_customer"][inv.customer_name] = (
+                report["by_customer"].get(inv.customer_name, 0) + inv.total_amount
+            )
+            if inv.status == "paid":
+                report["paid_amount"] += inv.total_amount
+            else:
+                report["unpaid_amount"] += inv.total_amount
+
+        report["total_amount"] = round(report["total_amount"], 2)
+        report["paid_amount"] = round(report["paid_amount"], 2)
+        report["unpaid_amount"] = round(report["unpaid_amount"], 2)
+        return report
+
+    # ── HTML Generation ───────────────────────────────
+
+    def generate_html(self, invoice_id: str) -> str:
+        """生成发票 HTML。"""
+        inv = self.get_invoice(invoice_id)
+        if not inv:
+            return "<p>Invoice not found</p>"
+
+        items_html = "".join(
+            f"""<tr>
+                <td>{i.name}</td>
+                <td>{i.description}</td>
+                <td>{i.quantity}</td>
+                <td>¥{i.amount:.2f}</td>
+                <td>¥{i.subtotal:.2f}</td>
+                <td>{(i.tax_rate*100):.0f}%</td>
+                <td>¥{i.tax:.2f}</td>
             </tr>"""
+            for i in inv.items
+        )
 
         return f"""<!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<title>发票 {self.invoice_id}</title>
+<head><meta charset="UTF-8"><title>发票 {inv.invoice_id}</title>
 <style>
-  body {{ font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; margin: 40px; color: #333; }}
-  .header {{ display: flex; justify-content: space-between; margin-bottom: 40px; }}
-  .company-info {{ font-size: 14px; }}
-  .company-info h1 {{ margin: 0; font-size: 24px; }}
-  .invoice-title {{ text-align: right; }}
-  .invoice-title h2 {{ margin: 0; font-size: 28px; color: #1a73e8; }}
-  .status {{ display: inline-block; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; }}
-  .status-draft {{ background: #f0f0f0; color: #666; }}
-  .status-sent {{ background: #e3f2fd; color: #1565c0; }}
-  .status-paid {{ background: #e8f5e9; color: #2e7d32; }}
-  .status-overdue {{ background: #ffebee; color: #c62828; }}
-  .section {{ margin-bottom: 30px; }}
-  .section-title {{ font-size: 14px; color: #666; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }}
-  table {{ width: 100%; border-collapse: collapse; }}
-  th {{ background: #f5f5f5; padding: 10px; text-align: left; font-size: 13px; border-bottom: 2px solid #ddd; }}
-  td {{ padding: 10px; border-bottom: 1px solid #eee; font-size: 14px; }}
-  .totals {{ margin-top: 30px; text-align: right; }}
-  .totals table {{ width: 300px; margin-left: auto; }}
-  .totals td:first-child {{ text-align: left; font-weight: bold; }}
-  .totals td:last-child {{ text-align: right; }}
-  .grand-total {{ font-size: 18px; font-weight: bold; color: #1a73e8; }}
-  .footer {{ margin-top: 60px; font-size: 12px; color: #999; border-top: 1px solid #eee; padding-top: 20px; }}
-  .notes {{ background: #fafafa; padding: 15px; border-radius: 4px; font-size: 13px; }}
-</style>
-</head>
+  body {{ font-family: 'PingFang SC', sans-serif; max-width: 800px; margin: 40px auto; color: #333; }}
+  .header {{ display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 20px; }}
+  .invoice-id {{ font-size: 1.4em; font-weight: bold; }}
+  .status {{ padding: 4px 12px; border-radius: 4px; font-size: .9em; }}
+  .status.draft {{ background: #eee; }}
+  .status.paid {{ background: #d4edda; color: #155724; }}
+  .status.overdue {{ background: #f8d7da; color: #721c24; }}
+  .customer {{ margin: 20px 0; }}
+  table {{ width: 100%; border-collapse: collapse; margin: 20px 0; }}
+  th, td {{ border: 1px solid #ddd; padding: 10px; text-align: left; }}
+  th {{ background: #f5f5f5; }}
+  .total {{ text-align: right; font-size: 1.2em; margin-top: 20px; }}
+  .footer {{ margin-top: 40px; color: #999; font-size: .85em; }}
+</style></head>
 <body>
 <div class="header">
-  <div class="company-info">
-    <h1>墨麟 AI 集团</h1>
-    <p>AI 自动化解决方案提供商</p>
-    <p>invoice@molin.ai</p>
+  <div>
+    <h1>发票</h1>
+    <div class="invoice-id">{inv.invoice_id}</div>
+    <span class="status {inv.status}">{inv.status}</span>
   </div>
-  <div class="invoice-title">
-    <h2>INVOICE</h2>
-    <p>编号: {self.invoice_id}</p>
-    <span class="status status-{self.status}">{_status_label(self.status)}</span>
+  <div style="text-align:right">
+    <p>日期: {inv.created_at[:10]}</p>
+    <p>到期: {inv.due_date}</p>
   </div>
 </div>
-
-<div class="section">
-  <div class="section-title">客户信息</div>
-  <p><strong>{_escape(self.customer_name)}</strong></p>
-  {f'<p>{_escape(self.customer_email)}</p>' if self.customer_email else ''}
-  {f'<p>{_escape(self.customer_address)}</p>' if self.customer_address else ''}
+<div class="customer">
+  <strong>客户:</strong> {inv.customer_name}<br>
+  {f'<strong>邮箱:</strong> {inv.customer_email}<br>' if inv.customer_email else ''}
 </div>
-
-<div class="section">
-  <div class="section-title">发票明细</div>
-  <table>
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>项目描述</th>
-        <th style="text-align:center">数量</th>
-        <th style="text-align:right">单价</th>
-        <th style="text-align:right">小计</th>
-      </tr>
-    </thead>
-    <tbody>
-      {items_html}
-    </tbody>
-  </table>
+<table>
+  <tr><th>项目</th><th>描述</th><th>数量</th><th>单价</th><th>小计</th><th>税率</th><th>税额</th></tr>
+  {items_html}
+</table>
+<div class="total">
+  <p>小计: ¥{inv.subtotal_amount:.2f}</p>
+  <p>税额: ¥{inv.tax_amount:.2f}</p>
+  <p><strong>总计: ¥{inv.total_amount:.2f}</strong></p>
 </div>
-
-<div class="totals">
-  <table>
-    <tr><td>小计</td><td>{self.currency}{self.subtotal:,.2f}</td></tr>
-    <tr><td>税额 ({self.tax_rate*100:.0f}%)</td><td>{self.currency}{self.total_tax:,.2f}</td></tr>
-    <tr class="grand-total"><td>总计</td><td>{self.currency}{self.total:,.2f}</td></tr>
-  </table>
-</div>
-
-<div class="section" style="margin-top:30px">
-  <div class="section-title">备注</div>
-  <div class="notes">{_escape(self.notes) if self.notes else '无'}</div>
-</div>
-
+{'' if inv.status != 'paid' else f'<p>✅ 已支付 · {inv.paid_at[:10]} · {inv.payment_method}</p>'}
 <div class="footer">
-  <p>付款条件: {_escape(self.terms)}</p>
-  <p>到期日: {self.due_date}</p>
-  <p>生成时间: {datetime.fromtimestamp(self.created_at).strftime('%Y-%m-%d %H:%M')}</p>
-  <p style="margin-top:10px">感谢您的合作！— 墨麟 AI 集团</p>
+  <p>{inv.notes}</p>
+  <p>墨麟AI集团 · 墨单订单 自动化发票系统</p>
 </div>
-</body>
-</html>"""
+</body></html>"""
 
-    def generate_text(self) -> str:
-        """生成纯文本发票"""
-        lines = []
-        width = 60
-        lines.append("=" * width)
-        lines.append("  墨麟 AI 集团 — 发票".center(width - 4))
-        lines.append("=" * width)
-        lines.append(f"  发票编号: {self.invoice_id}")
-        lines.append(f"  日期: {datetime.fromtimestamp(self.created_at).strftime('%Y-%m-%d')}")
-        lines.append(f"  到期日: {self.due_date}")
-        lines.append(f"  状态: {_status_label(self.status)}")
-        lines.append("-" * width)
-        lines.append(f"  客户: {self.customer_name}")
-        if self.customer_email:
-            lines.append(f"  邮箱: {self.customer_email}")
-        if self.customer_address:
-            lines.append(f"  地址: {self.customer_address}")
-        lines.append("-" * width)
-        lines.append(f"  {'项目':<28} {'数量':>6} {'单价':>10} {'小计':>10}")
-        lines.append("-" * width)
-        for item in self.items:
-            desc = item.description[:26]
-            lines.append(
-                f"  {desc:<28} {item.quantity:>6.0f} "
-                f"{self.currency}{item.unit_price:>8,.2f} "
-                f"{self.currency}{item.subtotal:>8,.2f}"
-            )
-        lines.append("-" * width)
-        lines.append(f"  {'小计:':>46} {self.currency}{self.subtotal:>10,.2f}")
-        lines.append(f"  {'税额 (' + str(int(self.tax_rate*100)) + '%):':>46} {self.currency}{self.total_tax:>10,.2f}")
-        lines.append(f"  {'总计:':>46} {self.currency}{self.total:>10,.2f}")
-        lines.append("=" * width)
-        if self.notes:
-            lines.append(f"  备注: {self.notes}")
-        lines.append(f"  付款条件: {self.terms}")
-        lines.append("  感谢您的合作！— 墨麟 AI 集团")
+    # ── Internal ──────────────────────────────────────
+
+    def _save(self, inv: Invoice) -> None:
+        filepath = self.storage_dir / f"{inv.invoice_id}.json"
+        with open(filepath, "w") as f:
+            json.dump(inv.to_dict(), f, ensure_ascii=False, indent=2)
+        self._cache[inv.invoice_id] = inv
+
+
+# ── CLI ──────────────────────────────────────────────
+
+def cmd_order_invoice(action: str, *args) -> str:
+    engine = InvoiceEngine()
+
+    if action == "create":
+        # args: customer_name, item_name, amount
+        if len(args) < 3:
+            return "Usage: invoice create <customer> <item_name> <amount>"
+        inv = engine.create_invoice(
+            args[0],
+            [{"name": args[1], "amount": float(args[2])}],
+        )
+        return f"✅ Invoice {inv.invoice_id}\n   Total: ¥{inv.total_amount:.2f}\n   Due: {inv.due_date}"
+
+    elif action == "list":
+        status_filter = args[0] if args else ""
+        invoices = engine.list_invoices(status_filter)
+        if not invoices:
+            return "No invoices found"
+        lines = [f"{'ID':<30} {'Customer':<20} {'Status':<10} {'Total':>10}"]
+        for inv in invoices[:20]:
+            lines.append(f"{inv.invoice_id:<30} {inv.customer_name:<20} {inv.status:<10} ¥{inv.total_amount:>8.2f}")
         return "\n".join(lines)
 
+    elif action == "report":
+        report = engine.get_report()
+        return json.dumps(report, ensure_ascii=False, indent=2)
 
-# ── 模板占位符引擎 ────────────────────────────────────────
+    elif action == "status":
+        if len(args) < 2:
+            return "Usage: invoice status <invoice_id> <new_status>"
+        inv = engine.update_status(args[0], args[1])
+        return f"✅ Invoice {args[0]} → {args[1]}" if inv else "Invoice not found"
 
-
-def generate_invoice_from_template(
-    template: str,
-    customer_name: str = "",
-    total: float = 0.0,
-    date: str = "",
-    invoice_id: str = "",
-    due_date: str = "",
-    items_text: str = "",
-    notes: str = "",
-    **kwargs,
-) -> str:
-    """
-    占位符模板引擎。
-
-    支持的占位符:
-      {customer_name} — 客户名
-      {total} — 总金额
-      {date} — 日期
-      {invoice_id} — 发票编号
-      {due_date} — 到期日
-      {items} — 项目明细
-      {notes} — 备注
-      {currency} — 货币符号
-    """
-    if not date:
-        date = datetime.now().strftime("%Y-%m-%d")
-    currency = kwargs.get("currency", "¥")
-
-    replacements = {
-        "{customer_name}": customer_name,
-        "{total}": f"{currency}{total:,.2f}",
-        "{date}": date,
-        "{invoice_id}": invoice_id,
-        "{due_date}": due_date,
-        "{items}": items_text,
-        "{notes}": notes,
-        "{currency}": currency,
-    }
-
-    result = template
-    for key, val in replacements.items():
-        result = result.replace(key, str(val))
-    return result
+    return f"Unknown action: {action}"
 
 
-# ── 工具函数 ──────────────────────────────────────────────
-
-
-def _escape(text: str) -> str:
-    """HTML 转义"""
-    return (
-        text.replace("&", "&amp;")
-        .replace("<", "&lt;")
-        .replace(">", "&gt;")
-        .replace('"', "&quot;")
-    )
-
-
-def _status_label(status: str) -> str:
-    labels = {
-        "draft": "草稿",
-        "sent": "已发送",
-        "paid": "已付款",
-        "overdue": "已逾期",
-        "cancelled": "已取消",
-    }
-    return labels.get(status, status)
-
-
-# ── 批量操作 ──────────────────────────────────────────────
-
-
-def get_invoice_stats() -> dict:
-    """获取发票统计"""
-    invoices = Invoice.list_all()
-    by_status = {}
-    total_value = 0.0
-    for inv in invoices:
-        by_status[inv.status] = by_status.get(inv.status, 0) + 1
-        if inv.status == "paid":
-            total_value += inv.total
-    return {
-        "total": len(invoices),
-        "by_status": by_status,
-        "total_paid_value": round(total_value, 2),
-    }
+if __name__ == "__main__":
+    engine = InvoiceEngine()
+    inv = engine.create_invoice("测试客户", [{"name": "AI咨询", "amount": 1000}])
+    print(f"Created: {inv.invoice_id} ¥{inv.total_amount:.2f}")
+    print(engine.get_report())

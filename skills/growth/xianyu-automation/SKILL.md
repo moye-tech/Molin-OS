@@ -805,21 +805,73 @@ Additional state files:
 
 ### Pitfalls
 
-- **Pip externally-managed error**: Python 3.12 from Homebrew requires a virtual environment. Never use `pip install --break-system-packages`. Always install into `~/xianyu_agent/.venv/`.
-- **Import path**: The project uses relative imports (`from message.types import ...`). Always `cd ~/xianyu_agent` before running Python, or `sys.path.insert(0, ...)`.
-- **JS file path**: `goofish_utils.py` uses `open('static/goofish_js_version_2.js')` — only works when CWD is the project root.
-- **Cookie expiration**: Xianyu cookies expire after ~7 days of inactivity. If API calls return auth errors, cookies need re-export.
+- Messages are queued via **Redis** (`xianyu:incoming_queue` and `xianyu:processed` pub/sub)
+- The listener runs as an **async coroutine** with `asyncio.sleep(30)`
+- The `XianyuListener` class is a **singleton** accessed via `get_xianyu_listener()`
+- Logging uses **loguru** at INFO/ERROR levels
+
+For the agent, these are replaced with equivalent in-session patterns (described in Section 5) without requiring Redis or async infrastructure.
+
+---
+
+## 6. LISTENER HEALTH & RESTART — 监听器健康与重启
+
+The WebSocket listener (`ws_listener.py`) is a long-running daemon that can die silently — if the process exits, no messages flow through the pipeline. The cron health check job must detect this and restart it.
+
+### Health Check (cron job pre-flight)
+
+Every cron cycle, before reading messages:
+1. Run `ps aux | grep ws_listener | grep -v grep` to check if the daemon is alive
+2. Check `~/.hermes/xianyu_bot/ws.log` — last entry should be within the last 5 minutes
+3. If either check fails → restart the listener (see below)
+4. Also run `python ~/.hermes/scripts/xianyu_check.py` to verify API token validity
+
+### Restart Command (exact)
+
+```bash
+/Users/moye/Molin-OS/molib/xianyu/.venv/bin/python3 \
+  /Users/moye/.hermes/xianyu_bot/ws_listener.py \
+  > /dev/null 2>&1 &
+```
+
+Workdir: `/Users/moye/Molin-OS/molib/xianyu`
+
+### Pitfall: Wrong Python Interpreter
+
+- ❌ **DO NOT** use `/opt/homebrew/bin/python3.12` — it lacks the `execjs` module and will crash with `ModuleNotFoundError: No module named 'execjs'`
+- ❌ **DO NOT** use the hermes-agent venv Python — it's Python 3.11 with incompatible TLS
+- ✅ **ONLY** use the xianyu venv: `/Users/moye/Molin-OS/molib/xianyu/.venv/bin/python3` (Python 3.12, contains all required dependencies: execjs, websocket-client, requests, etc.)
+
+### Startup Log Pattern (healthy)
+
+```
+[xianyu-ws] Loaded 17 cookie fields
+[xianyu-ws] Verifying token with SSL fix...
+[xianyu-ws] Token OK
+[xianyu-ws] Starting WebSocket listener...
+[xianyu-ws] 正在连接闲鱼WebSocket...
+[xianyu-ws] ✅ WebSocket 已连接
+[xianyu-ws] 初始化完成: None
+```
+
+The `None` in "初始化完成: None" is normal — it's `listen_forever()`'s return after listener setup.
+
+### Cron Report Persistence
+
+After each health check cycle, update:
+- `~/.hermes/state/xianyu_cron_report_latest.json` — full status snapshot
+- `~/.hermes/xianyu_bot/state.json` — minimal fields: messages_handled, replies_sent, last_activity, ws_listener_pid, ws_connected
+- `~/.hermes/xianyu_bot/activity.log` — append one-line summary
 
 ---
 
 ## Execution Checklist
 
-## Execution Checklist
-
 When processing Xianyu messages as the agent, follow this exact order:
 
+0. **Pre-flight health check:** Verify WebSocket listener is running (ps aux) and ws.log has recent activity. If dead, restart using the exact xianyu .venv command in Section 6.
 1. **Load state:** If `~/.hermes/state/xianyu_conversations.json` exists, load it into conversation memory.
-2. **Verify connectivity (cron mode):** Run `xianyu_bot.py cron` to validate token. If it fails with a cookie-parsing error, the cookies file is likely in JSON format — convert to `key=value; key=value` (see `references/cookies-format-fix.md`).
+2. **For each incoming message:**
 3. **For each incoming message:**
    - [ ] Derive `conversation_id` (use native ID or `{from_user}:{item_id}`)
    - [ ] Check `is_first_contact(conversation_id)`
