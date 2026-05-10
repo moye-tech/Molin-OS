@@ -387,3 +387,25 @@ To check whether embeddings exist, inspect `.gitnexus/meta.json` — the `stats.
 | Index, status, clean, wiki CLI commands | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md` |
 
 <!-- gitnexus:end -->
+
+## 任务→Worker 组合矩阵（CEO 委托必查）
+
+收到产出类任务时，按此表确定单Worker还是WorkerChain：
+
+| 触发关键词/场景 | 单Worker / 首选 | WorkerChain（推荐组合） | CLI命令 |
+|:---|:---|:---|:---|
+| 写文案/写笔记/小红书/公众号 | 墨笔文创 | 墨研竞情→墨笔文创→墨图设计 | `molib content write --topic X --platform xhs` |
+| 做封面/出图/设计/生图 | 墨图设计 | 墨笔文创→墨图设计（文案+封面） | `molib design image --prompt X` |
+| 视频脚本/抖音/短视频 | 墨播短视频 | 墨研竞情→墨播短视频→墨声配音 | `molib video script --topic X` |
+| 配音/TTS/播客/音频 | 墨声配音 | 独立完成为主 | `molib handoff route --task "配音"` |
+| 竞品分析/市场调研/趋势/情报 | 墨研竞情 | 墨研竞情→墨测数据→墨笔文创（研究报告） | `molib intel trending` / `molib intel save --topic X` |
+| 课程设计/逻辑思维/教程/教育 | 墨学教育 | 墨研竞情→墨学教育→墨笔文创 | `molib handoff route --task "课程设计"` |
+| 闲鱼上架/商品发布/订单 | 墨链电商 | 墨笔文创→墨图设计→墨链电商 | `molib order list` / `molib handoff route --task "电商上架"` |
+| 私域/用户运营/社群/复购 | 墨域私域 | 墨测数据→墨域私域→墨笔文创（用户分层+触达文案） | `molib crm segment --by 活跃度` |
+| 客服/闲鱼回复/自动回复 | 墨声客服 | 独立完成为主 | `molib xianyu reply --msg-id X` |
+| 写代码/开发/技术实现 | 墨码开发 | 墨码开发→墨安安全→墨维运维（开发+审查+部署） | `molib handoff route --task "开发"` |
+| 出海/台湾/繁体/Vocus/LINE | 墨海出海 | 墨研竞情→墨笔文创→墨海出海→墨律法务 | `molib handoff route --task "出海本地化"` |
+| 记账/财务/成本/预算 | 墨算财务 | 独立完成为主 | `molib finance record --type expense` / `molib finance report` |
+| 合同/法务/隐私/合规 | 墨律法务 | 墨律法务→墨算财务（合同+报价核算） | `molib handoff route --task "法务审查"` |
+| 数据分析/报表/BI/测试 | 墨测数据 | 墨测数据→墨笔文创（数据+报告） | `molib data analyze --file X.csv` |
+| BD/合作/变现/收入 | 墨商BD | 墨研竞情→墨商BD→墨律法务 | `molib handoff route --task "BD拓展"` |
