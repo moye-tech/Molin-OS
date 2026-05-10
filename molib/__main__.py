@@ -676,6 +676,22 @@ def cmd_order(args: list[str]) -> dict:
     return {"error": f"未知: {subcmd}，支持 create|list|invoice|stats"}
 
 
+def cmd_analytics(args: list[str]) -> dict:
+    """轻量分析 — track/stats/top"""
+    from molib.infra.molib_analytics import cmd_analytics_track, cmd_analytics_stats, cmd_analytics_top
+    if not args:
+        return {"error": "子命令: track | stats | top-pages"}
+    subcmd = args[0]
+    rest = args[1:]
+    if subcmd == "track":
+        return cmd_analytics_track(rest)
+    elif subcmd == "stats":
+        return cmd_analytics_stats(rest)
+    elif subcmd == "top-pages":
+        return cmd_analytics_top(rest)
+    return {"error": f"未知: {subcmd}，支持 track|stats|top-pages"}
+
+
 async def cmd_cost(args: list[str]) -> dict:
     """API成本追踪 — report / check / reset / track"""
     from molib.infra.budget_guard import BudgetGuard
@@ -1070,6 +1086,7 @@ async def run(command: str, args: list[str]) -> dict:
         "db": cmd_db,
         "mail": cmd_mail,
         "order": cmd_order,
+        "analytics": cmd_analytics,
     }
     # 异步命令映射（返回 coroutine）
     async_commands = {
