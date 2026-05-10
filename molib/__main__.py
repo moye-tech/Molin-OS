@@ -118,6 +118,12 @@ def cmd_help(args: list[str]) -> dict:
         "order transition --order-id ID --to STATUS": "推进订单状态（墨链电商）",
         "order stats": "订单统计（墨链电商）",
         "order report": "每日订单报告（墨链电商）",
+        "order remind-overdue": "逾期提醒（墨链电商）",
+        "pocketbase install": "安装 PocketBase 后端（墨码开发）",
+        "pocketbase start": "启动 PocketBase（墨码开发）",
+        "pocketbase stop": "停止 PocketBase（墨码开发）",
+        "pocketbase status": "查看 PocketBase 状态",
+        "pocketbase quick-start": "一键安装+启动+初始化 PocketBase",
         "crm segment --by B": "用户分群（墨域私域）",
         "proxy start": "启动AI代理（9Router，端口20128）",
         "proxy stop": "停止AI代理",
@@ -614,6 +620,62 @@ def cmd_avatar(args: list[str]) -> dict:
     return {"output": buf.getvalue()}
 
 
+# ── MolibDB / MolibMail / MolibOrder ────────────────────────
+
+def cmd_db(args: list[str]) -> dict:
+    """统一轻量后端 — collection/record/auth/stats"""
+    from molib.infra.molib_db import cmd_db_collection, cmd_db_record, cmd_db_auth, cmd_db_stats
+    if not args:
+        return cmd_db_stats()
+    subcmd = args[0]
+    rest = args[1:]
+    if subcmd == "collection":
+        return cmd_db_collection(rest)
+    elif subcmd == "record":
+        return cmd_db_record(rest)
+    elif subcmd == "auth":
+        return cmd_db_auth(rest)
+    elif subcmd == "stats":
+        return cmd_db_stats()
+    return {"error": f"未知: {subcmd}，支持 collection|record|auth|stats"}
+
+
+def cmd_mail(args: list[str]) -> dict:
+    """邮件营销 — list/subscriber/campaign/stats"""
+    from molib.infra.molib_mail import cmd_mail_list, cmd_mail_subscriber, cmd_mail_campaign, cmd_mail_stats
+    if not args:
+        return cmd_mail_stats()
+    subcmd = args[0]
+    rest = args[1:]
+    if subcmd == "list":
+        return cmd_mail_list(rest)
+    elif subcmd == "subscriber":
+        return cmd_mail_subscriber(rest)
+    elif subcmd == "campaign":
+        return cmd_mail_campaign(rest)
+    elif subcmd == "stats":
+        return cmd_mail_stats()
+    return {"error": f"未知: {subcmd}，支持 list|subscriber|campaign|stats"}
+
+
+def cmd_order(args: list[str]) -> dict:
+    """订单引擎 — create/list/invoice/stats"""
+    from molib.infra.molib_order import cmd_order_create, cmd_order_list, cmd_order_invoice, cmd_order_stats
+    if not args:
+        return cmd_order_stats()
+    subcmd = args[0]
+    rest = args[1:]
+    if subcmd == "create":
+        return cmd_order_create(rest)
+    elif subcmd == "list":
+        return cmd_order_list(rest)
+    elif subcmd == "invoice":
+        return cmd_order_invoice(rest)
+    elif subcmd == "stats":
+        return cmd_order_stats()
+    return {"error": f"未知: {subcmd}，支持 create|list|invoice|stats"}
+
+
 async def cmd_cost(args: list[str]) -> dict:
     """API成本追踪 — report / check / reset / track"""
     from molib.infra.budget_guard import BudgetGuard
@@ -797,7 +859,7 @@ async def cmd_order(args: list[str]) -> dict:
                 return {"error": "items 参数必须是有效 JSON"}
         return worker.create_invoice(
             order_id=order_id, items=items, customer_name=customer,
-            customer_email=email, notes=notes, tax_rate=tax_rate,
+            customer_email=email, notes=notes, tax_regime="CN_SMALL",
             due_days=due_days,
         )
 
@@ -825,7 +887,7 @@ async def cmd_order(args: list[str]) -> dict:
             return {"error": "请指定 --invoice-id 和 --amount 参数"}
         return worker.record_payment(
             invoice_id=invoice_id, amount=amount, method=method,
-            note=note, order_id=order_id,
+            note=note,
         )
 
     elif subcmd == "list":
@@ -874,6 +936,45 @@ async def cmd_order(args: list[str]) -> dict:
     elif subcmd == "report":
         print(worker.daily_report())
         return {"report": "printed"}
+
+    elif subcmd == "remind-overdue":
+        return worker.remind_overdue()
+
+    return {"error": f"未知子命令: {subcmd}"}
+
+
+def cmd_pocketbase(args: list[str]) -> dict:
+    """PocketBase 后端管理 — install | start | stop | restart | status | quick-start"""
+    from molib.infra.pocketbase import (
+        install, start, stop, restart, status, quick_start,
+        is_installed, version, get_client,
+    )
+
+    if not args:
+        return {
+            "error": "子命令: install | start | stop | restart | status | quick-start | health",
+            "installed": is_installed(),
+            "version": version(),
+        }
+
+    subcmd = args[0]
+
+    if subcmd == "install":
+        tag = args[1] if len(args) > 1 else None
+        return install(tag)
+    elif subcmd == "start":
+        return start()
+    elif subcmd == "stop":
+        return stop()
+    elif subcmd == "restart":
+        return restart()
+    elif subcmd == "status":
+        return status()
+    elif subcmd == "quick-start":
+        return quick_start()
+    elif subcmd == "health":
+        client = get_client()
+        return client.health()
 
     return {"error": f"未知子命令: {subcmd}"}
 
@@ -966,6 +1067,9 @@ async def run(command: str, args: list[str]) -> dict:
         "swarm": cmd_swarm,
         "memory": cmd_memory,
         "avatar": cmd_avatar,
+        "db": cmd_db,
+        "mail": cmd_mail,
+        "order": cmd_order,
     }
     # 异步命令映射（返回 coroutine）
     async_commands = {

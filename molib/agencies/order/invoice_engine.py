@@ -115,7 +115,12 @@ class Invoice:
 
     @classmethod
     def from_dict(cls, data: dict) -> Invoice:
-        items = [InvoiceItem(**i) for i in data.get("items", [])]
+        items = []
+        for i in data.get("items", []):
+            # 过滤掉 computed 字段 (subtotal, tax, total)
+            item_kwargs = {k: v for k, v in i.items() 
+                          if k in ("name", "amount", "quantity", "unit", "tax_rate", "description")}
+            items.append(InvoiceItem(**item_kwargs))
         return cls(
             invoice_id=data["invoice_id"],
             customer_name=data["customer_name"],
