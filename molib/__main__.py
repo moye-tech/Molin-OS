@@ -692,6 +692,35 @@ def cmd_analytics(args: list[str]) -> dict:
     return {"error": f"未知: {subcmd}，支持 track|stats|top-pages"}
 
 
+def cmd_comfy(args: list[str]) -> dict:
+    """ComfyUI MPS 桥 — check/generate"""
+    from molib.infra.molib_comfy import cmd_comfy_check, cmd_comfy_generate
+    if not args:
+        return cmd_comfy_check()
+    subcmd = args[0]
+    rest = args[1:]
+    if subcmd == "check":
+        return cmd_comfy_check()
+    elif subcmd == "generate":
+        return cmd_comfy_generate(rest)
+    return {"error": f"未知: {subcmd}，支持 check|generate"}
+
+
+def cmd_flow(args: list[str]) -> dict:
+    """n8n 工作流桥 — check/start/compare"""
+    from molib.infra.molib_flow import cmd_flow_check, cmd_flow_start, cmd_flow_compare
+    if not args:
+        return cmd_flow_compare()
+    subcmd = args[0]
+    if subcmd == "check":
+        return cmd_flow_check()
+    elif subcmd == "start":
+        return cmd_flow_start()
+    elif subcmd == "compare":
+        return cmd_flow_compare()
+    return {"error": f"未知: {subcmd}，支持 check|start|compare"}
+
+
 async def cmd_cost(args: list[str]) -> dict:
     """API成本追踪 — report / check / reset / track"""
     from molib.infra.budget_guard import BudgetGuard
@@ -1087,6 +1116,8 @@ async def run(command: str, args: list[str]) -> dict:
         "mail": cmd_mail,
         "order": cmd_order,
         "analytics": cmd_analytics,
+        "comfy": cmd_comfy,
+        "flow": cmd_flow,
     }
     # 异步命令映射（返回 coroutine）
     async_commands = {
