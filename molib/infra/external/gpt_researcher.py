@@ -12,6 +12,7 @@
 
 from __future__ import annotations
 
+import os
 import json
 import asyncio
 from typing import Optional
