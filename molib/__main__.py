@@ -22,6 +22,8 @@ Hermes（大脑）通过 terminal（神经）调用本 CLI。
     python -m molib sync <subcmd> [args]     # CocoIndex增量同步
     python -m molib trading <subcmd> [args]  # 量化交易（墨投交易）
     python -m molib plan <subcmd> [args]     # 规划工具（写任务计划）
+    python -m molib query "FROM ..."        # MQL 查询引擎（墨脑知识）
+    python -m molib manifest validate       # Manifest 标准化验证
 """
 
 import sys
@@ -116,6 +118,11 @@ def cmd_help(args: list[str]) -> dict:
         "cost report": "API成本月度报告",
         "cost alert": "检查成本预警",
         "cost daily [N]": "最近N日成本趋势",
+        "query \"FROM skills WHERE ...\"": "MQL 结构化查询（墨脑知识引擎）",
+        "query --search \"关键词\"": "MQL 全文搜索",
+        "query --sources": "列出 MQL 数据源",
+        "manifest validate": "验证所有技能的 Manifest 标准",
+        "manifest fix": "自动修复缺失的 Manifest 字段",
     }
     return {"commands": commands, "total": len(commands)}
 
@@ -566,6 +573,39 @@ async def cmd_plan(args: list[str]) -> dict:
     return plan_main(args)
 
 
+def cmd_query(args: list[str]) -> dict:
+    """MQL 查询引擎"""
+    from molib.shared.query.cli import main as query_main
+    import io
+
+    # 捕获 CLI 输出
+    old_argv = sys.argv
+    try:
+        sys.argv = ["molib-query"] + args
+        query_main()
+        return {"status": "ok"}
+    except SystemExit:
+        return {"status": "ok"}
+    finally:
+        sys.argv = old_argv
+
+
+def cmd_manifest(args: list[str]) -> dict:
+    """Manifest 标准化工具"""
+    from molib.core.tools.manifest_validator import main as manifest_main
+    import io
+
+    old_argv = sys.argv
+    try:
+        sys.argv = ["molib-manifest"] + args
+        manifest_main()
+        return {"status": "ok"}
+    except SystemExit:
+        return {"status": "ok"}
+    finally:
+        sys.argv = old_argv
+
+
 async def run(command: str, args: list[str]) -> dict:
     """分发命令到具体模块"""
     # 同步命令映射（直接返回 dict）
@@ -573,6 +613,8 @@ async def run(command: str, args: list[str]) -> dict:
         "health": cmd_health,
         "help": cmd_help,
         "sync": cmd_sync,
+        "query": cmd_query,
+        "manifest": cmd_manifest,
     }
     # 异步命令映射（返回 coroutine）
     async_commands = {
