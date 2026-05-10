@@ -291,57 +291,46 @@ class FeishuGateway:
             return {"error": str(e)}
 
     def _format_ceo_response(self, ceo_result: Dict[str, Any]) -> Dict[str, Any]:
-        """格式化CEO响应为飞书消息"""
+        """格式化CEO响应为飞书消息（使用互动卡片构建器）"""
+        from molib.infra.gateway.feishu_card_builder import FeishuCardBuilder
+
         decision = ceo_result.get("decision", "UNKNOWN")
         score = ceo_result.get("score", {})
         composite = score.get("composite", 0)
         model_used = ceo_result.get("model_used", "unknown")
 
-        # 创建飞书交互式卡片或文本消息
-        if decision == "GO":
-            color = "green"
-            title = "✅ 批准执行"
-        elif decision == "NO_GO":
-            color = "red"
-            title = "❌ 不建议执行"
-        elif decision == "NEED_INFO":
-            color = "orange"
-            title = "🔄 需要更多信息"
-        else:
-            color = "grey"
-            title = f"决策: {decision}"
+        # 决策 → 卡片颜色和标题
+        decision_map = {
+            "GO": ("green", "✅ 批准执行"),
+            "NO_GO": ("red", "❌ 不建议执行"),
+            "NEED_INFO": ("orange", "🔄 需要更多信息"),
+        }
+        color, title = decision_map.get(decision, ("grey", f"决策: {decision}"))
 
-        # 构建消息内容
-        text_content = f"{title}\n\n"
-        text_content += f"综合评分: {composite}/10\n"
-        text_content += f"使用模型: {model_used}\n\n"
+        card = FeishuCardBuilder()
+        card.header(title, template=color)
+        card.field_list([
+            ("综合评分", f"{composite}/10"),
+            ("使用模型", model_used),
+        ])
 
-        if "strategy" in ceo_result and ceo_result["strategy"]:
-            text_content += "推荐策略:\n"
-            for i, strategy in enumerate(ceo_result["strategy"][:3], 1):
-                text_content += f"{i}. {strategy}\n"
+        if ceo_result.get("strategy"):
+            card.divider()
+            strategies = ceo_result["strategy"][:3]
+            items = "\n".join(f"• {s}" for s in strategies)
+            card.section("🧭 推荐策略", items)
 
-        if "tasks" in ceo_result and ceo_result["tasks"]:
-            text_content += "\n建议任务:\n"
-            for i, task in enumerate(ceo_result["tasks"][:3], 1):
-                text_content += f"{i}. {task}\n"
+        if ceo_result.get("tasks"):
+            tasks = ceo_result["tasks"][:3]
+            items = "\n".join(f"• {t}" for t in tasks)
+            card.section("📋 建议任务", items)
 
-        # 返回飞书消息格式
+        card.divider()
+        card.note("墨麟OS · CEO自动化决策 | L1 通知")
+
         return {
             "msg_type": "interactive",
-            "card": {
-                "config": {"wide_screen_mode": True},
-                "header": {
-                    "title": {"tag": "plain_text", "content": title},
-                    "template": color
-                },
-                "elements": [
-                    {
-                        "tag": "div",
-                        "text": {"tag": "plain_text", "content": text_content}
-                    }
-                ]
-            }
+            "card": card.build(),
         }
 
     async def start(self):

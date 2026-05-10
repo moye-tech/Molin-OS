@@ -19,11 +19,18 @@ Hermes（大脑）通过 terminal（神经）调用本 CLI。
     python -m molib data <subcmd> [args]      # 数据
     python -m molib proxy <subcmd> [args]     # AI代理（9Router）
     python -m molib scrap <subcmd> [args]    # Scrapling抓取
+    python -m molib index <subcmd> [args]   # CocoIndex本地索引(watch/query/sync/stats)
     python -m molib sync <subcmd> [args]     # CocoIndex增量同步
     python -m molib trading <subcmd> [args]  # 量化交易（墨投交易）
     python -m molib plan <subcmd> [args]     # 规划工具（写任务计划）
     python -m molib query "FROM ..."        # MQL 查询引擎（墨脑知识）
     python -m molib manifest validate       # Manifest 标准化验证
+    python -m molib swarm list             # Swarm跨子公司通路
+    python -m molib swarm run <pattern>    # 运行预定义工作流
+    python -m molib swarm visualize        # ASCII流程图
+    python -m molib bitable schema         # 飞书多维表格表结构
+    python -m molib bitable write <table>  # 飞书多维表格写入记录
+    python -m molib bitable list <table>   # 飞书多维表格查询记录
 """
 
 import sys
@@ -111,6 +118,10 @@ def cmd_help(args: list[str]) -> dict:
         "sync run --pipeline NAME": "运行一次管道同步（增量catch-up）",
         "sync start --pipeline NAME": "启动管道后台持续同步",
         "sync stop --pipeline NAME": "停止管道后台同步",
+        "index watch --dir PATH": "开始监听目录文件变更（CocoIndex本地索引）",
+        "index query --term TERM": "搜索已索引文件内容",
+        "index sync": "全量扫描索引所有监听目录",
+        "index stats": "查看索引统计信息",
         "trading analyze --market-type crypto --symbol BTC/USDT": "市场分析（墨投交易）",
         "trading backtest --strategy S --period 90d": "回测策略（墨投交易）",
         "trading signal --symbol BTC/USDT --timeframe 1h": "生成交易信号（墨投交易）",
@@ -123,6 +134,9 @@ def cmd_help(args: list[str]) -> dict:
         "query --sources": "列出 MQL 数据源",
         "manifest validate": "验证所有技能的 Manifest 标准",
         "manifest fix": "自动修复缺失的 Manifest 字段",
+        "bitable schema [table]": "查看飞书多维表格结构",
+        "bitable write <table> --json '{...}'": "写入飞书多维表格记录",
+        "bitable list <table> [--filter expr]": "查询飞书多维表格记录",
     }
     return {"commands": commands, "total": len(commands)}
 
@@ -400,136 +414,235 @@ def cmd_sync(args: list[str]) -> dict:
     return _sync(args)
 
 
-async def cmd_trading(args: list[str]) -> dict:
-    """量化交易命令 — analyze / backtest / signal / research"""
+def cmd_index(args: list[str]) -> dict:
+    """CocoIndex本地索引命令 — watch/query/sync/stats"""
+    from molib.infra.coco_index import (
+        cmd_index_watch, cmd_index_query, cmd_index_sync, cmd_index_stats,
+    )
+    import io, sys
+
     if not args:
-        return {"error": "子命令: analyze | backtest | signal | research"}
+        return {"error": "子命令: watch | query | sync | stats"}
 
     subcmd = args[0]
     rest = args[1:]
 
-    # 解析通用参数
-    market_type = ""
-    symbol = ""
-    strategy = ""
-    period = ""
-    timeframe = ""
-    ticker = ""
-    pairs = []
-
-    i = 0
-    while i < len(rest):
-        if rest[i] == "--market-type" and i + 1 < len(rest):
-            market_type = rest[i + 1]
-            i += 2
-        elif rest[i] == "--symbol" and i + 1 < len(rest):
-            symbol = rest[i + 1]
-            i += 2
-        elif rest[i] == "--strategy" and i + 1 < len(rest):
-            strategy = rest[i + 1]
-            i += 2
-        elif rest[i] == "--period" and i + 1 < len(rest):
-            period = rest[i + 1]
-            i += 2
-        elif rest[i] == "--timeframe" and i + 1 < len(rest):
-            timeframe = rest[i + 1]
-            i += 2
-        elif rest[i] == "--ticker" and i + 1 < len(rest):
-            ticker = rest[i + 1]
-            i += 2
-        elif rest[i] == "--pairs" and i + 1 < len(rest):
-            pairs = [p.strip() for p in rest[i + 1].split(",")]
-            i += 2
+    old_stdout = sys.stdout
+    buf = io.StringIO()
+    sys.stdout = buf
+    try:
+        if subcmd == "watch":
+            path = rest[0] if rest else str(Path.home() / "Molin-OS")
+            cmd_index_watch(path)
+        elif subcmd == "query":
+            term = rest[0] if rest else ""
+            cmd_index_query(term)
+        elif subcmd == "sync":
+            cmd_index_sync()
+        elif subcmd == "stats":
+            cmd_index_stats()
         else:
-            i += 1
+            return {"error": f"未知子命令: {subcmd}"}
+    finally:
+        sys.stdout = old_stdout
 
-    from molib.agencies.workers.trading import Trading
-    from molib.agencies.workers.base import Task
+    return {"output": buf.getvalue()}
 
-    if subcmd == "analyze":
-        task = Task(
-            task_id="cli",
-            task_type="analyze_market",
-            payload={"market_type": market_type or "crypto", "symbol": symbol or "BTC/USDT"},
-        )
-        worker = Trading()
-        result = await worker.execute(task)
-        return result.output
 
-    if subcmd == "backtest":
-        task = Task(
-            task_id="cli",
-            task_type="backtest",
-            payload={
-                "strategy": strategy or "SampleStrategy",
-                "period": period or "90d",
-                "pairs": pairs or ["BTC/USDT", "ETH/USDT"],
-            },
-        )
-        worker = Trading()
-        result = await worker.execute(task)
-        return result.output
+def cmd_bitable(args: list[str]) -> dict:
+    """飞书多维表格命令 — schema / write / list"""
+    from molib.infra.feishu_bitable import (
+        cmd_bitable_schema, cmd_bitable_write, cmd_bitable_list,
+    )
+    import io, sys
 
-    if subcmd == "signal":
-        task = Task(
-            task_id="cli",
-            task_type="signal",
-            payload={"symbol": symbol or "BTC/USDT", "timeframe": timeframe or "1h"},
-        )
-        worker = Trading()
-        result = await worker.execute(task)
-        return result.output
+    if not args:
+        return {"error": "子命令: schema | write | list"}
 
-    if subcmd == "research":
-        task = Task(
-            task_id="cli",
-            task_type="research",
-            payload={"ticker": ticker or "BTC", "timeframe": timeframe or "1d"},
-        )
-        worker = Trading()
-        result = await worker.execute(task)
-        return result.output
+    subcmd = args[0]
+    rest = args[1:]
 
-    return {"error": f"未知子命令: {subcmd}"}
+    table = rest[0] if rest else ""
+    app_token = rest[1] if len(rest) > 1 else ""
+    table_id = rest[2] if len(rest) > 2 else ""
+
+    old_stdout = sys.stdout
+    buf = io.StringIO()
+    sys.stdout = buf
+    try:
+        if subcmd == "schema":
+            cmd_bitable_schema()
+        elif subcmd == "write":
+            cmd_bitable_write(table, app_token, table_id)
+        elif subcmd == "list":
+            cmd_bitable_list(table, app_token, table_id)
+        else:
+            return {"error": f"未知子命令: {subcmd}"}
+    finally:
+        sys.stdout = old_stdout
+
+    return {"output": buf.getvalue()}
+
+
+def cmd_swarm(args: list[str]) -> dict:
+    """Swarm Bridge — 跨子公司 Handoff 编排"""
+    from molib.agencies.swarm_bridge import SwarmBridge
+    import io, sys
+
+    sb = SwarmBridge()
+
+    if not args:
+        return {"error": "子命令: list | run | visualize"}
+
+    subcmd = args[0]
+    rest = args[1:]
+
+    old_stdout = sys.stdout
+    buf = io.StringIO()
+    sys.stdout = buf
+    try:
+        if subcmd == "list":
+            for h in sb.list_handoffs():
+                print(f"  {h.source_agency} → {h.target_agency} ({h.condition})")
+            return {"handoffs": len(sb.list_handoffs())}
+        elif subcmd == "run":
+            pattern = rest[0] if rest else "content_full_pipeline"
+            if pattern in sb.SWARM_PATTERNS:
+                print(f"⚡ 运行工作流: {pattern}")
+                print(f"   步骤: {' → '.join(sb.SWARM_PATTERNS[pattern])}")
+            else:
+                print(f"未知模式: {pattern}")
+                print(f"可用: {list(sb.SWARM_PATTERNS.keys())}")
+        elif subcmd == "visualize":
+            sb.visualize()
+        else:
+            return {"error": f"未知子命令: {subcmd}"}
+    finally:
+        sys.stdout = old_stdout
+
+    return {"output": buf.getvalue()}
+
+
+def cmd_memory(args: list[str]) -> dict:
+    """记忆蒸馏 — distill/stats"""
+    from molib.infra.memory.distiller import cmd_memory_distill, cmd_memory_stats
+    import io, sys
+
+    if not args:
+        return {"error": "子命令: distill | stats"}
+
+    subcmd = args[0]
+
+    old_stdout = sys.stdout
+    buf = io.StringIO()
+    sys.stdout = buf
+    try:
+        if subcmd == "distill":
+            cmd_memory_distill()
+        elif subcmd == "stats":
+            cmd_memory_stats()
+        else:
+            return {"error": f"未知子命令: {subcmd}"}
+    finally:
+        sys.stdout = old_stdout
+
+    return {"output": buf.getvalue()}
 
 
 async def cmd_cost(args: list[str]) -> dict:
-    """API成本追踪 — report / alert / daily / record"""
-    from molib.cost import report, check_alerts, get_daily_stats, record as cost_record
+    """API成本追踪 — report / check / reset / track"""
+    from molib.infra.budget_guard import BudgetGuard
+    bg = BudgetGuard()
 
     if not args or args[0] == "report":
-        stats = report()
-        return stats
+        return bg.get_report()
 
-    if args[0] == "alert":
-        alerts = check_alerts()
-        return {"alerts": alerts, "healthy": len(alerts) == 0}
+    if args[0] == "check":
+        provider = args[1] if len(args) > 1 else None
+        result = bg.check(provider=provider)
+        return result
 
-    if args[0] == "daily":
-        days = int(args[1]) if len(args) > 1 else 7
-        trend = get_daily_stats(days=days)
-        return {"days": days, "trend": trend}
+    if args[0] == "reset":
+        return bg.reset_daily()
 
-    if args[0] == "record":
-        kwargs = {"model": "unknown", "input_tokens": 0, "output_tokens": 0, "images": 0, "task": ""}
+    if args[0] == "track":
+        provider = "deepseek"
+        model = "deepseek-v4-pro"
+        input_tokens = 0
+        output_tokens = 0
+        images = 0
         i = 1
         while i < len(args):
-            if args[i] == "--input" and i + 1 < len(args):
-                kwargs["input_tokens"] = int(args[i + 1]); i += 2
-            elif args[i] == "--output" and i + 1 < len(args):
-                kwargs["output_tokens"] = int(args[i + 1]); i += 2
+            if args[i] == "--provider" and i + 1 < len(args):
+                provider = args[i + 1]; i += 2
             elif args[i] == "--model" and i + 1 < len(args):
-                kwargs["model"] = args[i + 1]; i += 2
-            elif args[i] == "--task" and i + 1 < len(args):
-                kwargs["task"] = args[i + 1]; i += 2
+                model = args[i + 1]; i += 2
+            elif args[i] == "--input" and i + 1 < len(args):
+                input_tokens = int(args[i + 1]); i += 2
+            elif args[i] == "--output" and i + 1 < len(args):
+                output_tokens = int(args[i + 1]); i += 2
             elif args[i] == "--images" and i + 1 < len(args):
-                kwargs["images"] = int(args[i + 1]); i += 2
+                images = int(args[i + 1]); i += 2
             else:
                 i += 1
-        cost = cost_record(**kwargs)
-        return {"cost": cost, **kwargs}
+        cost = bg.track(provider, model, input_tokens, output_tokens, images)
+        status = bg.check()
+        return {
+            "cost": round(cost, 6),
+            "provider": provider,
+            "model": model,
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "images": images,
+            "budget_status": status,
+        }
 
-    return {"error": f"未知: {args[0]}，支持: report | alert | daily [N] | record"}
+    return {"error": f"未知子命令: {args[0]}，支持: report | check [provider] | reset | track"}
+
+
+async def cmd_trading(args: list[str]) -> dict:
+    """TradingAgents-CN — signal/analyze/research（多智能体交易分析）"""
+    from molib.agencies.trading_agents import (
+        cmd_trading_signal, cmd_trading_analyze, cmd_trading_research,
+    )
+
+    if not args:
+        return {"error": "子命令: signal | analyze | research"}
+
+    subcmd = args[0]
+    rest = args[1:]
+
+    symbol = ""
+    market = ""
+    ticker = ""
+    i = 0
+    while i < len(rest):
+        if rest[i] == "--symbol" and i + 1 < len(rest):
+            symbol = rest[i + 1]; i += 2
+        elif rest[i] == "--market" and i + 1 < len(rest):
+            market = rest[i + 1]; i += 2
+        elif rest[i] == "--ticker" and i + 1 < len(rest):
+            ticker = rest[i + 1]; i += 2
+        else:
+            i += 1
+
+    import io, sys
+    old_stdout = sys.stdout
+    buf = io.StringIO()
+    sys.stdout = buf
+    try:
+        if subcmd == "signal":
+            cmd_trading_signal(symbol or "000001", market or "a-share")
+        elif subcmd == "analyze":
+            cmd_trading_analyze(symbol or "BTC/USDT", market or "crypto")
+        elif subcmd == "research":
+            cmd_trading_research(ticker or symbol or "BTC")
+        else:
+            return {"error": f"未知子命令: {subcmd}"}
+    finally:
+        sys.stdout = old_stdout
+
+    return {"output": buf.getvalue()}
 
 
 async def cmd_handoff(args: list[str]) -> dict:
@@ -613,8 +726,12 @@ async def run(command: str, args: list[str]) -> dict:
         "health": cmd_health,
         "help": cmd_help,
         "sync": cmd_sync,
+        "index": cmd_index,
         "query": cmd_query,
         "manifest": cmd_manifest,
+        "bitable": cmd_bitable,
+        "swarm": cmd_swarm,
+        "memory": cmd_memory,
     }
     # 异步命令映射（返回 coroutine）
     async_commands = {

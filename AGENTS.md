@@ -108,6 +108,17 @@ python -m molib plan decompose --plan-id xxx
 # 技能商店安装器
 python -m molib skill-store install --package xxx
 python -m molib skill-store list
+
+# 核心元技能（自动加载，也可手动调用）
+python -m molib ghost-os health              # 系统健康检查（ghost-os）
+python -m molib ghost-os cron list           # Cron作业状态
+python -m molib ghost-os diagnose            # 环境诊断
+python -m molib self-learning reflect        # 手动触发反思协议（self-learning-loop）
+python -m molib self-learning session-id XXX # 反思指定会话
+python -m molib karpathy scan --topic "主题"  # 情报扫描（karpathy-autoresearch）
+python -m molib karpathy depth --level deep  # 深度研究模式
+python -m molib moneymaker assess --idea "..." # 变现评估（moneymaker-turbo）
+python -m molib moneymaker score --plan xxx  # 变现路径评分
 ```
 
 ## 22家 Worker 与 20家子公司映射
