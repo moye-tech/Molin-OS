@@ -70,6 +70,30 @@ curl -fsSL https://raw.githubusercontent.com/riba2534/feishu-cli/main/install.sh
 - 批量导入建议用 `--verbose` 观察进度
 - 导入完成后应立即授权：`feishu-cli perm add <doc_id> --doc-type docx --member-type email --member-id fengye940708@gmail.com --perm full_access --notification`
 
+### ⚠️ doc import vs content-update（重要）
+
+**永远用 `doc import`，不要用 `doc content-update` 导入大文档。**
+
+```bash
+# ✅ 正确：三阶段流水线，图表自动转画板，表格智能填充
+feishu-cli doc import /tmp/report.md --document-id <doc_id> --verbose
+
+# ❌ 错误：单线程逐块写入，大文档（>5000字/含表格）必定超时
+feishu-cli doc content-update <doc_id> --mode overwrite --markdown-file /tmp/report.md
+```
+
+`doc import` 的优势：
+- 三阶段流水线：顺序创建块 → 并发填充表格 → 降级容错
+- Mermaid/PlantUML 自动转换为飞书画板
+- 表格并发填充（3并发），大表格自动拆分
+- 429 限流自动重试
+
+`content-update` 的陷阱：
+- `--mode overwrite` 需要 `--selection-by-title` 或 `--selection-with-ellipsis`
+- `--mode replace_all` 同样需要定位参数
+- 逐块写入，无并发，大内容必然超时
+- 表格不支持，图表不转换
+
 ```bash
 feishu-cli <module> <command> [args]
 ```
@@ -259,6 +283,24 @@ feishu-cli mail send --to u@e.com --subject "主题" --body "内容"
 **Hermes cron 投递格式**：`deliver: "feishu:oc_94c87f141e118b68c2da9852bf2f3bda"`
 
 **CEO 私聊 chat_id**: `oc_16b4568be8c63c198b2cd6c4d3d11b85`（创始人的 DM）
+
+## ⚠️ 文档评论回复陷阱 — 内容被剥离
+
+当用户在飞书文档中**回复评论**时，Hermes 收到的是：
+
+```
+[Replying to: "fc-parent-comment-id"]
+fc-new-comment-id
+```
+
+**评论的实际文字内容被完全剥离**，只转发父评论 ID 和新评论 ID。
+
+这意味着：
+- ❌ 用户无法通过「回复文档评论」向 Hermes 传递信息（包括 API Key、指令等）
+- ❌ agent 无法用 `feishu_drive_list_comments` 读取评论内容 — 因为没有 `doc_token`
+- ✅ 让用户直接在当前对话中发送文字，或发送文档链接（含 doc_token）
+
+**实战案例**：用户将 Firecrawl API Key 作为文档评论回复粘贴，Hermes 收到的是 `fc-2d4f2ef37ece4acd9ddae434f22e9bb2`（只有评论 ID，没有实际 key）。经过多轮追问 doc_token 后才确认字符串本身就是 key。
 
 ## 内容输出策略
 

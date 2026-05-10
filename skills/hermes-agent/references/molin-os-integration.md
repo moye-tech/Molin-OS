@@ -77,3 +77,37 @@ curl -fsSL https://raw.githubusercontent.com/riba2534/feishu-cli/main/install.sh
 ```
 
 凭证复用 `~/.hermes/.env` 中的 `FEISHU_APP_ID` 和 `FEISHU_APP_SECRET`。
+
+## 外部项目完整集成模式
+
+将第三方项目（如 Firecrawl、9Router 等）集成到 Molin-OS 时，遵循四层模式：
+
+### 层级结构
+
+```
+1. SDK/依赖层    → pip install 到 Hermes venv
+2. 技能层        → ~/.hermes/skills/<name>/SKILL.md（完整 API 文档）
+3. molib 模块层   → molib/<domain>/<name>_client.py（Python 封装 + CLI）
+4. Cron 接入层    → 更新相关 cron job 的 skills 列表和 prompt
+```
+
+### 集成清单
+
+- SDK 安装到 Hermes venv
+- SKILL.md 覆盖全部 API（不可简化）
+- molib 模块：独立 .py 文件，自带 `_cli()` 入口
+- `__main__.py` 注册子命令（`cmd_intel` 等函数中 `if subcmd == "xxx"` 分支）
+- `cmd_help` 函数中添加命令文档
+- 相关 cron job 加载新技能
+- API Key 写入 `~/.hermes/.env`
+- 变更提交到 GitHub + 本地硬盘备份
+
+### Firecrawl 集成实例
+
+```
+SDK: firecrawl-py v4.25.2
+技能: ~/.hermes/skills/intelligence/firecrawl/SKILL.md
+模块: molib/intelligence/firecrawl_client.py (scrape/crawl/search/batch/research/map)
+CLI: python -m molib intel firecrawl scrape --url URL
+Cron: 墨思情报银行 (bf670fd0a49d) 已加载 firecrawl 技能
+```
