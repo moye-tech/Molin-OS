@@ -59,6 +59,13 @@ The core loop mirrors the production listener: poll → detect → route → not
 
 **Don't use for:** Other marketplace platforms (Taobao, JD, Pinduoduo have different message formats). Don't use for outbound marketing campaigns — this is an inbound message handler.
 
+## Runtime Troubleshooting
+
+- **SSL/TLS errors (SSLEOFError)**: See [references/ssl-eof-error.md](references/ssl-eof-error.md) — force TLS 1.2 in `goofish_apis.py`
+- **Cookie format**: `cookies.json` stores fields individually, rebuild with `';\ '.join(f'{k}={v}'...)`
+- **WebSocket**: `websockets` v16 uses `additional_headers`, not `extra_headers`
+- **Health check**: `python ~/.hermes/scripts/xianyu_check.py` (xianyu venv, TLS fixed)
+
 ---
 
 ## 0. PREREQUISITES & SETUP — 前置条件（首次运行必检）
@@ -419,9 +426,9 @@ Requires `OPENROUTER_API_KEY` in environment. Falls back to keyword-matching tem
 
 ---
 
-## 5. AUTOMATION PATTERN — 运行模式
+## 5. DEPLOYMENT & INFRASTRUCTURE — 部署架构
 
-### Two-Tier Architecture
+### Current Production Stack
 
 闲鱼自动化采用双层架构。消息只能通过 WebSocket 获取，闲鱼 REST API 不提供消息端点。
 
@@ -466,9 +473,9 @@ Cron 只能验证 API 连通性和汇报统计，**不能拉取消息**。
 | 首次联系通知 | L1 通知 | 发送飞书卡片告知有新买家 |
 | 成交信号 / BD 报价 | L2 审批 | 需要老板确认价格/承诺后报价 |
 | 退款/投诉 | L2 审批 | 绝不自动回复，上报等待老板决策 |
-| 涉及真实现金/支付 | L4 禁止 | 直接拒绝 |
+## 5. DEPLOYMENT & INFRASTRUCTURE — 部署架构
 
-### Polling Loop (30-second interval)
+### Current Production Stack
 
 In the Hermes agent context, Xianyu automation uses two tiers:
 
@@ -513,23 +520,57 @@ CRON TICK (every 30 min):
         d. Save conversation state
         e. Produce patrol report card with message stats
 ```
+## 5. DEPLOYMENT & INFRASTRUCTURE — 部署架构
 
-### Live Polling Mode (WebSocket, 30-second interval)
+### Current Production Stack
 
-For interactive sessions with long-running listener:
+The production deployment uses **WebSocket real-time listening** (not polling). Three components work together:
+
+| Component | File | Role |
+|-----------|------|------|
+| **WS Listener** | `~/.hermes/xianyu_bot/ws_listener.py` | WebSocket 长连接，实时接收闲鱼消息 |
+| **Auto Agent** | `Molin-OS/molib/xianyu/xianyu_auto_service.py` | AI 回复生成 + 飞书通知（通过 goofish WebSocket 发回消息） |
+| **Cron Check** | `~/.hermes/molin/bots/xianyu_bot.py cron` | 定时健康检查（Token 验证、状态汇报） |
+
+The ws_listener runs as a **persistent process** (PID tracked in `~/.hermes/state/xianyu_cron_report_latest.json`). It is started once and stays alive, receiving messages via WebSocket push from goofish. The cron job only performs health checks — it does NOT poll for messages directly.
+
+### Python Version Requirement
+
+**Python 3.12+ is REQUIRED** for goofish API connectivity. Python 3.11 (including the Hermes venv's 3.11.15) has an SSL compatibility issue with `h5api.m.goofish.com`:
 
 ```
-WHILE running:
-    1. Connect XianyuLive WebSocket
-    2. On message received:
-        a. Parse into XianyuMessage
-        b. Run process_message(msg) → get result dict
-        c. If result.needs_approval or result.needs_bd_quote:
-            → Send Feishu/Lark notification to operator
-    3. On disconnect: reconnect after 30s
+SSLEOFError: [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol
 ```
 
-### Message Model
+- `ws_listener.py` runs under **Homebrew Python 3.12** (`/opt/homebrew/Cellar/python@3.12/`) — this works.
+- `xianyu_bot.py cron` uses the Hermes venv Python 3.11 — this fails on the token endpoint.
+- `curl` works fine with goofish (uses macOS native SecureTransport, not OpenSSL).
+
+**Pitfall:** Running any goofish API call from within the Hermes venv will fail with SSL errors. Always use the 3.12 venv at `Molin-OS/molib/xianyu/.venv` for API operations.
+
+### Cron Job Workflow
+
+The cron job (scheduled at 15/45 of each hour 9-21) executes these steps:
+
+1. Check if ws_listener process is alive (PID from `xianyu_cron_report_latest.json`)
+2. Verify WebSocket log for recent activity (`~/.hermes/xianyu_bot/ws.log`)
+3. Read state counters from `~/.hermes/xianyu_bot/state.json`
+4. Generate patrol card following `feishu-message-formatter` cron template
+5. Write updated report to `~/.hermes/state/xianyu_cron_report_latest.json`
+6. Deliver to Feishu automation control group
+
+### Key State Files
+
+| File | Contents |
+|------|----------|
+| `~/.hermes/xianyu_bot/state.json` | `{messages_handled, replies_sent, last_activity, last_reply_time}` |
+| `~/.hermes/xianyu_bot/config.json` | `{notify_chat_id, auto_reply, cookies_configured, stat_day}` |
+| `~/.hermes/xianyu_bot/ws.log` | WebSocket connection and message logs |
+| `~/.hermes/xianyu_bot/cookies.json` | Structured cookie fields for goofish auth |
+| `~/.xianyu_cookies_new.txt` | Raw cookie string (browser export) |
+| `~/.hermes/state/xianyu_cron_report_latest.json` | Full cron report including infrastructure status |
+
+### Message Model (from WebSocket)
 
 ```json
 {
@@ -559,9 +600,85 @@ In production, conversation memory lives in-memory during the listener's lifecyc
 - If a session spans many conversations, persist to a JSON file at `~/.hermes/state/xianyu_conversations.json`
 - Reload on session start if the file exists
 
-### Cron Mode Execution（无消息 / API未就绪处理）
+### Reference Files
 
-When invoked as a cron job (no user present, no interactive mode), follow this execution path:
+- `references/ssl-troubleshooting.md` — Python SSL compatibility issue with goofish API, workarounds, and tested approaches
+- `references/cron-report-schema.md` — Cron report JSON schema and patrol card output template
+
+---
+
+## Execution Checklist
+
+```
+SSLEOFError: [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol
+```
+
+- `ws_listener.py` runs under **Homebrew Python 3.12** (`/opt/homebrew/Cellar/python@3.12/`) — this works.
+- `xianyu_bot.py cron` uses the Hermes venv Python 3.11 — this fails on the token endpoint.
+- `curl` works fine with goofish (uses macOS native SecureTransport, not OpenSSL).
+
+**Pitfall:** Running any goofish API call from within the Hermes venv will fail with SSL errors. Always use the 3.12 venv at `Molin-OS/molib/xianyu/.venv` for API operations.
+
+### Cron Job Workflow
+
+The cron job (scheduled at 15/45 of each hour 9-21) executes these steps:
+
+1. Check if ws_listener process is alive (PID from `xianyu_cron_report_latest.json`)
+2. Verify WebSocket log for recent activity (`~/.hermes/xianyu_bot/ws.log`)
+3. Read state counters from `~/.hermes/xianyu_bot/state.json`
+4. Generate patrol card following `feishu-message-formatter` cron template
+5. Write updated report to `~/.hermes/state/xianyu_cron_report_latest.json`
+6. Deliver to Feishu automation control group
+
+### Key State Files
+
+| File | Contents |
+|------|----------|
+| `~/.hermes/xianyu_bot/state.json` | `{messages_handled, replies_sent, last_activity, last_reply_time}` |
+| `~/.hermes/xianyu_bot/config.json` | `{notify_chat_id, auto_reply, cookies_configured, stat_day}` |
+| `~/.hermes/xianyu_bot/ws.log` | WebSocket connection and message logs |
+| `~/.hermes/xianyu_bot/cookies.json` | Structured cookie fields for goofish auth |
+| `~/.xianyu_cookies_new.txt` | Raw cookie string (browser export) |
+| `~/.hermes/state/xianyu_cron_report_latest.json` | Full cron report including infrastructure status |
+
+### Message Model (from WebSocket)
+
+```json
+{
+  "msg_id": "string (unique message ID)",
+  "from_user": "string (buyer ID)",
+  "to_user": "string (seller ID / your account)",
+  "content": "string (message body text)",
+  "item_id": "string (listing ID, can be empty)",
+  "item_title": "string (listing title, can be empty)",
+  "timestamp": 1234567890.0,
+  "conversation_id": "string (platform conversation ID, can be empty)"
+}
+```
+
+### Notification Triggers
+
+| Condition | Channel | Priority |
+|-----------|---------|----------|
+| `needs_approval == true` (refund) | Feishu @boss | HIGH — immediate |
+| `needs_bd_quote == true` (deal signal) | Feishu @bd_team | MEDIUM |
+| First contact | Log only | LOW |
+
+### State Persistence
+
+In production, conversation memory lives in-memory during the listener's lifecycle. For agent usage:
+- Track conversations in the current session's working memory
+- If a session spans many conversations, persist to a JSON file at `~/.hermes/state/xianyu_conversations.json`
+- Reload on session start if the file exists
+
+### Reference Files
+
+- `references/ssl-troubleshooting.md` — Python SSL compatibility issue with goofish API, workarounds, and tested approaches
+- `references/cron-report-schema.md` — Cron report JSON schema and patrol card output template
+
+---
+
+## Execution Checklist
 
 ```
 1. CHECK PREREQUISITES (Section 0)
@@ -930,6 +1047,16 @@ pip3.12 install --break-system-packages blackboxprotobuf pydantic typing_extensi
 | **Token 过期** | API 返回非 SUCCESS 状态 | 重新扫码登录获取新的 cookies |
 
 ---
+
+## Infrastructure Pitfalls
+
+Before running any Xianyu operations, check these known issues:
+
+- **TLS 1.2 required**: Python 3.12 + OpenSSL 3.6.x cannot complete TLS 1.3 handshake with `h5api.m.goofish.com`. Force TLS 1.2 via `_GoofishAdapter` in `goofish_apis.py`. See [references/infrastructure-fixes.md](references/infrastructure-fixes.md).
+- **WebSocket API**: websockets v16 deprecated `extra_headers` → `additional_headers`. Affects `xianyu_auto_service.py`, `goofish_live.py`, `xianyu_helper.py`. All three files need the parameter renamed.
+- **Cookie format**: `~/.hermes/xianyu_bot/cookies.json` stores individual fields, not a `cookie_string`. Build the string with `'; '.join(f'{k}={v}' for k, v in data.items())`.
+- **WebSocket cache**: Clear `__pycache__` directories or use `python -B` before starting the listener after code changes.
+- **Log location**: WebSocket listener writes to `~/.hermes/xianyu_bot/ws.log`. Check this file for connection status.
 
 ## Reference: Production Integration
 
