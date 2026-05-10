@@ -153,7 +153,7 @@ class XianyuAutoAgent(XianyuLive):
         
         while self._running:
             try:
-                async with websockets.connect(self.base_url, extra_headers=headers, ping_interval=30) as ws:
+                async with websockets.connect(self.base_url, additional_headers=headers, ping_interval=30) as ws:
                     self.ws = ws
                     logger.info("✅ WebSocket 已连接")
                     print("\n✅ 闲鱼消息监听已启动！等待买家消息...")

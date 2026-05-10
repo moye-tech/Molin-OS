@@ -13,6 +13,31 @@ from typing import Optional, List
 from urllib.parse import quote
 
 import requests
+from requests.adapters import HTTPAdapter
+
+# ── SSL 修复：强制 TLS 1.2 解决 Python 3.12 + OpenSSL 3.6 与闲鱼服务器的握手超时 ──
+import ssl as _ssl
+
+class _GoofishAdapter(HTTPAdapter):
+    """强制 TLS 1.2 的 HTTPAdapter — 闲鱼 h5api 服务器与 OpenSSL 3.6 TLS 1.3 不兼容"""
+    def init_poolmanager(self, *args, **kwargs):
+        ctx = _ssl.create_default_context()
+        ctx.minimum_version = _ssl.TLSVersion.TLSv1_2
+        ctx.maximum_version = _ssl.TLSVersion.TLSv1_2
+        kwargs['ssl_context'] = ctx
+        return super().init_poolmanager(*args, **kwargs)
+
+    def proxy_manager_for(self, *args, **kwargs):
+        ctx = _ssl.create_default_context()
+        ctx.minimum_version = _ssl.TLSVersion.TLSv1_2
+        ctx.maximum_version = _ssl.TLSVersion.TLSv1_2
+        kwargs['ssl_context'] = ctx
+        return super().proxy_manager_for(*args, **kwargs)
+
+def _ssl_session() -> requests.Session:
+    s = requests.Session()
+    s.mount('https://', _GoofishAdapter())
+    return s
 
 from message.types import Price, DeliverySettings
 from utils.goofish_utils import generate_sign, trans_cookies, generate_device_id
@@ -67,7 +92,7 @@ def _gen_tfstk(timeout: int = 15) -> str:
 
 def build_initial_cookies() -> dict:
     """纯 HTTP 获取闲鱼初始 cookie（不含登录态）"""
-    s = requests.Session()
+    s = _ssl_session()
     s.headers.update({'User-Agent': UA})
 
     s.get('https://log.mmstat.com/eg.js', timeout=10)
@@ -287,7 +312,7 @@ class XianyuApis:
         self.refresh_token_url = 'https://h5api.m.goofish.com/h5/mtop.taobao.idlemessage.pc.loginuser.get/1.0/'
         self.item_detail_url = 'https://h5api.m.goofish.com/h5/mtop.taobao.idle.pc.detail/1.0/'
         self.reset_login_info_url = 'https://passport.goofish.com/newlogin/hasLogin.do'
-        self.session = requests.Session()
+        self.session = _ssl_session()
         self.session.cookies.update(cookies)
         self.device_id = device_id
         self.cookies = {}

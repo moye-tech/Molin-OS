@@ -212,7 +212,7 @@ class XianyuMonitor:
             "Origin":"https://www.goofish.com"}
         while self._running:
             try:
-                async with websockets.connect("wss://wss-goofish.dingtalk.com/", extra_headers=headers,
+                async with websockets.connect("wss://wss-goofish.dingtalk.com/", additional_headers=headers,
                     ping_interval=30, close_timeout=10, open_timeout=10) as ws:
                     token = self.api.get_token()["data"]["accessToken"]
                     await ws.send(json.dumps({"lwp":"/reg","headers":{"cache-header":"app-key token ua wv",

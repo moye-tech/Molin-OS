@@ -113,6 +113,7 @@ Write this report to `~/.hermes/state/xianyu_cron_report_latest.json` for downst
 3. **pip dependencies**: In addition to `requests`, the goofish project needs `blackboxprotobuf`, `PyExecJS`, `websockets`. Install with `pip install blackboxprotobuf PyExecJS websockets`.
 
 4. **Python 3.9 vs 3.12**: The xianyu_bot.py uses `asyncio` features (TaskGroup, timeout contexts) only available in Python 3.11+. System Python on macOS may be 3.9 — install 3.12 via brew.
+5. **SSL EOF 握手错误 (h5api.m.goofish.com)**: Python `requests` 库调用 `h5api.m.goofish.com` 的 Token 端点时偶发 `SSLEOFError(8, 'UNEXPECTED_EOF_WHILE_READING')`。症状是 `curl` 可正常连接（返回 404），但 Python 握手失败。多见于 macOS + Python 3.12+。通常 15-30 分钟后自动恢复（阿里侧偶发限流），如持续多轮失败需检查 Cookies 是否过期。详细排查见 `references/ssl-eof-error.md`。
 
 ### Production Scripts
 
@@ -941,6 +942,13 @@ pip3.12 install --break-system-packages blackboxprotobuf pydantic typing_extensi
 | `~/Molin-OS/molib/xianyu/xianyu_helper.py` | 闲鱼工具：千问 AI + 图片生成 + 发布商品 |
 | `~/Molin-OS/molib/publish/xianyu.py` | 发布管线 |
 | `~/xianyu_agent/` | goofish SDK 目录（goofish_apis, utils, message） |
+
+### 参考文件
+
+| 文件 | 内容 |
+|:-----|:-----|
+| `references/ssl-eof-error.md` | SSL EOF 握手错误的诊断与恢复 |
+| `references/cron-report-schema.md` | cron 巡检报告的 JSON schema 与状态语义 |
 
 状态文件位置：
 - `~/.hermes/xianyu_bot/state.json` — 消息处理统计
