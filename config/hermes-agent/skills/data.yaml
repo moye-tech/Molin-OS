@@ -1,0 +1,29 @@
+data:
+  approval_level: low
+  config:
+    prompt_path: prompts/data_system.txt
+  cost_level: medium
+  description: 负责数据分析、洞察
+  enabled: true
+  max_concurrent: 2
+  model_preference: qwen3.6-plus
+  name: 数据子公司
+  prompts:
+    system: 请处理相关业务任务。
+    user_template: '请处理以下数据子公司相关任务: {task}'
+  tools:
+  - data_analysis_tool
+  - report_generation_tool
+  triggers:
+    keywords:
+    - 数据
+    - 分析
+    - 统计
+    - 报表
+    - 指标
+    - 可视化
+    - 洞察
+    - 趋势
+    - 预测
+    - 挖掘
+    patterns: []

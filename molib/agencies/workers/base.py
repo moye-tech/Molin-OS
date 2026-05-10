@@ -102,3 +102,16 @@ class WorkerRegistry:
     @classmethod
     def list_all(cls) -> list[str]:
         return list(cls._workers.keys())
+
+
+# ── v2.0 升级：SmartSubsidiaryWorker ──
+# 零侵入改造：所有Worker只需改基类 1行
+#   class ContentWriter(SmartSubsidiaryWorker):  ← 原 SubsidiaryWorker
+try:
+    from molib.agencies.workers.smart_mixin import SmartWorkerMixin
+    class SmartSubsidiaryWorker(SmartWorkerMixin, SubsidiaryWorker):
+        """v2.0 智能Worker基类 = 业务能力 + 经验学习 + 协作能力"""
+        pass
+except ImportError:
+    class SmartSubsidiaryWorker(SubsidiaryWorker):
+        pass

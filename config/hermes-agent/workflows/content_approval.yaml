@@ -1,0 +1,249 @@
+# 内容审批工作流定义
+# Paperclip工作流DAG示例
+# 支持多步骤审批、合规检查和条件分支
+
+workflow:
+  id: "content_approval_workflow"
+  name: "内容审批工作流"
+  version: "1.0.0"
+  description: "用于内容发布前的多级审批工作流，包含合规检查、质量审核和最终审批"
+  created_by: "墨麟AI团队"
+  created_at: "2026-04-19"
+  updated_at: "2026-04-19"
+
+  # 工作流全局配置
+  config:
+    timeout_seconds: 3600  # 整个工作流超时时间（1小时）
+    max_retries: 2
+    notify_on_failure: true
+    notification_channels:
+      - "feishu"
+      - "email"
+    archive_completed: true
+    archive_ttl_days: 30
+
+  # 工作流步骤定义
+  steps:
+    # 步骤1: 合规检查（自动）
+    - id: "compliance_check"
+      name: "合规检查"
+      type: "automated"
+      description: "自动检查内容是否符合合规要求"
+      component: "compliance_checker"
+      config:
+        check_types:
+          - "sensitive_words"
+          - "copyright"
+          - "platform_policy"
+          - "advertising_rules"
+        severity_level: "high"
+        auto_reject_on_fail: true
+      timeout_seconds: 30
+      retry_config:
+        max_retries: 1
+        backoff_factor: 2
+      on_success:
+        - next_step: "quality_review"
+      on_failure:
+        - action: "reject_workflow"
+          reason: "合规检查未通过"
+        - next_step: "workflow_end"
+
+    # 步骤2: 质量审核（人工审批）
+    - id: "quality_review"
+      name: "质量审核"
+      type: "approval"
+      description: "内容质量团队审核"
+      config:
+        approvers:
+          - "quality_team_lead"
+          - "senior_editor"
+        min_approvals: 1
+        approval_timeout_hours: 24
+        reminder_interval_hours: 6
+        escalation_path:
+          - "content_director"
+          - "ceo"
+        approval_criteria:
+          - "content_quality"
+          - "readability"
+          - "audience_suitability"
+      timeout_seconds: 86400  # 24小时
+      on_success:
+        - condition: "budget > 10000"
+          next_step: "ceo_final_approval"
+        - condition: "budget <= 10000"
+          next_step: "publishing"
+      on_failure:
+        - action: "reject_workflow"
+          reason: "质量审核未通过"
+        - next_step: "workflow_end"
+
+    # 步骤3: CEO最终审批（条件性人工审批）
+    - id: "ceo_final_approval"
+      name: "CEO最终审批"
+      type: "approval"
+      description: "高预算内容需要CEO最终审批"
+      config:
+        approvers:
+          - "ceo"
+        min_approvals: 1
+        approval_timeout_hours: 48
+        priority: "high"
+        require_justification: true
+      timeout_seconds: 172800  # 48小时
+      condition: "budget > 10000"  # 只有预算超过10000才进入此步骤
+      on_success:
+        - next_step: "publishing"
+      on_failure:
+        - action: "reject_workflow"
+          reason: "CEO审批未通过"
+        - next_step: "workflow_end"
+
+    # 步骤4: 发布执行（自动）
+    - id: "publishing"
+      name: "内容发布"
+      type: "automated"
+      description: "自动发布内容到目标平台"
+      component: "content_publisher"
+      config:
+        target_platforms:
+          - "xiaohongshu"
+          - "wechat"
+          - "zhihu"
+        publish_schedule: "immediate"
+        format_templates:
+          xiaohongshu: "social_media_v1"
+          wechat: "article_v1"
+          zhihu: "answer_v1"
+        monitoring_enabled: true
+        analytics_tracking: true
+      timeout_seconds: 300  # 5分钟
+      retry_config:
+        max_retries: 3
+        backoff_factor: 3
+      on_success:
+        - next_step: "post_publish_analysis"
+      on_failure:
+        - action: "notify_administrator"
+          severity: "critical"
+        - next_step: "workflow_end"
+
+    # 步骤5: 发布后分析（自动）
+    - id: "post_publish_analysis"
+      name: "发布后分析"
+      type: "automated"
+      description: "分析发布效果，生成报告"
+      component: "data_brain"
+      config:
+        analysis_types:
+          - "engagement_metrics"
+          - "audience_reaction"
+          - "roi_estimation"
+        report_format: "executive_summary"
+        alert_thresholds:
+          low_engagement: 0.01
+          negative_feedback: 0.05
+        recipients:
+          - "content_team"
+          - "growth_team"
+      timeout_seconds: 600  # 10分钟
+      on_success:
+        - next_step: "workflow_end"
+      on_failure:
+        - next_step: "workflow_end"  # 分析失败不影响主流程
+
+    # 步骤6: 工作流结束（系统）
+    - id: "workflow_end"
+      name: "工作流结束"
+      type: "system"
+      description: "工作流结束步骤，清理资源，生成最终报告"
+      config:
+        generate_final_report: true
+        notify_participants: true
+        archive_data: true
+      always_run: true  # 无论成功失败都会执行
+
+  # 工作流变量定义
+  variables:
+    - name: "budget"
+      type: "number"
+      default: 0
+      description: "内容预算（元）"
+      required: true
+
+    - name: "content_type"
+      type: "string"
+      default: "article"
+      allowed_values: ["article", "video", "image", "short_post"]
+      description: "内容类型"
+
+    - name: "target_audience"
+      type: "string"
+      default: "general"
+      description: "目标受众"
+
+    - name: "urgency"
+      type: "string"
+      default: "normal"
+      allowed_values: ["low", "normal", "high", "critical"]
+      description: "紧急程度"
+
+  # 工作流权限配置
+  permissions:
+    start_workflow:
+      - "content_creator"
+      - "content_manager"
+      - "ceo"
+    approve_steps:
+      quality_review:
+        - "quality_team_lead"
+        - "senior_editor"
+        - "content_director"
+      ceo_final_approval:
+        - "ceo"
+    view_reports:
+      - "content_team"
+      - "growth_team"
+      - "ceo"
+    cancel_workflow:
+      - "content_manager"
+      - "ceo"
+
+  # 工作流集成配置
+  integrations:
+    memory_provider: "sqlite"
+    notification_provider: "feishu"
+    analytics_provider: "data_brain"
+    scheduling_provider: "clawteam"
+
+  # 工作流监控配置
+  monitoring:
+    metrics:
+      - "workflow_start_count"
+      - "average_completion_time"
+      - "step_success_rate"
+      - "approval_response_time"
+    alerts:
+      - metric: "average_completion_time"
+        operator: ">"
+        threshold: 7200  # 2小时
+        severity: "warning"
+      - metric: "step_success_rate"
+        operator: "<"
+        threshold: 0.8
+        severity: "critical"
+
+  # 工作流版本控制
+  versioning:
+    auto_version: true
+    keep_previous_versions: 3
+    migration_script: "migrate_workflow_v1_to_v2.py"
+
+  # 工作流模板标签
+  tags:
+    - "content"
+    - "approval"
+    - "multi-step"
+    - "automated"
+    - "compliance"

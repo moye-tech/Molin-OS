@@ -1,0 +1,131 @@
+# CEO决策技能配置
+# 将现有CEO决策引擎包装为hermes-agent原生技能
+
+skill:
+  name: "CEO决策引擎"
+  id: "ceo_decision"
+  description: "负责ROI分析、三层决策、记忆集成的CEO决策系统"
+
+  # 触发配置
+  triggers:
+    keywords:
+      - "决策"
+      - "分析"
+      - "roi"
+      - "预算"
+      - "项目"
+      - "投资"
+      - "评估"
+      - "审批"
+      - "ceo"
+      - "ceo决策"
+
+    # 上下文匹配规则
+    context_rules:
+      - field: "metadata.budget"
+        operator: "exists"
+        weight: 0.3
+      - field: "metadata.revenue"
+        operator: "exists"
+        weight: 0.3
+      - field: "text"
+        operator: "contains"
+        value: ["决策", "分析", "roi"]
+        weight: 0.4
+
+  # 模型和成本配置
+  model_preference: "glm-5"
+  cost_level: "high"
+  approval_level: "high"
+  max_concurrent: 1
+
+  # 技能工具
+  tools:
+    - "analyze_roi_tool"
+    - "make_decision_tool"
+    - "query_memory_tool"
+    - "daily_optimization_tool"
+
+  # 技能实现类
+  implementation:
+    module: "hermes_fusion.skills.hermes_native.ceo_decision_skill"
+    class: "CeoDecisionMolinSkill"
+
+  # 技能参数
+  parameters:
+    min_roi_ratio: 1.5
+    min_confidence: 0.7
+    max_payback_days: 180
+    high_composite_score: 7.0
+
+  # 提示词配置
+  prompts:
+    system: |
+      你是一个专业的CEO决策专家，拥有丰富的投资决策和战略规划经验。
+      你需要基于ROI分析、市场数据和历史记忆做出GO/NO_GO/NEED_INFO三层决策。
+      决策时需要考虑：
+      1. ROI比率必须大于1.5
+      2. 投资回收期不超过180天
+      3. 综合评分需要达到7分以上
+      4. 置信度需要达到70%以上
+
+      你的决策将直接影响公司的战略方向，请谨慎评估所有因素。
+
+    user_template: |
+      请进行CEO决策分析：
+
+      用户请求: {text}
+      用户ID: {user_id}
+      平台: {platform}
+
+      元数据:
+      {metadata_formatted}
+
+      请进行完整的ROI分析并给出三层决策建议。
+
+  # 输出格式
+  output_format:
+    required_fields:
+      - "success"
+      - "decision"
+      - "roi_analysis"
+      - "composite_score"
+      - "strategy"
+      - "risks"
+      - "execution_time"
+    optional_fields:
+      - "tasks"
+      - "metrics"
+      - "next_review"
+      - "confidence"
+
+  # 性能配置
+  performance:
+    timeout_seconds: 30
+    retry_count: 2
+    cache_enabled: true
+    cache_ttl_seconds: 300
+
+  # 监控配置
+  monitoring:
+    metrics:
+      - "decision_count"
+      - "average_execution_time"
+      - "success_rate"
+      - "go_rate"
+      - "composite_score_average"
+    alerts:
+      - metric: "success_rate"
+        operator: "<"
+        threshold: 0.8
+        severity: "warning"
+      - metric: "average_execution_time"
+        operator: ">"
+        threshold: 5.0
+        severity: "warning"
+
+  # 版本和元数据
+  version: "1.0.0"
+  author: "墨麟AI团队"
+  created_at: "2026-04-19"
+  updated_at: "2026-04-19"

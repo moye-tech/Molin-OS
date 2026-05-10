@@ -1,0 +1,4 @@
+shop_agency_tools:
+  description: shop_agency业务处理专用工具
+  enabled: true
+  name: shop_agency专用工具集

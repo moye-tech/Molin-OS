@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>墨麟AI — 系统监控看板</title>
+<style>
+:root {
+  --bg: #0f1117; --card: #1a1d27; --border: #2a2d3a;
+  --text: #e0e0e0; --text-dim: #888; --green: #22c55e;
+  --red: #ef4444; --blue: #3b82f6; --orange: #f59e0b;
+  --purple: #a855f7; --cyan: #06b6d4;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg); color: var(--text); min-height: 100vh; padding: 20px; }
+
+.header { display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.header h1 { font-size: 22px; font-weight: 600; }
+.header .status { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-dim); }
+.header .status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green);
+  animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px; margin-bottom: 24px; }
+.kpi-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+  padding: 20px; text-align: center; }
+.kpi-card .value { font-size: 32px; font-weight: 700; margin: 8px 0; }
+.kpi-card .label { font-size: 13px; color: var(--text-dim); }
+
+.section { margin-bottom: 24px; }
+.section-title { font-size: 16px; font-weight: 600; margin-bottom: 12px;
+  padding-left: 12px; border-left: 3px solid var(--blue); }
+
+.agency-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px; }
+.agency-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+  padding: 16px; display: flex; align-items: center; gap: 12px; }
+.agency-card .icon { width: 40px; height: 40px; border-radius: 8px; display: flex;
+  align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.agency-card .info { flex: 1; min-width: 0; }
+.agency-card .info .name { font-size: 14px; font-weight: 500; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; }
+.agency-card .info .count { font-size: 12px; color: var(--text-dim); }
+
+.task-table { width: 100%; border-collapse: collapse; }
+.task-table th { text-align: left; padding: 10px 12px; font-size: 12px;
+  color: var(--text-dim); font-weight: 500; border-bottom: 1px solid var(--border);
+  text-transform: uppercase; letter-spacing: 0.5px; }
+.task-table td { padding: 12px; font-size: 13px; border-bottom: 1px solid var(--border);
+  vertical-align: middle; }
+.task-table tr:hover { background: rgba(255,255,255,0.02); }
+.task-table .input-text { max-width: 280px; white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; }
+.task-table .badge { display: inline-block; padding: 2px 8px; border-radius: 99px;
+  font-size: 11px; font-weight: 500; }
+.badge-green { background: rgba(34,197,94,0.15); color: var(--green); }
+.badge-red { background: rgba(239,68,68,0.15); color: var(--red); }
+.badge-blue { background: rgba(59,130,246,0.15); color: var(--blue); }
+
+.agency-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.agency-tags .tag { background: rgba(168,85,247,0.12); color: var(--purple);
+  padding: 1px 6px; border-radius: 4px; font-size: 11px; }
+
+.loading { text-align: center; padding: 60px 0; color: var(--text-dim); }
+.refresh-btn { background: var(--card); border: 1px solid var(--border); color: var(--text);
+  padding: 6px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+.refresh-btn:hover { border-color: var(--blue); }
+
+.chart-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.chart-bar .bar-label { width: 80px; font-size: 12px; text-align: right;
+  flex-shrink: 0; color: var(--text-dim); }
+.chart-bar .bar-track { flex: 1; height: 20px; background: rgba(255,255,255,0.05);
+  border-radius: 4px; overflow: hidden; }
+.chart-bar .bar-fill { height: 100%; border-radius: 4px;
+  transition: width 0.5s ease; }
+.chart-bar .bar-value { width: 36px; font-size: 12px; font-weight: 500; flex-shrink: 0; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>墨麟AI 系统监控看板</h1>
+  <div style="display:flex;align-items:center;gap:16px;">
+    <div class="status"><span class="dot"></span>在线</div>
+    <button class="refresh-btn" onclick="loadData()">刷新</button>
+  </div>
+</div>
+
+<div class="kpi-row" id="kpiRow">
+  <div class="kpi-card"><div class="label">总任务数</div>
+    <div class="value" id="kpiTotal" style="color:var(--blue)">--</div>
+    <div class="label">历史累计</div></div>
+  <div class="kpi-card"><div class="label">成功率</div>
+    <div class="value" id="kpiRate" style="color:var(--green)">--</div>
+    <div class="label">子任务成功</div></div>
+  <div class="kpi-card"><div class="label">总子任务</div>
+    <div class="value" id="kpiSubtasks" style="color:var(--orange)">--</div>
+    <div class="label">已执行</div></div>
+  <div class="kpi-card"><div class="label">参与子公司</div>
+    <div class="value" id="kpiAgencies" style="color:var(--purple)">--</div>
+    <div class="label">个</div></div>
+</div>
+
+<div class="section">
+  <div class="section-title">子公司参与频次</div>
+  <div id="agencyChart"></div>
+</div>
+
+<div class="section">
+  <div class="section-title">最近任务记录</div>
+  <div style="overflow-x:auto;">
+    <table class="task-table">
+      <thead><tr>
+        <th>时间</th><th>用户输入</th><th>参与子公司</th>
+        <th>子任务</th><th>耗时</th><th>状态</th>
+      </tr></thead>
+      <tbody id="taskBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const AGENT_MAP = {
+  research: "墨情报局", product: "墨品工场", growth: "墨增引擎",
+  ip: "墨迹内容", dev: "墨码工坊", ai: "墨智引擎", edu: "墨育学堂",
+  shop: "墨商引力", data: "墨镜数据", ads: "墨流广投",
+  secure: "墨盾安全", finance: "墨算财务", crm: "墨域私域",
+  knowledge: "墨脑知识", cs: "墨声客服", legal: "墨律法务",
+  bd: "墨商BD", global_market: "墨海出海", devops: "墨维运维",
+  order: "墨匠技术"
+};
+const COLORS = ['#3b82f6','#22c55e','#f59e0b','#ef4444','#a855f7','#06b6d4',
+  '#ec4899','#14b8a6','#f97316','#6366f1','#84cc16','#e11d48'];
+
+async function loadData() {
+  try {
+    const res = await fetch('/api/dashboard');
+    const data = await res.json();
+    renderKPIs(data);
+    renderAgencyChart(data.agency_participation);
+    renderTaskTable(data.recent_tasks);
+  } catch (e) {
+    console.error(e);
+    document.getElementById('kpiRow').innerHTML =
+      '<div class="loading">加载失败: ' + e.message + '</div>';
+  }
+}
+
+function renderKPIs(d) {
+  document.getElementById('kpiTotal').textContent = d.total_tasks;
+  document.getElementById('kpiRate').textContent = d.success_rate + '%';
+  document.getElementById('kpiSubtasks').textContent = d.total_subtasks;
+  document.getElementById('kpiAgencies').textContent = d.agency_participation.length;
+}
+
+function renderAgencyChart(participation) {
+  const el = document.getElementById('agencyChart');
+  if (!participation || !participation.length) {
+    el.innerHTML = '<div style="color:var(--text-dim);padding:20px 0;">暂无数据</div>';
+    return;
+  }
+  const max = Math.max(...participation.map(p => p[1]));
+  el.innerHTML = '<div class="agency-grid">' +
+    participation.slice(0, 20).map((p, i) => {
+      const name = AGENT_MAP[p[0]] || p[0];
+      const color = COLORS[i % COLORS.length];
+      const pct = Math.round(p[1] / max * 100);
+      return `<div class="agency-card">
+        <div class="icon" style="background:${color}22;color:${color}">
+          ${name[0]}</div>
+        <div class="info">
+          <div class="name">${name}</div>
+          <div class="count">参与 ${p[1]} 次任务</div>
+        </div>
+      </div>`;
+    }).join('') + '</div>';
+}
+
+function renderTaskTable(tasks) {
+  const el = document.getElementById('taskBody');
+  if (!tasks || !tasks.length) {
+    el.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:40px">暂无任务记录</td></tr>';
+    return;
+  }
+  el.innerHTML = tasks.map(t => {
+    const agencies = JSON.parse(t.agencies || '[]');
+    const tags = agencies.map(a =>
+      `<span class="tag">${AGENT_MAP[a] || a}</span>`).join('');
+    const rate = t.total_subtasks > 0
+      ? Math.round(t.success_count / t.total_subtasks * 100) : 0;
+    const badgeCls = t.status === 'completed' ? 'badge-green' : 'badge-red';
+    const time = (t.created_at || '').replace('T', ' ').substring(0, 19);
+    return `<tr>
+      <td style="white-space:nowrap">${time}</td>
+      <td class="input-text" title="${esc(t.user_input || '')}">${esc(t.user_input || '')}</td>
+      <td><div class="agency-tags">${tags || '-'}</div></td>
+      <td><span style="color:var(--green)">${t.success_count}</span>/${t.total_subtasks}
+        <span style="color:var(--text-dim);font-size:11px">(${rate}%)</span></td>
+      <td>${t.latency_seconds ? t.latency_seconds.toFixed(1) + 's' : '-'}</td>
+      <td><span class="badge ${badgeCls}">${t.status}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+loadData();
+setInterval(loadData, 30000);
+</script>
+</body>
+</html>

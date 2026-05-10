@@ -1,0 +1,29 @@
+shop:
+  approval_level: medium
+  config:
+    prompt_path: prompts/shop_system.txt
+  cost_level: high
+  description: 负责电商、销售业务
+  enabled: true
+  max_concurrent: 3
+  model_preference: claude-haiku
+  name: 电商子公司
+  prompts:
+    system: 请处理相关业务任务。
+    user_template: '请处理以下电商子公司相关任务: {task}'
+  tools:
+  - product_listing_tool
+  - sales_analysis_tool
+  triggers:
+    keywords:
+    - 电商
+    - 销售
+    - 商品
+    - 产品
+    - 店铺
+    - 购物
+    - 客户
+    - 营销
+    - 推广
+    - 促销
+    patterns: []

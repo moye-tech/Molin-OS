@@ -1,0 +1,280 @@
+# ClawTeam技能配置
+# 将原始ClawTeam调度器适配为hermes-agent原生技能
+# 负责任务调度、并发执行和资源管理
+
+skill:
+  name: "ClawTeam"
+  id: "clawteam"
+  description: "负责任务调度、并发执行和资源管理，集成到原始7层架构的ClawTeam层"
+
+  # 触发配置
+  triggers:
+    keywords:
+      - "调度"
+      - "任务"
+      - "执行"
+      - "并发"
+      - "并行"
+      - "clawteam"
+      - "scheduler"
+      - "run task"
+      - "schedule"
+      - "parallel"
+      - "多任务"
+      - "异步"
+      - "资源管理"
+      - "限流"
+      - "重试"
+      - "超时"
+
+    # 上下文匹配规则
+    context_rules:
+      - field: "text"
+        operator: "contains"
+        value: ["调度", "任务", "并行", "并发", "clawteam"]
+        weight: 0.4
+      - field: "action"
+        operator: "in"
+        value: ["schedule_task", "run_parallel", "task_status", "cancel_task"]
+        weight: 0.3
+      - field: "metadata.requires_scheduling"
+        operator: "=="
+        value: true
+        weight: 0.3
+
+    # 意图匹配
+    intents:
+      - "schedule_task"
+      - "run_parallel"
+      - "task_status"
+      - "cancel_task"
+      - "list_tasks"
+      - "get_stats"
+
+  # 模型和成本配置
+  model_preference: "claude-haiku"  # 调度任务不需要复杂模型
+  cost_level: "low"
+  approval_level: "low"
+  max_concurrent: 5  # 调度器本身可以处理多个并发调度请求
+
+  # 技能工具
+  tools:
+    - "schedule_task_tool"
+    - "run_parallel_tool"
+    - "task_status_tool"
+    - "cancel_task_tool"
+    - "list_tasks_tool"
+
+  # 技能实现类
+  implementation:
+    module: "hermes_fusion.skills.clawteam.skill"
+    class: "ClawTeamSkill"
+
+  # 技能参数
+  parameters:
+    scheduler_config:
+      max_concurrent_tasks: 10
+      task_timeouts:
+        content_gen: 30
+        data_analyze: 60
+        hermes_decision: 20
+        default: 45
+      retry_config:
+        max_retries: 3
+        backoff_factor: 2
+      default_priority: "medium"
+
+    # 原始7层架构集成
+    layer_integration:
+      layer_name: "clawteam"
+      upstream_layers: ["strategy_engine", "paperclip"]
+      downstream_layers: ["execution", "data_brain"]
+      data_flow_format: "task_context"
+
+  # 提示词配置
+  prompts:
+    system: |
+      你是墨麟科技任务调度专家，负责 ClawTeam 调度层。
+
+      【核心职责】
+      1. 任务调度：接收任务请求，分配资源，控制并发
+      2. 并发控制：限制同时运行的任务数量，防止资源过载
+      3. 重试机制：任务失败时自动重试，指数退避
+      4. 超时管理：不同类型任务设置不同超时时间
+      5. 状态跟踪：监控任务状态，提供实时状态查询
+
+      【任务类型】
+      - content_gen（内容生成）：超时30秒，优先级高
+      - data_analyze（数据分析）：超时60秒，优先级中
+      - hermes_decision（决策）：超时20秒，优先级高
+      - default（默认）：超时45秒，优先级中
+
+      【调度策略】
+      - 公平调度：轮询分配资源
+      - 优先级调度：高优先级任务优先
+      - 资源感知：根据任务类型分配不同资源
+
+      【输出格式】
+      根据操作类型返回结构化数据：
+
+      1. 调度任务：
+      {
+        "task_id": "任务ID",
+        "status": "scheduled|running|completed|failed",
+        "message": "调度成功消息",
+        "scheduled_at": 时间戳
+      }
+
+      2. 并行执行：
+      {
+        "total_tasks": 总任务数,
+        "completed_tasks": 成功数,
+        "failed_tasks": 失败数,
+        "results": [
+          {"task_index": 0, "status": "completed|failed", "result|error": "结果或错误"}
+        ]
+      }
+
+      3. 任务状态：
+      {
+        "task_id": "任务ID",
+        "status_info": {
+          "status": "状态",
+          "elapsed": "运行时间",
+          "type": "任务类型"
+        }
+      }
+
+      4. 取消任务：
+      {
+        "task_id": "任务ID",
+        "cancelled": true|false,
+        "message": "取消结果消息"
+      }
+
+    user_template: |
+      请处理以下调度请求：
+
+      用户请求: {text}
+      用户ID: {user_id}
+      平台: {platform}
+
+      调度配置:
+      - 操作类型: {action}
+      - 任务配置: {task_config}
+      - 任务ID: {task_id}
+      - 状态过滤: {status_filter}
+
+      请根据请求类型执行调度操作，并严格按照输出格式返回结果。
+
+  # 输出格式
+  output_format:
+    required_fields:
+      - "success"
+      - "skill"
+      - "action"
+      - "data"
+      - "timestamp"
+    optional_fields:
+      - "execution_time"
+      - "error"
+      - "warning"
+    validation_rules:
+      - field: "data.task_id"
+        required: false
+        type: "string"
+        condition: "action in ['schedule_task', 'task_status', 'cancel_task']"
+      - field: "data.total_tasks"
+        required: false
+        type: "number"
+        condition: "action == 'run_parallel'"
+      - field: "success"
+        required: true
+        type: "boolean"
+
+  # 性能配置
+  performance:
+    timeout_seconds: 30  # 调度操作应该在30秒内完成
+    retry_count: 1
+    cache_enabled: true
+    cache_ttl_seconds: 300  # 任务状态缓存5分钟
+    rate_limit_per_minute: 60  # 每分钟最多60个调度请求
+
+  # 监控配置
+  monitoring:
+    metrics:
+      - "tasks_scheduled"
+      - "tasks_completed"
+      - "tasks_failed"
+      - "average_execution_time"
+      - "concurrent_tasks"
+      - "cache_hit_rate"
+    alerts:
+      - metric: "tasks_failed"
+        operator: ">"
+        threshold: 10
+        period: "hour"
+        severity: "warning"
+      - metric: "average_execution_time"
+        operator: ">"
+        threshold: 10.0
+        severity: "warning"
+      - metric: "concurrent_tasks"
+        operator: ">"
+        threshold: 15
+        severity: "critical"
+
+  # 数据质量配置
+  data_quality:
+    required_fields:
+      - "text"
+    validation_rules:
+      - field: "task_config"
+        required: false
+        type: "object"
+        condition: "action == 'schedule_task'"
+      - field: "tasks"
+        required: false
+        type: "array"
+        condition: "action == 'run_parallel'"
+      - field: "task_id"
+        required: false
+        type: "string"
+        condition: "action in ['task_status', 'cancel_task']"
+
+  # 集成配置
+  integrations:
+    memory_providers:
+      - "sqlite"  # 存储任务历史
+      - "redis"   # 缓存任务状态
+    notification_channels:
+      - "feishu"  # 任务完成通知
+    downstream_systems:
+      - "execution_layer"  # 原始7层架构的执行层
+      - "data_brain"       # 数据分析层
+
+  # 调度配置（定时清理任务）
+  scheduling:
+    cleanup_tasks:
+      enabled: true
+      cron: "0 3 * * *"  # 每天凌晨3点清理过期任务
+      timezone: "Asia/Shanghai"
+    stats_collection:
+      enabled: true
+      interval_minutes: 30
+
+  # 版本和元数据
+  version: "1.0.0"
+  author: "墨麟AI团队"
+  created_at: "2026-04-19"
+  updated_at: "2026-04-19"
+  dependencies:
+    - "hermes_fusion.skills.hermes_skill_base"
+    - "hermes_fusion.providers.scheduler_provider"
+    - "clawteam.scheduler"
+  tags:
+    - "scheduling"
+    - "concurrency"
+    - "task_management"
+    - "clawteam"
+    - "execution"

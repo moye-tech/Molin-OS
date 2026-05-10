@@ -1,0 +1,116 @@
+# ============================================================
+# 墨麟AI智能系统 v6.6 — 记忆层访问控制列表 (ACL)
+# 定义每个子公司命名空间的读写权限
+# 未在此处列出的 agency 对该 namespace 无任何访问权限
+# CEO 默认拥有所有命名空间的读写权限
+# ============================================================
+
+[global]
+# 全局 ACL 设置
+enabled = true
+default_deny = true  # 未配置的 namespace 默认拒绝访问
+audit_log = true     # 记录所有 ACL 拒绝事件
+
+# ─── 原有 12 子公司命名空间 ─────────────────────────────
+
+[namespaces.ai]
+description = "AI技术子公司工作记忆"
+read_access = ["ai", "dev", "ceo"]
+write_access = ["ai", "ceo"]
+
+[namespaces.data]
+description = "数据分析子公司工作记忆"
+read_access = ["data", "ads", "growth", "finance", "ceo"]
+write_access = ["data", "ceo"]
+
+[namespaces.dev]
+description = "开发子公司工作记忆"
+read_access = ["dev", "ai", "devops", "ceo"]
+write_access = ["dev", "ceo"]
+
+[namespaces.edu]
+description = "教育子公司工作记忆"
+read_access = ["edu", "crm", "ip", "ceo"]
+write_access = ["edu", "ceo"]
+
+[namespaces.growth]
+description = "增长子公司工作记忆"
+read_access = ["growth", "ads", "data", "crm", "ceo"]
+write_access = ["growth", "ceo"]
+
+[namespaces.ip]
+description = "内容子公司工作记忆"
+read_access = ["ip", "growth", "global", "ceo"]
+write_access = ["ip", "ceo"]
+
+[namespaces.order]
+description = "订单子公司工作记忆"
+read_access = ["order", "finance", "bd", "ceo"]
+write_access = ["order", "ceo"]
+
+[namespaces.product]
+description = "产品子公司工作记忆"
+read_access = ["product", "dev", "research", "ceo"]
+write_access = ["product", "ceo"]
+
+[namespaces.research]
+description = "研究子公司工作记忆"
+read_access = ["research", "product", "growth", "bd", "ceo"]
+write_access = ["research", "ceo"]
+
+[namespaces.secure]
+description = "安全子公司工作记忆"
+read_access = ["secure", "legal", "devops", "ceo"]
+write_access = ["secure", "ceo"]
+
+[namespaces.shop]
+description = "电商子公司工作记忆"
+read_access = ["shop", "crm", "data", "ceo"]
+write_access = ["shop", "ceo"]
+
+[namespaces.ads]
+description = "广告子公司工作记忆"
+read_access = ["ads", "data", "growth", "finance", "ceo"]
+write_access = ["ads", "ceo"]
+
+# ─── 新增 8 子公司命名空间 ──────────────────────────────
+
+[namespaces.finance]
+description = "财务子公司工作记忆 — 含账单、ROI、预算数据"
+read_access = ["finance", "ceo", "devops"]
+write_access = ["finance", "ceo"]
+
+[namespaces.crm]
+description = "私域CRM子公司工作记忆 — 含用户画像、转化数据"
+read_access = ["crm", "cs", "growth", "ceo"]
+write_access = ["crm", "ceo"]
+
+[namespaces.knowledge]
+description = "知识库子公司工作记忆 — 含知识卡片、SOP版本"
+read_access = ["knowledge", "ceo", "ai", "dev", "data"]
+write_access = ["knowledge", "ceo"]
+
+[namespaces.cs]
+description = "客服子公司工作记忆 — 含投诉记录、满意度数据"
+read_access = ["cs", "crm", "ceo"]
+write_access = ["cs", "ceo"]
+
+[namespaces.legal]
+description = "法务子公司工作记忆 — 含合同模板、合规检查"
+read_access = ["legal", "ceo", "bd"]
+write_access = ["legal", "ceo"]
+
+[namespaces.bd]
+description = "BD子公司工作记忆 — 含客户评估、报价历史"
+read_access = ["bd", "finance", "legal", "ceo"]
+write_access = ["bd", "ceo"]
+
+[namespaces.global]
+description = "出海子公司工作记忆 — 含本地化方案、市场数据"
+read_access = ["global", "ip", "ceo"]
+write_access = ["global", "ceo"]
+
+[namespaces.devops]
+description = "运维子公司工作记忆 — 含巡检日志、故障记录"
+read_access = ["devops", "ceo", "dev"]
+write_access = ["devops", "ceo"]

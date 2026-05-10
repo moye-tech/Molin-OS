@@ -1,0 +1,29 @@
+secure:
+  approval_level: high
+  config:
+    prompt_path: prompts/secure_system.txt
+  cost_level: low
+  description: 负责安全、合规、风控
+  enabled: true
+  max_concurrent: 2
+  model_preference: glm-5
+  name: 安全子公司
+  prompts:
+    system: 请处理相关业务任务。
+    user_template: '请处理以下安全子公司相关任务: {task}'
+  tools:
+  - security_audit_tool
+  - compliance_check_tool
+  triggers:
+    keywords:
+    - 安全
+    - 合规
+    - 风险
+    - 审核
+    - 检查
+    - 监控
+    - 审计
+    - 保护
+    - 加密
+    - 隐私
+    patterns: []

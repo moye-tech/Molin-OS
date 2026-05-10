@@ -1,0 +1,29 @@
+dev:
+  approval_level: low
+  config:
+    prompt_path: prompts/dev_system.txt
+  cost_level: low
+  description: 负责代码开发、技术实现
+  enabled: true
+  max_concurrent: 3
+  model_preference: deepseek-v4-pro
+  name: 开发子公司
+  prompts:
+    system: 请处理相关业务任务。
+    user_template: '请处理以下开发子公司相关任务: {task}'
+  tools:
+  - code_generation_tool
+  - technical_design_tool
+  triggers:
+    keywords:
+    - 代码
+    - 开发
+    - 编程
+    - 技术
+    - 软件
+    - 程序
+    - 系统
+    - API
+    - 数据库
+    - 架构
+    patterns: []

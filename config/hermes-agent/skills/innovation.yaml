@@ -1,0 +1,42 @@
+innovation:
+  approval_level: medium
+  config:
+    prompt_path: prompts/innovation_system.txt
+  cost_level: high
+  description: 负责A/B测试实验设计、创新方案评估、实验结果可视化、群体智能预测等功能
+  enabled: true
+  max_concurrent: 1
+  model_preference: claude-3-sonnet
+  name: 创新实验子公司
+  prompts:
+    system: 请处理相关业务任务。
+    user_template: '请处理以下创新实验子公司相关任务: {task}'
+  tools:
+  - innovation_run_experiment
+  - innovation_analyze_results
+  - innovation_create_visualization
+  - innovation_predict
+  triggers:
+    keywords:
+    - 创新
+    - 实验
+    - A/B测试
+    - 方案评估
+    - 可视化
+    - 群体智能
+    - 预测
+    - 实验设计
+    - 假设检验
+    - 统计显著性
+    - 用户研究
+    - 原型测试
+    - 概念验证
+    - MVP测试
+    - 创新验证
+    - 实验分析
+    - 实验报告
+    - 实验可视化
+    - 数据驱动
+    - 迭代优化
+    - 优化实验
+    patterns: []

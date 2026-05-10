@@ -1,0 +1,84 @@
+# 墨麟AI智能系统 记忆层 TOML 配置
+# 定义记忆提供者优先级和使用场景
+
+# 记忆提供者定义
+[providers.sqlite]
+type = "transactional"
+description = "SQLite数据库，用于事务性数据存储"
+enabled = true
+priority = 1  # 最高优先级
+config_key = "SQLITE_DB_PATH"
+
+[providers.qdrant]
+type = "vector"
+description = "Qdrant向量数据库，用于语义搜索"
+enabled = true
+priority = 2
+config_keys = { host = "QDRANT_HOST", port = "QDRANT_PORT", collection_users = "QDRANT_COLLECTION_USERS", collection_content = "QDRANT_COLLECTION_CONTENT", collection_decisions = "QDRANT_COLLECTION_DECISIONS" }
+
+[providers.supermemory]
+type = "semantic"
+description = "Supermemory长期语义记忆"
+enabled = false  # 默认禁用，需要API密钥
+priority = 3
+config_keys = { api_key = "SUPERMEMORY_API_KEY", container_tag = "SUPERMEMORY_CONTAINER_TAG" }
+optional = true
+
+[providers.redis]
+type = "cache"
+description = "Redis缓存，用于高频临时数据"
+enabled = true
+priority = 0  # 特殊：缓存层，独立于优先级体系
+config_keys = { host = "REDIS_HOST", port = "REDIS_PORT", password = "REDIS_PASSWORD" }
+
+# 使用场景到提供者映射
+[scenarios.transactional]
+description = "事务性数据：决策记录、交易、事件"
+providers = ["sqlite"]
+ttl = "permanent"  # 永久存储
+compression = false
+
+[scenarios.semantic_search]
+description = "语义搜索：用户行为、内容匹配"
+providers = ["qdrant"]
+ttl = "30d"  # 30天
+compression = true
+indexing_strategy = "auto"
+
+[scenarios.long_term_memory]
+description = "长期记忆：用户画像、历史模式、跨会话上下文"
+providers = ["supermemory", "sqlite"]  # 优先Supermemory，回退SQLite
+ttl = "1y"  # 1年
+compression = true
+encryption = true
+
+[scenarios.cache]
+description = "缓存：高频访问数据、会话状态、临时结果"
+providers = ["redis"]
+ttl = "1h"  # 1小时
+compression = false
+eviction_policy = "lru"
+
+[scenarios.realtime_analytics]
+description = "实时分析：监控数据、性能指标"
+providers = ["redis", "sqlite"]  # 实时数据在Redis，批量转存到SQLite
+ttl = { redis = "24h", sqlite = "7d" }
+compression = false
+
+# 记忆管理层配置
+[management]
+auto_migrate = true
+backup_schedule = "0 2 * * *"  # 每天凌晨2点
+backup_retention_days = 7
+health_check_interval = 300  # 5分钟
+cleanup_cron = "0 3 * * *"   # 每天凌晨3点清理过期数据
+
+# Supermemory特定配置（如果启用）
+[supermemory_config]
+container_image = "supermemory/supermemory:v1.2.0"
+embedding_model = "bge-large-zh-v1.5"
+max_chunk_size = 1000
+overlap_size = 200
+retrieval_top_k = 5
+similarity_threshold = 0.7
+local_storage_fallback = true

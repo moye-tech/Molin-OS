@@ -1,0 +1,41 @@
+thinking:
+  approval_level: medium
+  config:
+    prompt_path: prompts/thinking_system.txt
+  cost_level: medium
+  description: 负责思维模型应用、决策支持、复杂问题结构化分解等功能
+  enabled: true
+  max_concurrent: 1
+  model_preference: claude-3-opus
+  name: 思维模型子公司
+  prompts:
+    system: 请处理相关业务任务。
+    user_template: '请处理以下思维模型子公司相关任务: {task}'
+  tools:
+  - minimind_analyze_problem
+  - minimind_apply_model
+  - minimind_decision_framework
+  - minimind_evaluate_solution
+  triggers:
+    keywords:
+    - 思维模型
+    - 决策支持
+    - 问题分析
+    - 结构化思考
+    - 框架分析
+    - SWOT分析
+    - 根本原因
+    - 第一性原理
+    - 思维导图
+    - 决策框架
+    - 问题解决
+    - 模型应用
+    - 分析框架
+    - 思考工具
+    - 决策树
+    - 风险评估
+    - 战略分析
+    - 业务分析
+    - 复杂问题
+    - 结构化分析
+    patterns: []

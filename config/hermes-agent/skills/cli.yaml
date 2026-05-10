@@ -1,0 +1,32 @@
+cli:
+  approval_level: low
+  config:
+    prompt_path: prompts/cli_system.txt
+  cost_level: medium
+  description: 负责命令行工具执行、脚本自动化、系统管理等业务
+  enabled: true
+  max_concurrent: 2
+  model_preference: claude-3-sonnet
+  name: CLI工具子公司
+  prompts:
+    system: 请处理相关业务任务。
+    user_template: '请处理以下CLI工具子公司相关任务: {task}'
+  tools:
+  - cli_execute_command
+  triggers:
+    keywords:
+    - 命令行
+    - CLI
+    - 脚本
+    - 自动化
+    - 终端
+    - shell
+    - 系统管理
+    - 命令
+    - 执行
+    - 运行
+    - 批量
+    - 部署
+    - 安装
+    - 配置
+    patterns: []

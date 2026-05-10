@@ -1,0 +1,29 @@
+edu:
+  approval_level: medium
+  config:
+    prompt_path: prompts/edu_system.txt
+  cost_level: low
+  description: 负责教育、培训、知识付费业务
+  enabled: true
+  max_concurrent: 2
+  model_preference: qwen3.6-plus
+  name: 教育子公司
+  prompts:
+    system: 请处理相关业务任务。
+    user_template: '请处理以下教育子公司相关任务: {task}'
+  tools:
+  - course_creation_tool
+  - training_material_tool
+  triggers:
+    keywords:
+    - 课程
+    - 培训
+    - 教育
+    - 学习
+    - 知识付费
+    - 教学
+    - 学校
+    - 学生
+    - 老师
+    - 教材
+    patterns: []

@@ -2,10 +2,13 @@
 
 所属: VP营销
 技能: molin-xiaohongshu, copywriting, content-strategy
+v2.0升级: SmartSubsidiaryWorker基类 + 主动协作(Research) + 经验注入 + 链路上下文
 """
-from .base import SubsidiaryWorker, Task, WorkerResult
+from .base import Task, WorkerResult
+from .base import SmartSubsidiaryWorker as _Base
 
-class ContentWriter(SubsidiaryWorker):
+
+class ContentWriter(_Base):
     worker_id = "content_writer"
     worker_name = "墨笔文创"
     description = "文字内容创作、文案、公众号、博客"
@@ -37,6 +40,23 @@ class ContentWriter(SubsidiaryWorker):
             keywords = task.payload.get("keywords", [])
             word_count = task.payload.get("word_count", 1500)
 
+            # ── v2.0: 主动向Research请求热词/竞品洞察（营销场景）──
+            research_ctx = ""
+            if platform in ("小红书", "抖音", "公众号"):
+                try:
+                    r = await self.request_collaboration(
+                        "research",
+                        {"action": "trend_scan", "topic": topic, "platform": platform}
+                    )
+                    research_ctx = r.get("summary", "") if isinstance(r, dict) else ""
+                except Exception:
+                    pass
+
+            # ── v2.0: 读取历史经验（SmartWorkerMixin Pre-flight注入）──
+            exp_hint = (context or {}).get("exp_hint", "")
+            # ── v2.0: 读取WorkerChain上游产出 ──
+            chain_ctx = task.payload.get("__context__", "")
+
             # LLM 生成真实内容
             system = (
                 "你是墨笔文创——墨麟AI集团旗下的专业内容创作子公司。"
@@ -45,6 +65,14 @@ class ContentWriter(SubsidiaryWorker):
                 "熟悉中文互联网的内容调性和传播规律。"
                 "请根据用户的需求生成高质量、结构化的文章内容。"
             )
+            # v2.0: 富上下文注入
+            if research_ctx:
+                system += f"\n\n【趋势洞察】\n{research_ctx}"
+            if exp_hint:
+                system += f"\n\n【历史成功经验】\n{exp_hint}"
+            if chain_ctx:
+                system += f"\n\n【上游协作背景】\n{chain_ctx}"
+
             prompt = (
                 f"请为以下主题创作一篇{platform}风格的文章：\n\n"
                 f"主题：{topic}\n"
@@ -66,8 +94,12 @@ class ContentWriter(SubsidiaryWorker):
                     "style": style,
                     "tags": result.get("tags", []),
                     "status": "draft_generated",
+                    "v2_contexts": {
+                        "research_used": bool(research_ctx),
+                        "experience_used": bool(exp_hint),
+                        "chain_used": bool(chain_ctx),
+                    },
                 }]
-                # 如果需要多篇，让LLM再生成
                 for i in range(1, count):
                     extra_prompt = prompt + f"\n\n这是第{i+1}篇，请换一个不同的角度和标题来创作。"
                     extra = await self.llm_chat_json(extra_prompt, system=system)
@@ -84,15 +116,14 @@ class ContentWriter(SubsidiaryWorker):
                         })
                 output = {"articles": articles, "count": count, "topic": topic, "platform": platform, "source": "llm"}
             else:
-                # fallback: 原有 mock 输出
                 results = []
                 for i in range(count):
                     results.append({
-                        "title": "{0}深度解析（第{1}篇）".format(topic, i+1),
+                        "title": "{}深度解析（第{}篇）".format(topic, i+1),
                         "word_count": 2000,
                         "style": style,
                         "keywords": keywords,
-                        "outline": ["## 引言", "## {0}的背景".format(topic), "## 核心分析", "## 结论"],
+                        "outline": ["## 引言", "## {}的背景".format(topic), "## 核心分析", "## 结论"],
                         "status": "draft_generated"
                     })
                 output = {"articles": results, "count": count, "topic": topic, "platform": platform, "source": "mock"}

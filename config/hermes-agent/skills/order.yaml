@@ -1,0 +1,29 @@
+order:
+  approval_level: high
+  config:
+    prompt_path: prompts/order_system.txt
+  cost_level: high
+  description: 负责定价、订单、交易处理
+  enabled: true
+  max_concurrent: 3
+  model_preference: claude-sonnet
+  name: 订单子公司
+  prompts:
+    system: 请处理相关业务任务。
+    user_template: '请处理以下订单子公司相关任务: {task}'
+  tools:
+  - pricing_tool
+  - order_processing_tool
+  triggers:
+    keywords:
+    - 订单
+    - 价格
+    - 定价
+    - 交易
+    - 支付
+    - 购买
+    - 销售
+    - 金额
+    - 费用
+    - 账单
+    patterns: []

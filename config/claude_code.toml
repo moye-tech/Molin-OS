@@ -1,0 +1,123 @@
+# Claude Code CLI 配置
+# 用于 墨麟AI智能系统 v6.6 的 Base Reasoning Engine
+
+[cli]
+# Claude Code CLI 路径
+path = "claude"
+
+# 默认执行超时（秒）
+timeout = 10
+
+# 默认参数
+default_args = ["--print", "--thinking=adaptive"]
+
+# 启用详细日志
+verbose = false
+
+# 输出模式
+output_mode = "json"  # json, text, raw
+
+[paths]
+# 工作目录
+working_directory = "."
+
+# 临时文件目录
+temp_directory = "/tmp/claude_code"
+
+# 日志文件路径
+log_file = "logs/claude_code.log"
+
+[limits]
+# 最大并发请求数
+max_concurrent_requests = 10
+
+# 每分钟最大请求数
+requests_per_minute = 30
+
+# 最大输出长度（字符）
+max_output_length = 10000
+
+# 最大输入长度（字符）
+max_input_length = 5000
+
+[features]
+# 启用任务分析
+task_analysis_enabled = true
+
+# 启用代码审查
+code_review_enabled = true
+
+# 启用计划生成
+plan_generation_enabled = true
+
+# 启用错误调试
+error_debugging_enabled = true
+
+# 启用提示优化
+prompt_optimization_enabled = true
+
+# 启用结果聚合
+results_aggregation_enabled = true
+
+# 启用配置验证
+config_validation_enabled = true
+
+[caching]
+# 启用缓存
+enabled = true
+
+# 缓存过期时间（秒）
+ttl_seconds = 3600
+
+# 最大缓存条目数
+max_entries = 1000
+
+[monitoring]
+# 启用健康检查
+health_check_enabled = true
+
+# 健康检查间隔（秒）
+health_check_interval = 60
+
+# 启用性能指标收集
+metrics_enabled = true
+
+# 指标报告间隔（秒）
+metrics_interval = 300
+
+[fallback]
+# 启用降级机制
+enabled = true
+
+# Claude Code 不可用时的降级策略
+fallback_strategy = "direct_execution"  # direct_execution, skip
+
+# 降级触发条件：连续失败次数
+failure_threshold = 3
+
+# 降级后重试间隔（秒）
+retry_interval = 300
+
+[security]
+# 启用输入验证
+input_validation_enabled = true
+
+# 允许的命令列表（如果为空则允许所有）
+allowed_commands = []
+
+# 禁止的命令列表
+blocked_commands = ["rm", "format", "shutdown", "reboot"]
+
+# 启用沙箱模式（如果支持）
+sandbox_enabled = false
+
+# 测试配置
+[test]
+# 测试连接命令
+test_command = ["--version"]
+
+# 测试连接超时（秒）
+test_timeout = 5
+
+# 预期输出包含
+expected_output_contains = "Claude Code"

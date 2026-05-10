@@ -1,0 +1,4 @@
+product_agency_tools:
+  description: product_agency业务处理专用工具
+  enabled: true
+  name: product_agency专用工具集

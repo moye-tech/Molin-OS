@@ -1,0 +1,280 @@
+# Strategy Engine技能配置
+# 将原始Strategy Engine组件适配为hermes-agent原生技能
+# 负责生成量化业务策略，支持AI教育、AI服务、AI工具三大行业
+
+skill:
+  name: "Strategy Engine"
+  id: "strategy_engine"
+  description: "负责生成量化业务策略，支持AI教育、AI服务、AI工具三大行业"
+
+  # 触发配置
+  triggers:
+    keywords:
+      - "策略"
+      - "战略"
+      - "规划"
+      - "业务计划"
+      - "roadmap"
+      - "strategy"
+      - "plan"
+      - "商业模式"
+      - "市场策略"
+      - "增长计划"
+      - "路线图"
+      - "商业计划"
+
+    # 上下文匹配规则
+    context_rules:
+      - field: "hermes_decision"
+        operator: "exists"
+        weight: 0.4
+      - field: "text"
+        operator: "contains"
+        value: ["策略", "战略", "规划", "roadmap"]
+        weight: 0.3
+      - field: "metadata.business_goal"
+        operator: "exists"
+        weight: 0.3
+
+    # 意图匹配
+    intents:
+      - "generate_strategy"
+      - "business_planning"
+      - "roadmap_creation"
+
+  # 模型和成本配置
+  model_preference: "claude-3-sonnet"
+  cost_level: "high"
+  approval_level: "medium"
+  max_concurrent: 1
+
+  # 技能工具
+  tools:
+    - "generate_strategy_tool"
+    - "analyze_decision_tool"
+
+  # 技能实现类
+  implementation:
+    module: "hermes_fusion.skills.strategy_engine.skill"
+    class: "StrategyEngineSkill"
+
+  # 技能参数
+  parameters:
+    default_industry: "mixed"
+    min_budget: 0
+    max_budget: 1000000
+    default_timeframe: "medium_term"
+    default_team_size: 3
+    roi_threshold_high: 5.0
+    roi_threshold_medium: 2.0
+    roi_threshold_low: 1.0
+
+  # 策略模板配置
+  templates:
+    ai_education:
+      name: "AI教育（课程/训练营）"
+      description: "适用于AI教育业务，包括课程、训练营、知识付费等模式"
+      suitable_for: ["在线教育", "知识付费", "培训服务", "内容创作"]
+      key_metrics:
+        daily_target_leads: 10
+        conversion_rate: "10-15%"
+        avg_order_value: "¥999-2999"
+        monthly_revenue_target: "¥30000+"
+
+    ai_service:
+      name: "AI服务（接单/定制）"
+      description: "适用于AI服务业务，包括接单、定制开发、外包服务等模式"
+      suitable_for: ["定制开发", "外包服务", "项目接单", "技术咨询"]
+      key_metrics:
+        daily_inquiries: 5
+        conversion_rate: "15-20%"
+        avg_order_value: "¥500-2000"
+        monthly_revenue_target: "¥20000-50000"
+
+    ai_tool:
+      name: "AI工具（SaaS/API变现）"
+      description: "适用于AI工具业务，包括SaaS、API服务、开源项目变现等模式"
+      suitable_for: ["SaaS产品", "API服务", "开源项目", "工具软件"]
+      key_metrics:
+        daily_signups: 20
+        conversion_rate: "2-5%"
+        avg_order_value: "¥29-99"
+        monthly_revenue_target: "¥10000-30000"
+
+    mixed:
+      name: "混合策略"
+      description: "混合业务模式，结合教育、服务和工具的多元化策略"
+      suitable_for: ["初创公司", "多元化业务", "探索阶段", "转型期"]
+      key_metrics:
+        daily_target_leads: 8
+        conversion_rate: "8-12%"
+        avg_order_value: "¥500-1500"
+        monthly_revenue_target: "¥20000-40000"
+
+  # 提示词配置
+  prompts:
+    system: |
+      你是墨麟科技战略顾问，专注为中国市场 AI 副业和 AI 服务业务生成量化可执行策略。
+
+      【三大行业策略模板】
+
+      模板A · AI教育（课程/训练营）：
+      流量：小红书爆款内容引流 → 私信 → 社群 → 课程转化
+      定价：入门课¥99-299（低价引流）+ 主课¥999-2999（核心收入）+ 陪跑¥3999+（高客单）
+      核心指标：内容播放量、私信率（目标3-5%）、课程转化率（目标10-15%）
+      ROI预期：内容成本约¥500/月，目标收入¥5000+/月，ROI目标>10
+
+      模板B · AI服务（接单/定制）：
+      流量：猪八戒/闲鱼/小红书 → 询盘 → 报价 → 成交 → 交付
+      定价：小单¥100-500（快速起量）+ 中单¥500-2000（主力）+ 大单¥2000+（精力聚焦）
+      核心指标：询盘数（目标5+/天）、转化率（目标15-20%）、复购率
+      ROI预期：平台费+工具费约¥300/月，目标收入¥3000-8000/月
+
+      模板C · AI工具（SaaS/API变现）：
+      流量：GitHub/V2EX/独立站/技术社区
+      定价：免费版（引流）+ 月费¥29-99 + 年费（留存）
+      核心指标：注册转化率、付费转化率（目标2-5%）、MRR、月流失率（目标<5%）
+      ROI预期：开发成本较高，长期ROI
+
+      【输出规范】
+      所有数字必须给出具体值，不接受"约X"或"大概"——必须有明确估算假设。
+
+      严格输出 JSON：
+      {
+        "strategy_name": "策略名称",
+        "template_used": "AI教育|AI服务|AI工具|混合",
+        "traffic": {
+          "primary_channel": "主力渠道",
+          "daily_target_impressions": 每日目标曝光量,
+          "content_frequency": "每日发布量（条）",
+          "daily_target_leads": 每日目标线索数
+        },
+        "conversion": {
+          "lead_to_deal_rate": 线索转成交率,
+          "daily_target_deals": 每日目标成交数,
+          "avg_order_value": 平均客单价,
+          "daily_target_revenue": 每日目标收入
+        },
+        "pricing": {
+          "low_entry": {"name": "引流品名称", "price": 价格, "purpose": "定位说明"},
+          "mid_core": {"name": "核心产品名称", "price": 价格, "purpose": "定位说明"},
+          "high_premium": {"name": "高端产品名称", "price": 价格, "purpose": "定位说明"}
+        },
+        "cost_structure": {
+          "api_cost_monthly": 月度API成本,
+          "total_monthly_cost": 月度总成本,
+          "break_even_deals": 保本成交数
+        },
+        "expected_roi": {
+          "week1": 第1周ROI, "week2": 第2周ROI, "month1": 第1月ROI,
+          "best_case": 乐观ROI, "base_case": 基准ROI, "worst_case": 悲观ROI
+        },
+        "milestones": [
+          {"day": 天数, "target": "里程碑目标（可量化）", "kpi": "衡量指标"}
+        ],
+        "quick_wins": ["48小时内可立刻执行的3个高ROI动作"],
+        "recommendation": "综合推荐（3句话，给决策者看的摘要）"
+      }
+
+    user_template: |
+      请根据以下决策上下文生成量化业务策略：
+
+      用户请求: {text}
+      用户ID: {user_id}
+      平台: {platform}
+
+      决策上下文:
+      {hermes_decision_formatted}
+
+      请生成详细的量化业务策略，严格按照输出规范返回JSON格式。
+
+  # 输出格式
+  output_format:
+    required_fields:
+      - "success"
+      - "strategy"
+      - "strategy_type"
+      - "execution_time"
+      - "cost"
+      - "recommendation"
+    optional_fields:
+      - "decision_context"
+      - "model_used"
+      - "quality_score"
+      - "risk_assessment"
+      - "improvement_suggestions"
+    validation_rules:
+      - field: "strategy.strategy_name"
+        required: true
+        type: "string"
+      - field: "strategy.template_used"
+        required: true
+        type: "string"
+        allowed_values: ["AI教育", "AI服务", "AI工具", "混合"]
+      - field: "strategy.expected_roi.month1"
+        required: true
+        type: "number"
+        min: 0
+
+  # 性能配置
+  performance:
+    timeout_seconds: 60
+    retry_count: 1
+    cache_enabled: true
+    cache_ttl_seconds: 600  # 策略缓存10分钟
+    rate_limit_per_minute: 5
+
+  # 监控配置
+  monitoring:
+    metrics:
+      - "strategy_count"
+      - "average_execution_time"
+      - "success_rate"
+      - "average_roi_score"
+      - "template_distribution"
+    alerts:
+      - metric: "success_rate"
+        operator: "<"
+        threshold: 0.75
+        severity: "warning"
+      - metric: "average_execution_time"
+        operator: ">"
+        threshold: 30.0
+        severity: "warning"
+      - metric: "strategy_count"
+        operator: ">"
+        threshold: 100
+        period: "day"
+        severity: "info"
+
+  # 风险评估配置
+  risk_assessment:
+    high_risk_threshold: 7.0
+    medium_risk_threshold: 4.0
+    risk_factors:
+      - name: "budget_too_large"
+        condition: "budget > 100000"
+        weight: 2.0
+      - name: "timeframe_too_short"
+        condition: "timeframe == 'short_term'"
+        weight: 1.0
+      - name: "team_size_too_small"
+        condition: "team_size == 1"
+        weight: 1.0
+      - name: "industry_uncertain"
+        condition: "industry == 'mixed'"
+        weight: 0.5
+
+  # 版本和元数据
+  version: "1.0.0"
+  author: "墨麟AI团队"
+  created_at: "2026-04-19"
+  updated_at: "2026-04-19"
+  dependencies:
+    - "hermes_fusion.skills.hermes_skill_base"
+    - "strategy.strategy_engine"
+  tags:
+    - "strategy"
+    - "business"
+    - "planning"
+    - "roadmap"

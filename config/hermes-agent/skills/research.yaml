@@ -1,0 +1,29 @@
+research:
+  approval_level: medium
+  config:
+    prompt_path: prompts/research_system.txt
+  cost_level: medium
+  description: 负责市场研究、竞品分析
+  enabled: true
+  max_concurrent: 2
+  model_preference: claude-opus
+  name: 研究子公司
+  prompts:
+    system: 请处理相关业务任务。
+    user_template: '请处理以下研究子公司相关任务: {task}'
+  tools:
+  - market_research_tool
+  - competitor_analysis_tool
+  triggers:
+    keywords:
+    - 研究
+    - 市场
+    - 竞品
+    - 分析
+    - 调研
+    - 报告
+    - 趋势
+    - 机会
+    - 威胁
+    - SWOT
+    patterns: []

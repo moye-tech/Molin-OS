@@ -1,0 +1,4 @@
+daily_optimization_tool:
+  description: 执行每日决策优化和系统调优
+  enabled: true
+  name: 每日优化工具

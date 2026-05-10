@@ -1,0 +1,1106 @@
+cost_control:
+  auto_fallback_on_budget: true
+  currency_conversion_rate: 7.2
+  daily_budget_cny: 50.0
+  monthly_budget_cny: 1000.0
+  prefer_local_models: true
+description: 墨麟AI智能系统 v6.6 - 基于hermes-agent框架
+gateways:
+  feishu:
+    config:
+      app_id: ${FEISHU_APP_ID}
+      app_secret: ${FEISHU_APP_SECRET}
+      verification_token: ${FEISHU_VERIFICATION_TOKEN}
+    enabled: true
+    type: feishu
+generated_by: ConfigAdapter
+memory_providers:
+  qdrant:
+    config:
+      collection_content: QDRANT_COLLECTION_CONTENT
+      collection_decisions: QDRANT_COLLECTION_DECISIONS
+      collection_users: QDRANT_COLLECTION_USERS
+      host: QDRANT_HOST
+      port: QDRANT_PORT
+    enabled: true
+    priority: 2
+    type: vector
+  redis:
+    config:
+      host: REDIS_HOST
+      password: REDIS_PASSWORD
+      port: REDIS_PORT
+    enabled: true
+    priority: 0
+    type: cache
+  sqlite:
+    config:
+      db_path: SQLITE_DB_PATH
+    enabled: true
+    priority: 1
+    type: transactional
+  supermemory:
+    config:
+      api_key: SUPERMEMORY_API_KEY
+      container_tag: SUPERMEMORY_CONTAINER_TAG
+    enabled: false
+    priority: 3
+    type: semantic
+model_preferences:
+  ceo_decision:
+    budget_constraint: high
+    fallback:
+    - glm-5
+    - deepseek-v4-pro
+    primary: qwen3.6-plus
+    quality_requirement: high
+  code_generation:
+    budget_constraint: low
+    fallback:
+    - deepseek-v4-pro
+    primary: qwen3.6-plus
+    quality_requirement: medium
+  content_creation:
+    budget_constraint: medium
+    fallback:
+    - deepseek-v4-pro
+    primary: qwen3.6-plus
+    quality_requirement: high
+  data_analysis:
+    budget_constraint: low
+    fallback:
+    - minimax-m2.5
+    - qwen3.6-plus
+    primary: deepseek-v4-pro
+    quality_requirement: medium
+  routine_tasks:
+    budget_constraint: low
+    fallback:
+    - qwen3.6-plus
+    primary: minimax-m2.5
+    quality_requirement: low
+scheduling:
+  max_total_concurrent: 10
+  per_skill_limits:
+    ai: 2
+    data: 2
+    dev: 3
+    edu: 2
+    growth: 3
+    ip: 2
+    order: 3
+    product: 2
+    research: 2
+    secure: 2
+    shop: 3
+    cli: 2
+    social_media: 2
+    seo: 2
+    innovation: 1
+    thinking: 1
+    browser_automation: 1
+    vision: 1
+    finance: 1
+  task_queue_capacity: 100
+  worker_pool_size: 4
+skills:
+  # 外部技能目录配置
+  external_dirs:
+    - /Users/moye/Downloads/GitHub项目汇总/hermes-fusion-pro/hermes-agent-skills
+
+  ai:
+    approval_level: low
+    config:
+      prompt_path: prompts/ai_system.txt
+    cost_level: low
+    description: 负责提示工程、AI优化
+    enabled: true
+    max_concurrent: 2
+    model_preference: glm-5
+    name: AI子公司
+    prompts:
+      system: 请处理相关业务任务。
+      user_template: '请处理以下AI子公司相关任务: {task}'
+    tools:
+    - prompt_optimization_tool
+    - model_evaluation_tool
+    triggers:
+      keywords:
+      - 提示
+      - AI
+      - 模型
+      - 智能
+      - 优化
+      - 调整
+      - 参数
+      - 配置
+      - 训练
+      - 微调
+      patterns: []
+  ceo_decision:
+    approval_level: high
+    cost_level: high
+    description: 负责ROI分析、三层决策、记忆集成的CEO决策系统
+    enabled: true
+    max_concurrent: 1
+    model_preference: glm-5
+    name: CEO决策引擎
+    # Hermes Native技能实现
+    implementation:
+      module: hermes_fusion.skills.hermes_native.ceo_decision_skill
+      class: CeoDecisionMolinSkill
+    # 技能参数
+    parameters:
+      min_roi_ratio: 1.5
+      min_confidence: 0.7
+      max_payback_days: 180
+      high_composite_score: 7.0
+    prompts:
+      system: 你是一个专业的CEO决策引擎，负责分析项目ROI、做出三层决策（GO/NO_GO/NEED_INFO），并集成记忆系统。
+      user_template: '请分析以下决策请求: {task}'
+    tools:
+    - analyze_roi_tool
+    - make_decision_tool
+    - query_memory_tool
+    - daily_optimization_tool
+    triggers:
+      keywords:
+      - 决策
+      - 分析
+      - ROI
+      - 预算
+      - 项目
+      - 投资
+      - 评估
+      - 审批
+      - ceo
+      - ceo决策
+      patterns:
+      - 决策.*
+      - 分析.*
+      - ROI.*
+      - 预算.*
+    # 性能配置
+    performance:
+      timeout_seconds: 30
+      retry_count: 2
+      cache_enabled: true
+      cache_ttl_seconds: 300
+  strategy_engine:
+    approval_level: medium
+    cost_level: high
+    description: 负责生成量化业务策略，支持AI教育、AI服务、AI工具三大行业
+    enabled: true
+    max_concurrent: 1
+    model_preference: claude-3-sonnet
+    name: Strategy Engine
+    # Hermes Native技能实现
+    implementation:
+      module: hermes_fusion.skills.strategy_engine.skill
+      class: StrategyEngineSkill
+    # 技能参数
+    parameters:
+      default_industry: mixed
+      min_budget: 0
+      max_budget: 1000000
+      default_timeframe: medium_term
+      default_team_size: 3
+      roi_threshold_high: 5.0
+      roi_threshold_medium: 2.0
+      roi_threshold_low: 1.0
+    prompts:
+      system: 你是一个专业的战略顾问，专注为中国市场AI副业和AI服务业务生成量化可执行策略。支持AI教育、AI服务、AI工具三大行业模板。
+      user_template: '请根据以下决策上下文生成量化业务策略: {task}'
+    tools:
+    - generate_strategy_tool
+    - analyze_decision_tool
+    triggers:
+      keywords:
+      - 策略
+      - 战略
+      - 规划
+      - 业务计划
+      - roadmap
+      - strategy
+      - plan
+      - 商业模式
+      - 市场策略
+      - 增长计划
+      - 路线图
+      - 商业计划
+      patterns:
+      - 策略.*
+      - 战略.*
+      - 规划.*
+      - roadmap.*
+    # 性能配置
+    performance:
+      timeout_seconds: 60
+      retry_count: 1
+      cache_enabled: true
+      cache_ttl_seconds: 600
+  data:
+    approval_level: low
+    config:
+      prompt_path: prompts/data_system.txt
+    cost_level: medium
+    description: 负责数据分析、洞察
+    enabled: true
+    max_concurrent: 2
+    model_preference: qwen3.6-plus
+    name: 数据子公司
+    prompts:
+      system: 请处理相关业务任务。
+      user_template: '请处理以下数据子公司相关任务: {task}'
+    tools:
+    - data_analysis_tool
+    - report_generation_tool
+    triggers:
+      keywords:
+      - 数据
+      - 分析
+      - 统计
+      - 报表
+      - 指标
+      - 可视化
+      - 洞察
+      - 趋势
+      - 预测
+      - 挖掘
+      patterns: []
+  dev:
+    approval_level: low
+    config:
+      prompt_path: prompts/dev_system.txt
+    cost_level: low
+    description: 负责代码开发、技术实现
+    enabled: true
+    max_concurrent: 3
+    model_preference: deepseek-v4-pro
+    name: 开发子公司
+    prompts:
+      system: 请处理相关业务任务。
+      user_template: '请处理以下开发子公司相关任务: {task}'
+    tools:
+    - code_generation_tool
+    - technical_design_tool
+    triggers:
+      keywords:
+      - 代码
+      - 开发
+      - 编程
+      - 技术
+      - 软件
+      - 程序
+      - 系统
+      - API
+      - 数据库
+      - 架构
+      patterns: []
+  edu:
+    approval_level: medium
+    config:
+      prompt_path: prompts/edu_system.txt
+    cost_level: low
+    description: 负责教育、培训、知识付费业务
+    enabled: true
+    max_concurrent: 2
+    model_preference: qwen3.6-plus
+    name: 教育子公司
+    prompts:
+      system: 请处理相关业务任务。
+      user_template: '请处理以下教育子公司相关任务: {task}'
+    tools:
+    - course_creation_tool
+    - training_material_tool
+    triggers:
+      keywords:
+      - 课程
+      - 培训
+      - 教育
+      - 学习
+      - 知识付费
+      - 教学
+      - 学校
+      - 学生
+      - 老师
+      - 教材
+      patterns: []
+  growth:
+    approval_level: medium
+    config:
+      prompt_path: prompts/growth_system.txt
+    cost_level: high
+    description: 负责用户增长、营销
+    enabled: true
+    max_concurrent: 3
+    model_preference: claude-sonnet
+    name: 增长子公司
+    prompts:
+      system: 请处理相关业务任务。
+      user_template: '请处理以下增长子公司相关任务: {task}'
+    tools:
+    - user_acquisition_tool
+    - retention_analysis_tool
+    triggers:
+      keywords:
+      - 增长
+      - 用户
+      - 营销
+      - 获客
+      - 留存
+      - 激活
+      - 转化
+      - 漏斗
+      - 渠道
+      - 投放
+      patterns: []
+  ip:
+    approval_level: medium
+    config:
+      prompt_path: prompts/ip_system.txt
+    cost_level: medium
+    description: 负责内容创作、IP孵化
+    enabled: true
+    max_concurrent: 2
+    model_preference: claude-opus
+    name: IP子公司
+    prompts:
+      system: 请处理相关业务任务。
+      user_template: '请处理以下IP子公司相关任务: {task}'
+    tools:
+    - content_creation_tool
+    - ip_management_tool
+    triggers:
+      keywords:
+      - 内容
+      - 创作
+      - IP
+      - 文案
+      - 文章
+      - 视频
+      - 图片
+      - 设计
+      - 创意
+      - 故事
+      patterns: []
+  order:
+    approval_level: high
+    config:
+      prompt_path: prompts/order_system.txt
+    cost_level: high
+    description: 负责定价、订单、交易处理
+    enabled: true
+    max_concurrent: 3
+    model_preference: claude-sonnet
+    name: 订单子公司
+    prompts:
+      system: 请处理相关业务任务。
+      user_template: '请处理以下订单子公司相关任务: {task}'
+    tools:
+    - pricing_tool
+    - order_processing_tool
+    triggers:
+      keywords:
+      - 订单
+      - 价格
+      - 定价
+      - 交易
+      - 支付
+      - 购买
+      - 销售
+      - 金额
+      - 费用
+      - 账单
+      patterns: []
+  product:
+    approval_level: medium
+    config:
+      prompt_path: prompts/product_system.txt
+    cost_level: medium
+    description: 负责产品规划、设计
+    enabled: true
+    max_concurrent: 2
+    model_preference: qwen3.6-plus
+    name: 产品子公司
+    prompts:
+      system: 请处理相关业务任务。
+      user_template: '请处理以下产品子公司相关任务: {task}'
+    tools:
+    - product_design_tool
+    - requirement_analysis_tool
+    triggers:
+      keywords:
+      - 产品
+      - 设计
+      - 规划
+      - 需求
+      - 功能
+      - 体验
+      - 界面
+      - 原型
+      - 测试
+      - 迭代
+      patterns: []
+  research:
+    approval_level: medium
+    config:
+      prompt_path: prompts/research_system.txt
+    cost_level: medium
+    description: 负责市场研究、竞品分析
+    enabled: true
+    max_concurrent: 2
+    model_preference: claude-opus
+    name: 研究子公司
+    prompts:
+      system: 请处理相关业务任务。
+      user_template: '请处理以下研究子公司相关任务: {task}'
+    tools:
+    - market_research_tool
+    - competitor_analysis_tool
+    triggers:
+      keywords:
+      - 研究
+      - 市场
+      - 竞品
+      - 分析
+      - 调研
+      - 报告
+      - 趋势
+      - 机会
+      - 威胁
+      - SWOT
+      patterns: []
+  secure:
+    approval_level: high
+    config:
+      prompt_path: prompts/secure_system.txt
+    cost_level: low
+    description: 负责安全、合规、风控
+    enabled: true
+    max_concurrent: 2
+    model_preference: glm-5
+    name: 安全子公司
+    prompts:
+      system: 请处理相关业务任务。
+      user_template: '请处理以下安全子公司相关任务: {task}'
+    tools:
+    - security_audit_tool
+    - compliance_check_tool
+    triggers:
+      keywords:
+      - 安全
+      - 合规
+      - 风险
+      - 审核
+      - 检查
+      - 监控
+      - 审计
+      - 保护
+      - 加密
+      - 隐私
+      patterns: []
+  shop:
+    approval_level: medium
+    config:
+      prompt_path: prompts/shop_system.txt
+    cost_level: high
+    description: 负责电商、销售业务
+    enabled: true
+    max_concurrent: 3
+    model_preference: claude-haiku
+    name: 电商子公司
+    prompts:
+      system: 请处理相关业务任务。
+      user_template: '请处理以下电商子公司相关任务: {task}'
+    tools:
+    - product_listing_tool
+    - sales_analysis_tool
+    triggers:
+      keywords:
+      - 电商
+      - 销售
+      - 商品
+      - 产品
+      - 店铺
+      - 购物
+      - 客户
+      - 营销
+      - 推广
+      - 促销
+      patterns: []
+
+  cli:
+    approval_level: low
+    config:
+      prompt_path: prompts/cli_system.txt
+    cost_level: medium
+    description: 负责命令行工具执行、脚本自动化、系统管理等业务
+    enabled: true
+    max_concurrent: 2
+    model_preference: claude-3-sonnet
+    name: CLI工具子公司
+    prompts:
+      system: 请处理相关业务任务。
+      user_template: '请处理以下CLI工具子公司相关任务: {task}'
+    tools:
+    - cli_execute_command
+    triggers:
+      keywords:
+      - 命令行
+      - CLI
+      - 脚本
+      - 自动化
+      - 终端
+      - shell
+      - 系统管理
+      - 命令
+      - 执行
+      - 运行
+      - 批量
+      - 部署
+      - 安装
+      - 配置
+      patterns: []
+
+  social_media:
+    approval_level: low
+    config:
+      prompt_path: prompts/social_media_system.txt
+    cost_level: medium
+    description: 负责小红书、微博等社交媒体内容发布、用户互动数据分析、营销活动自动化
+    enabled: true
+    max_concurrent: 2
+    model_preference: qwen3.6-plus
+    name: 社交媒体子公司
+    prompts:
+      system: 请处理相关业务任务。
+      user_template: '请处理以下社交媒体子公司相关任务: {task}'
+    tools:
+    - xiaohongshu_publish_content
+    triggers:
+      keywords:
+      - 小红书
+      - 社交媒体
+      - 内容发布
+      - 粉丝互动
+      - 数据分析
+      - 营销
+      - 微博
+      - 抖音
+      - B站
+      - 内容
+      - 发布
+      - 帖子
+      - 粉丝
+      - 互动
+      - 分析
+      - 推广
+      - 社交
+      - 媒体
+      - 运营
+      patterns: []
+
+  seo:
+    approval_level: low
+    config:
+      prompt_path: prompts/seo_system.txt
+    cost_level: medium
+    description: 负责网站SEO分析、关键词排名监控、竞争对手分析、SEO质量评估等功能
+    enabled: true
+    max_concurrent: 2
+    model_preference: qwen3.6-plus
+    name: SEO优化子公司
+    prompts:
+      system: 请处理相关业务任务。
+      user_template: '请处理以下SEO优化子公司相关任务: {task}'
+    tools:
+    - seo_analyze_intent
+    - seo_rate_quality
+    - seo_analyze_keywords
+    - seo_compare_content
+    - seo_score_opportunity
+    triggers:
+      keywords:
+      - SEO
+      - 搜索引擎优化
+      - 网站优化
+      - 关键词
+      - 排名
+      - 流量分析
+      - 竞争对手
+      - 竞品分析
+      - 搜索意图
+      - 内容优化
+      - 外链
+      - 反向链接
+      - 页面速度
+      - 移动友好
+      - 结构化数据
+      - 元标签
+      - 标题优化
+      - seo分析
+      - seo报告
+      - seo评分
+      - seo建议
+      - seo监控
+      patterns: []
+
+  innovation:
+    approval_level: medium
+    config:
+      prompt_path: prompts/innovation_system.txt
+    cost_level: high
+    description: 负责A/B测试实验设计、创新方案评估、实验结果可视化、群体智能预测等功能
+    enabled: true
+    max_concurrent: 1
+    model_preference: claude-3-sonnet
+    name: 创新实验子公司
+    prompts:
+      system: 请处理相关业务任务。
+      user_template: '请处理以下创新实验子公司相关任务: {task}'
+    tools:
+    - innovation_run_experiment
+    - innovation_analyze_results
+    - innovation_create_visualization
+    - innovation_predict
+    triggers:
+      keywords:
+      - 创新
+      - 实验
+      - A/B测试
+      - 方案评估
+      - 可视化
+      - 群体智能
+      - 预测
+      - 实验设计
+      - 假设检验
+      - 统计显著性
+      - 用户研究
+      - 原型测试
+      - 概念验证
+      - MVP测试
+      - 创新验证
+      - 实验分析
+      - 实验报告
+      - 实验可视化
+      - 数据驱动
+      - 迭代优化
+      - 优化实验
+      patterns: []
+
+  thinking:
+    approval_level: medium
+    config:
+      prompt_path: prompts/thinking_system.txt
+    cost_level: medium
+    description: 负责思维模型应用、决策支持、复杂问题结构化分解等功能
+    enabled: true
+    max_concurrent: 1
+    model_preference: claude-3-opus
+    name: 思维模型子公司
+    prompts:
+      system: 请处理相关业务任务。
+      user_template: '请处理以下思维模型子公司相关任务: {task}'
+    tools:
+    - minimind_analyze_problem
+    - minimind_apply_model
+    - minimind_decision_framework
+    - minimind_evaluate_solution
+    triggers:
+      keywords:
+      - 思维模型
+      - 决策支持
+      - 问题分析
+      - 结构化思考
+      - 框架分析
+      - SWOT分析
+      - 根本原因
+      - 第一性原理
+      - 思维导图
+      - 决策框架
+      - 问题解决
+      - 模型应用
+      - 分析框架
+      - 思考工具
+      - 决策树
+      - 风险评估
+      - 战略分析
+      - 业务分析
+      - 复杂问题
+      - 结构化分析
+      patterns: []
+
+  browser_automation:
+    approval_level: high
+    config:
+      prompt_path: prompts/browser_system.txt
+    cost_level: medium
+    description: 负责网页自动化测试、数据采集、用户行为模拟、截图、表单填写等功能
+    enabled: true
+    max_concurrent: 1
+    model_preference: qwen3.6-plus
+    name: 浏览器自动化子公司
+    prompts:
+      system: 请处理相关业务任务。
+      user_template: '请处理以下浏览器自动化子公司相关任务: {task}'
+    tools:
+    - browser_fetch_url
+    - browser_screenshot
+    - browser_execute_script
+    - browser_start_cdp
+    - browser_fill_form
+    triggers:
+      keywords:
+        - 浏览器
+        - 自动化
+        - 网页
+        - 抓取
+        - 数据采集
+        - 爬虫
+        - 截图
+        - screenshot
+        - 表单
+        - 填写
+        - 用户行为
+        - 模拟
+        - 测试
+        - UI测试
+        - 端到端测试
+        - 性能测试
+        - 兼容性测试
+        - fetch
+        - scrape
+        - crawl
+        - playwright
+        - selenium
+      patterns: []
+
+  clawteam:
+    approval_level: low
+    cost_level: low
+    description: 负责任务调度、并发执行和资源管理，集成到原始7层架构的ClawTeam层
+    enabled: true
+    max_concurrent: 5
+    model_preference: claude-haiku
+    name: ClawTeam调度器
+    # Hermes Native技能实现
+    implementation:
+      module: hermes_fusion.skills.clawteam.skill
+      class: ClawTeamSkill
+    # 技能参数
+    parameters:
+      scheduler_config:
+        max_concurrent_tasks: 10
+        task_timeouts:
+          content_gen: 30
+          data_analyze: 60
+          hermes_decision: 20
+          default: 45
+    prompts:
+      system: 你是墨麟科技任务调度专家，负责 ClawTeam 调度层，负责任务调度、并发控制、重试和超时管理。
+      user_template: '请处理以下调度请求: {task}'
+    tools:
+      - schedule_task_tool
+      - run_parallel_tool
+      - task_status_tool
+      - cancel_task_tool
+    triggers:
+      keywords:
+        - 调度
+        - 任务
+        - 执行
+        - 并发
+        - 并行
+        - clawteam
+        - scheduler
+        - run task
+        - schedule
+        - parallel
+      patterns:
+        - 调度.*
+        - 任务.*
+    # 性能配置
+    performance:
+      timeout_seconds: 30
+      retry_count: 1
+      cache_enabled: true
+      cache_ttl_seconds: 300
+
+  paperclip:
+    approval_level: medium
+    cost_level: medium
+    description: 负责任务审批、合规检查、多步骤流程管理，集成到原始7层架构的Paperclip层
+    enabled: true
+    max_concurrent: 3
+    model_preference: claude-3-sonnet
+    name: Paperclip工作流引擎
+    # Hermes Native技能实现
+    implementation:
+      module: hermes_fusion.skills.paperclip.skill
+      class: PaperclipSkill
+    # 技能参数
+    parameters:
+      workflow_defs_dir: config/hermes-agent/workflows
+    prompts:
+      system: 你是墨麟科技工作流审批专家，负责 Paperclip 工作流层，负责任务审批、合规检查、多步骤流程管理。
+      user_template: '请处理以下工作流请求: {task}'
+    tools:
+      - start_workflow_tool
+      - approve_task_tool
+      - check_compliance_tool
+      - workflow_status_tool
+    triggers:
+      keywords:
+        - 工作流
+        - 审批
+        - 流程
+        - paperclip
+        - 合规检查
+        - 多步骤
+        - 审批流程
+      patterns:
+        - 工作流.*
+        - 审批.*
+    # 性能配置
+    performance:
+      timeout_seconds: 60
+      retry_count: 1
+      cache_enabled: true
+      cache_ttl_seconds: 300
+
+  vision:
+    approval_level: high
+    config:
+      prompt_path: prompts/vision_system.txt
+    cost_level: high
+    description: 负责实时图像分析、对象检测、人脸识别、异常事件检测等合规视觉分析功能
+    enabled: true
+    max_concurrent: 1
+    model_preference: claude-3-sonnet
+    name: 视觉分析子公司
+    prompts:
+      system: 你是一个专业的视觉分析专家，精通图像处理、对象检测、人脸识别、视频分析等计算机视觉技术。严格遵守伦理准则，仅提供合规的分析服务，禁止用于深度伪造、隐私侵犯或非法监控。
+      user_template: '请处理以下视觉分析任务: {task}'
+    tools: []
+    triggers:
+      keywords:
+        - 视觉
+        - 图像
+        - 图片
+        - 照片
+        - 视频
+        - 人脸识别
+        - 对象检测
+        - 实时分析
+        - 异常检测
+        - 监控
+        - 视觉分析
+        - 图像处理
+        - 视觉识别
+        - 目标检测
+        - 面部识别
+        - 人脸检测
+        - 图像分类
+        - 计算机视觉
+        - 深度分析
+        - 安防监控
+        - 质量检测
+        - 视觉自动化
+      patterns: []
+
+  finance:
+    approval_level: high
+    config:
+      prompt_path: prompts/finance_system.txt
+    cost_level: high
+    description: 负责金融市场数据分析、交易策略回测、风险管理、投资组合分析等专业金融服务
+    enabled: true
+    max_concurrent: 1
+    model_preference: claude-3-opus
+    name: 金融交易子公司
+    prompts:
+      system: 你是一个专业的金融分析师，精通金融市场分析、交易策略开发、风险管理、投资组合优化。严格遵守风险控制原则，所有建议仅供教育参考，不构成投资建议。必须使用模拟交易环境进行测试，并保持完整的审计日志。
+      user_template: '请处理以下金融分析任务: {task}'
+    tools: []
+    triggers:
+      keywords:
+        - 金融
+        - 交易
+        - 投资
+        - 股票
+        - 期货
+        - 外汇
+        - 加密货币
+        - 策略回测
+        - 风险管理
+        - 投资组合
+        - 市场分析
+        - 技术分析
+        - 基本面分析
+        - 量化交易
+        - 算法交易
+        - 风险控制
+        - 资金管理
+        - 行情分析
+        - 趋势预测
+        - 波动率分析
+        - 对冲策略
+        - 套利机会
+        - 投资建议
+        - 财务分析
+        - 经济指标
+        - 宏观经济
+        - 微观经济
+      patterns: []
+
+tools:
+  ai_agency_tools:
+    description: ai_agency业务处理专用工具
+    enabled: true
+    name: ai_agency专用工具集
+  analyze_roi_tool:
+    description: 分析项目预算、时间线、目标收入，计算ROI
+    enabled: true
+    name: ROI分析工具
+  daily_optimization_tool:
+    description: 执行每日决策优化和系统调优
+    enabled: true
+    name: 每日优化工具
+  data_agency_tools:
+    description: data_agency业务处理专用工具
+    enabled: true
+    name: data_agency专用工具集
+  dev_agency_tools:
+    description: dev_agency业务处理专用工具
+    enabled: true
+    name: dev_agency专用工具集
+  edu_agency_tools:
+    description: edu_agency业务处理专用工具
+    enabled: true
+    name: edu_agency专用工具集
+  growth_agency_tools:
+    description: growth_agency业务处理专用工具
+    enabled: true
+    name: growth_agency专用工具集
+  ip_agency_tools:
+    description: ip_agency业务处理专用工具
+    enabled: true
+    name: ip_agency专用工具集
+  make_decision_tool:
+    description: 基于ROI分析和记忆系统做出GO/NO_GO/NEED_INFO决策
+    enabled: true
+    name: 决策工具
+  order_agency_tools:
+    description: order_agency业务处理专用工具
+    enabled: true
+    name: order_agency专用工具集
+  product_agency_tools:
+    description: product_agency业务处理专用工具
+    enabled: true
+    name: product_agency专用工具集
+  query_memory_tool:
+    description: 查询分层记忆系统（SQLite/Qdrant/Redis/Supermemory）
+    enabled: true
+    name: 记忆查询工具
+  research_agency_tools:
+    description: research_agency业务处理专用工具
+    enabled: true
+    name: research_agency专用工具集
+  secure_agency_tools:
+    description: secure_agency业务处理专用工具
+    enabled: true
+    name: secure_agency专用工具集
+  generate_strategy_tool:
+    description: 生成量化业务策略，支持AI教育、AI服务、AI工具三大行业
+    enabled: true
+    name: 策略生成工具
+  analyze_decision_tool:
+    description: 分析决策质量并提供改进建议
+    enabled: true
+    name: 决策分析工具
+  cli_execute_command:
+    description: 执行命令行工具和系统命令
+    enabled: true
+    name: CLI命令执行工具
+  xiaohongshu_publish_content:
+    description: 小红书内容发布
+    enabled: true
+    name: 小红书内容发布工具
+  seo_analyze_intent:
+    description: 分析搜索意图和查询相关性
+    enabled: true
+    name: 搜索意图分析工具
+  seo_rate_quality:
+    description: 评估网页SEO质量并给出改进建议
+    enabled: true
+    name: SEO质量评分工具
+  seo_analyze_keywords:
+    description: 分析内容关键词密度和分布
+    enabled: true
+    name: 关键词分析工具
+  seo_compare_content:
+    description: 对比两个内容长度并给出优化建议
+    enabled: true
+    name: 内容长度对比工具
+  seo_score_opportunity:
+    description: 评估SEO优化机会和潜在收益
+    enabled: true
+    name: SEO机会评分工具
+  innovation_run_experiment:
+    description: 设计A/B测试、多变量测试等创新实验
+    enabled: true
+    name: 实验设计工具
+  innovation_analyze_results:
+    description: 分析实验结果、统计显著性、效应大小
+    enabled: true
+    name: 实验结果分析工具
+  innovation_create_visualization:
+    description: 创建实验结果可视化图表和报告
+    enabled: true
+    name: 实验可视化工具
+  innovation_predict:
+    description: 使用群体智能预测市场响应和用户行为
+    enabled: true
+    name: 群体智能预测工具
+  minimind_analyze_problem:
+    description: 使用思维模型分析复杂问题，识别根本原因
+    enabled: true
+    name: 问题分析工具
+  minimind_apply_model:
+    description: 应用特定思维模型（如SWOT、第一性原理等）
+    enabled: true
+    name: 思维模型应用工具
+  minimind_decision_framework:
+    description: 生成结构化决策框架和评估标准
+    enabled: true
+    name: 决策框架工具
+  minimind_evaluate_solution:
+    description: 评估解决方案的可行性和效果
+    enabled: true
+    name: 解决方案评估工具
+  browser_fetch_url:
+    description: 获取URL内容并转换为指定格式
+    enabled: true
+    name: 网页内容获取工具
+  browser_screenshot:
+    description: 网页截图功能
+    enabled: true
+    name: 网页截图工具
+  browser_execute_script:
+    description: 在页面中执行JavaScript脚本
+    enabled: true
+    name: 脚本执行工具
+  browser_start_cdp:
+    description: 启动CDP服务器（Chrome DevTools Protocol）
+    enabled: true
+    name: CDP服务器工具
+  browser_fill_form:
+    description: 自动填写网页表单
+    enabled: true
+    name: 表单填写工具
+  shop_agency_tools:
+    description: shop_agency业务处理专用工具
+    enabled: true
+    name: shop_agency专用工具集
+version: '1.0'

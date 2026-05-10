@@ -1,0 +1,44 @@
+browser_automation:
+  approval_level: high
+  config:
+    prompt_path: prompts/browser_system.txt
+  cost_level: medium
+  description: 负责网页自动化测试、数据采集、用户行为模拟、截图、表单填写等功能
+  enabled: true
+  max_concurrent: 1
+  model_preference: qwen3.6-plus
+  name: 浏览器自动化子公司
+  prompts:
+    system: 请处理相关业务任务。
+    user_template: '请处理以下浏览器自动化子公司相关任务: {task}'
+  tools:
+  - browser_fetch_url
+  - browser_screenshot
+  - browser_execute_script
+  - browser_start_cdp
+  - browser_fill_form
+  triggers:
+    keywords:
+    - 浏览器
+    - 自动化
+    - 网页
+    - 抓取
+    - 数据采集
+    - 爬虫
+    - 截图
+    - screenshot
+    - 表单
+    - 填写
+    - 用户行为
+    - 模拟
+    - 测试
+    - UI测试
+    - 端到端测试
+    - 性能测试
+    - 兼容性测试
+    - fetch
+    - scrape
+    - crawl
+    - playwright
+    - selenium
+    patterns: []

@@ -1,0 +1,4 @@
+make_decision_tool:
+  description: 基于ROI分析和记忆系统做出GO/NO_GO/NEED_INFO决策
+  enabled: true
+  name: 决策工具

@@ -1,0 +1,29 @@
+product:
+  approval_level: medium
+  config:
+    prompt_path: prompts/product_system.txt
+  cost_level: medium
+  description: 负责产品规划、设计
+  enabled: true
+  max_concurrent: 2
+  model_preference: qwen3.6-plus
+  name: 产品子公司
+  prompts:
+    system: 请处理相关业务任务。
+    user_template: '请处理以下产品子公司相关任务: {task}'
+  tools:
+  - product_design_tool
+  - requirement_analysis_tool
+  triggers:
+    keywords:
+    - 产品
+    - 设计
+    - 规划
+    - 需求
+    - 功能
+    - 体验
+    - 界面
+    - 原型
+    - 测试
+    - 迭代
+    patterns: []

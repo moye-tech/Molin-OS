@@ -1,0 +1,336 @@
+# Data Brain技能配置
+# 将原始Data Brain组件适配为hermes-agent原生技能
+# 负责每日业务数据分析、异常检测和优化建议
+
+skill:
+  name: "Data Brain"
+  id: "data_brain"
+  description: "负责每日业务数据分析、异常检测和优化建议"
+
+  # 触发配置
+  triggers:
+    keywords:
+      - "分析"
+      - "数据"
+      - "报表"
+      - "指标"
+      - "趋势"
+      - "告警"
+      - "洞察"
+      - "analytics"
+      - "report"
+      - "metrics"
+      - "trend"
+      - "预警"
+      - "监控"
+      - "统计"
+
+    # 上下文匹配规则
+    context_rules:
+      - field: "text"
+        operator: "contains"
+        value: ["分析", "数据", "报表", "告警"]
+        weight: 0.4
+      - field: "metadata.analysis_requested"
+        operator: "=="
+        value: true
+        weight: 0.3
+      - field: "user_role"
+        operator: "in"
+        value: ["analyst", "manager", "ceo"]
+        weight: 0.3
+
+    # 意图匹配
+    intents:
+      - "analyze_data"
+      - "generate_report"
+      - "check_alerts"
+      - "data_analysis"
+      - "business_intelligence"
+
+  # 模型和成本配置
+  model_preference: "claude-3-sonnet"
+  cost_level: "medium"
+  approval_level: "low"
+  max_concurrent: 1
+
+  # 技能工具
+  tools:
+    - "analyze_daily_data_tool"
+    - "check_alerts_tool"
+    - "generate_report_tool"
+
+  # 技能实现类
+  implementation:
+    module: "hermes_fusion.skills.data_brain.skill"
+    class: "DataBrainSkill"
+
+  # 技能参数
+  parameters:
+    analysis_interval_hours: 24
+    cache_ttl_seconds: 3600
+    alert_thresholds:
+      roi_critical: 1.0
+      roi_warning: 1.5
+      cvr_critical: 0.03
+      cvr_warning: 0.05
+      api_cost_rate_critical: 0.3
+      api_cost_rate_warning: 0.2
+    data_sources:
+      - "sqlite"
+      - "redis"
+      - "qdrant"
+
+  # 分析维度配置
+  analysis_dimensions:
+    - name: "核心指标评分"
+      description: "ROI、CVR、API成本率等核心指标0-10分评分"
+      enabled: true
+    - name: "趋势分析"
+      description: "与前7天均值对比，识别异常波动"
+      enabled: true
+    - name: "归因分析"
+      description: "问题指标的根本原因分析"
+      enabled: true
+    - name: "模型效率排名"
+      description: "各模型cost-per-lead和cost-per-conversion分析"
+      enabled: true
+    - name: "决策建议"
+      description: "SCALE/OPTIMIZE/STOP/PIVOT决策建议"
+      enabled: true
+
+  # 告警规则配置
+  alert_rules:
+    - name: "CVR下降告警"
+      condition: "cvr_day_over_day_change < -0.3"
+      severity: "high"
+      action: "建议立刻人工接管成交"
+      enabled: true
+    - name: "API成本率告警"
+      condition: "api_cost_rate > 0.3"
+      severity: "high"
+      action: "强制切换批量任务到低成本模型"
+      enabled: true
+    - name: "ROI连续下降告警"
+      condition: "roi < 1.5 for 2 consecutive days"
+      severity: "medium"
+      action: "触发Hermes决策复盘"
+      enabled: true
+    - name: "线索量不足告警"
+      condition: "daily_leads < 5"
+      severity: "medium"
+      action: "内容发布频率告警"
+      enabled: true
+
+  # 提示词配置
+  prompts:
+    system: |
+      你是墨麟科技首席数据分析师，精通用户增长漏斗分析、API 成本优化和转化归因。
+
+      【输入数据格式】
+      你会收到 JSON 格式的当日业务数据，包含：
+      - date, leads, deals, total_revenue, api_cost
+      - model_usage（各模型使用量和费用明细）
+      - cvr（转化率=deals/leads）
+      - roi（ROI=revenue/api_cost）
+      - prev_7day_avg（前7天各指标均值）
+
+      【五个分析维度】
+
+      维度1·核心指标评分（0-10分）：
+      - ROI：>5→10分, >3→8分, >1.5→6分, >1→4分, <1→0分
+      - CVR：>15%→10, >10%→8, >5%→6, >3%→4, <3%→0
+      - API成本率（api_cost/revenue）：<5%→10, <10%→8, <30%→5, >30%→0
+
+      维度2·趋势分析（与前7天均值对比）：
+      - 偏离 ±30% 为异常，±50% 为严重异常
+      - 标注方向：↑↑（大幅上升）↑↓↓↓（大幅下降）
+
+      维度3·归因分析（找真正原因）：
+      - 转化率低 → 可能原因：流量质量/话术问题/定价/时机/内容品质
+      - API成本高 → 可能原因：模型选择不当/批量任务走了高价模型/调用异常
+      - 线索少 → 可能原因：内容发布频率低/平台算法下降/话题选择不佳
+
+      维度4·模型效率排名：
+      - 计算每个模型的 cost-per-lead 和 cost-per-conversion
+      - 找出性价比最高和最低的模型，给出切换建议
+
+      维度5·决策建议：
+      - 1个最高优先级立刻行动项（top_action）
+      - 3个本周优化项
+      - 明确标注：SCALE / OPTIMIZE / STOP / PIVOT
+
+      【告警规则（触发时必须在 alerts 字段列出）】
+      - CVR 单日下降 > 30% → 建议立刻人工接管成交
+      - API 成本率 > 30% → 强制切换批量任务到 Qwen-Turbo
+      - ROI 连续 2 天 < 1.5 → 触发 Hermes 决策复盘
+      - 日线索量 < 5 → 内容发布频率告警
+
+      【输出格式】
+      严格输出 JSON：
+      {
+        "date": "分析日期",
+        "overall_score": 0到10综合评分,
+        "kpis": {
+          "roi": {"value": 数字, "score": 0-10, "trend": "↑↑|↑|→|↓|↓↓", "vs_7day": "变化百分比"},
+          "cvr": {"value": 数字, "score": 0-10, "trend": "符号"},
+          "cac": {"value": 数字, "score": 0-10, "trend": "符号"},
+          "api_cost_rate": {"value": 数字, "score": 0-10, "trend": "符号"}
+        },
+        "anomalies": [
+          {"metric": "指标名", "severity": "high|medium|low", "description": "异常描述", "action": "建议操作"}
+        ],
+        "attribution": {
+          "conversion_issue": "转化问题归因（若有）",
+          "cost_issue": "成本问题归因（若有）",
+          "traffic_issue": "流量问题归因（若有）"
+        },
+        "model_efficiency": [
+          {"model": "模型名", "cost_per_lead": 数字, "recommendation": "继续|降级|停用"}
+        ],
+        "top_action": "最高优先级立刻执行的1个操作（动词开头，可量化）",
+        "weekly_optimizations": ["优化项1", "优化项2", "优化项3"],
+        "decision": "SCALE|OPTIMIZE|STOP|PIVOT",
+        "alerts": ["告警信息1（若有）"],
+        "confidence_level": 0.0到1.0置信度,
+        "data_quality_score": 0.0到1.0数据完整性,
+        "summary": "3句话执行摘要（给非技术人员看）"
+      }
+
+    user_template: |
+      请分析以下业务数据：
+
+      用户请求: {text}
+      用户ID: {user_id}
+      平台: {platform}
+
+      分析配置:
+      - 日期范围: {date_range}
+      - 重点关注指标: {focus_metrics}
+      - 告警级别: {alert_level}
+
+      请按照五个分析维度进行完整分析，并严格按照输出格式返回JSON。
+
+  # 输出格式
+  output_format:
+    required_fields:
+      - "success"
+      - "analysis_type"
+      - "analysis"
+      - "execution_time"
+      - "has_alerts"
+    optional_fields:
+      - "target_date"
+      - "alert_summary"
+      - "overall_score"
+      - "recommendations"
+      - "trends"
+    validation_rules:
+      - field: "analysis.date"
+        required: true
+        type: "string"
+        pattern: "^\\d{4}-\\d{2}-\\d{2}$"
+      - field: "analysis.overall_score"
+        required: true
+        type: "number"
+        min: 0
+        max: 10
+      - field: "analysis.kpis.roi.value"
+        required: true
+        type: "number"
+        min: 0
+
+  # 性能配置
+  performance:
+    timeout_seconds: 120
+    retry_count: 1
+    cache_enabled: true
+    cache_ttl_seconds: 3600  # 分析缓存1小时
+    rate_limit_per_minute: 10
+
+  # 监控配置
+  monitoring:
+    metrics:
+      - "analysis_count"
+      - "average_execution_time"
+      - "success_rate"
+      - "alert_count"
+      - "average_overall_score"
+      - "cache_hit_rate"
+    alerts:
+      - metric: "success_rate"
+        operator: "<"
+        threshold: 0.8
+        severity: "warning"
+      - metric: "average_execution_time"
+        operator: ">"
+        threshold: 60.0
+        severity: "warning"
+      - metric: "alert_count"
+        operator: ">"
+        threshold: 10
+        period: "day"
+        severity: "critical"
+
+  # 数据质量配置
+  data_quality:
+    required_data_sources: ["sqlite"]
+    min_data_records: 10
+    max_data_age_hours: 48
+    validation_rules:
+      - field: "leads"
+        required: true
+        type: "integer"
+        min: 0
+      - field: "revenue"
+        required: true
+        type: "number"
+        min: 0
+      - field: "api_cost"
+        required: true
+        type: "number"
+        min: 0
+
+  # 集成配置
+  integrations:
+    memory_providers:
+      - "sqlite"
+      - "redis"
+      - "qdrant"
+    notification_channels:
+      - "feishu"
+      - "email"
+      - "webhook"
+    downstream_systems:
+      - "ceo_decision"
+      - "strategy_engine"
+      - "paperclip_workflows"
+
+  # 调度配置（定时分析）
+  scheduling:
+    daily_analysis:
+      enabled: true
+      cron: "0 9 * * *"  # 每天9:00执行
+      timezone: "Asia/Shanghai"
+    alert_monitoring:
+      enabled: true
+      interval_minutes: 30
+    report_generation:
+      enabled: true
+      cron: "0 18 * * 5"  # 每周五18:00生成周报
+
+  # 版本和元数据
+  version: "1.0.0"
+  author: "墨麟AI团队"
+  created_at: "2026-04-19"
+  updated_at: "2026-04-19"
+  dependencies:
+    - "hermes_fusion.skills.hermes_skill_base"
+    - "data_brain.analytics"
+    - "memory.sqlite_client"
+  tags:
+    - "analytics"
+    - "data"
+    - "reporting"
+    - "alerts"
+    - "business_intelligence"

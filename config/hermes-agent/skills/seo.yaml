@@ -1,0 +1,44 @@
+seo:
+  approval_level: low
+  config:
+    prompt_path: prompts/seo_system.txt
+  cost_level: medium
+  description: 负责网站SEO分析、关键词排名监控、竞争对手分析、SEO质量评估等功能
+  enabled: true
+  max_concurrent: 2
+  model_preference: qwen3.6-plus
+  name: SEO优化子公司
+  prompts:
+    system: 请处理相关业务任务。
+    user_template: '请处理以下SEO优化子公司相关任务: {task}'
+  tools:
+  - seo_analyze_intent
+  - seo_rate_quality
+  - seo_analyze_keywords
+  - seo_compare_content
+  - seo_score_opportunity
+  triggers:
+    keywords:
+    - SEO
+    - 搜索引擎优化
+    - 网站优化
+    - 关键词
+    - 排名
+    - 流量分析
+    - 竞争对手
+    - 竞品分析
+    - 搜索意图
+    - 内容优化
+    - 外链
+    - 反向链接
+    - 页面速度
+    - 移动友好
+    - 结构化数据
+    - 元标签
+    - 标题优化
+    - seo分析
+    - seo报告
+    - seo评分
+    - seo建议
+    - seo监控
+    patterns: []

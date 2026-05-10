@@ -1,0 +1,191 @@
+# 墨麟AI智能系统 v6.6 - Subsidiary Manager 配置
+# 定义20个子公司的管理器配置
+# worker_types 与 agencies/workers/{type}_worker.py 实际文件一一对应
+
+[managers.ai_manager]
+name = "AI子公司管理器"
+subsidiary_id = "ai"
+worker_types = ["ai"]
+max_concurrent_tasks = 5
+claude_code_enabled = true
+enabled = true
+manager_class = "core.managers.ai_manager.AISubsidiaryManager"
+
+[managers.growth_manager]
+name = "增长子公司管理器"
+subsidiary_id = "growth"
+worker_types = ["growth"]
+max_concurrent_tasks = 3
+claude_code_enabled = true
+enabled = true
+manager_class = "core.managers.growth_manager.GrowthSubsidiaryManager"
+
+[managers.ip_manager]
+name = "IP子公司管理器"
+subsidiary_id = "ip"
+worker_types = ["ip"]
+max_concurrent_tasks = 4
+claude_code_enabled = true
+enabled = true
+manager_class = "core.managers.ip_manager.IPSubsidiaryManager"
+
+[managers.dev_manager]
+name = "开发子公司管理器"
+subsidiary_id = "dev"
+worker_types = ["dev"]
+max_concurrent_tasks = 4
+claude_code_enabled = true
+enabled = true
+manager_class = "core.managers.dev_manager.DevSubsidiaryManager"
+
+[managers.data_manager]
+name = "数据子公司管理器"
+subsidiary_id = "data"
+worker_types = ["data"]
+max_concurrent_tasks = 3
+claude_code_enabled = true
+enabled = true
+manager_class = "core.managers.data_manager.DataSubsidiaryManager"
+
+[managers.order_manager]
+name = "订单子公司管理器"
+subsidiary_id = "order"
+worker_types = ["order"]
+max_concurrent_tasks = 3
+claude_code_enabled = true
+enabled = true
+manager_class = "core.managers.order_manager.OrderSubsidiaryManager"
+
+[managers.shop_manager]
+name = "电商子公司管理器"
+subsidiary_id = "shop"
+worker_types = ["shop"]
+max_concurrent_tasks = 3
+claude_code_enabled = true
+enabled = true
+manager_class = "core.managers.shop_manager.ShopSubsidiaryManager"
+
+[managers.edu_manager]
+name = "教育子公司管理器"
+subsidiary_id = "edu"
+worker_types = ["edu"]
+max_concurrent_tasks = 2
+claude_code_enabled = true
+enabled = true
+manager_class = "core.managers.edu_manager.EduSubsidiaryManager"
+
+[managers.secure_manager]
+name = "安全子公司管理器"
+subsidiary_id = "secure"
+worker_types = ["secure"]
+max_concurrent_tasks = 2
+claude_code_enabled = true
+enabled = true
+manager_class = "core.managers.secure_manager.SecureSubsidiaryManager"
+
+[managers.research_manager]
+name = "研究子公司管理器"
+subsidiary_id = "research"
+worker_types = ["research"]
+max_concurrent_tasks = 2
+claude_code_enabled = true
+enabled = true
+manager_class = "core.managers.research_manager.ResearchSubsidiaryManager"
+
+[managers.product_manager]
+name = "产品子公司管理器"
+subsidiary_id = "product"
+worker_types = ["product"]
+max_concurrent_tasks = 2
+claude_code_enabled = true
+enabled = true
+manager_class = "core.managers.product_manager.ProductSubsidiaryManager"
+
+[managers.ads_manager]
+name = "广告子公司管理器"
+subsidiary_id = "ads"
+worker_types = ["ads"]
+max_concurrent_tasks = 3
+claude_code_enabled = true
+enabled = true
+manager_class = "core.managers.ads_manager.AdsSubsidiaryManager"
+
+# ════ v6.6 新增 8 个 Manager ════
+
+[managers.finance_manager]
+name = "财务子公司管理器"
+subsidiary_id = "finance"
+worker_types = ["finance"]
+max_concurrent_tasks = 2
+claude_code_enabled = true
+enabled = true
+
+[managers.crm_manager]
+name = "私域子公司管理器"
+subsidiary_id = "crm"
+worker_types = ["crm"]
+max_concurrent_tasks = 3
+claude_code_enabled = true
+enabled = true
+
+[managers.knowledge_manager]
+name = "知识子公司管理器"
+subsidiary_id = "knowledge"
+worker_types = ["knowledge"]
+max_concurrent_tasks = 3
+claude_code_enabled = true
+enabled = true
+
+[managers.cs_manager]
+name = "客服子公司管理器"
+subsidiary_id = "cs"
+worker_types = ["cs"]
+max_concurrent_tasks = 5
+claude_code_enabled = true
+enabled = true
+
+[managers.legal_manager]
+name = "法务子公司管理器"
+subsidiary_id = "legal"
+worker_types = ["legal"]
+max_concurrent_tasks = 2
+claude_code_enabled = true
+enabled = true
+
+[managers.bd_manager]
+name = "商务子公司管理器"
+subsidiary_id = "bd"
+worker_types = ["bd"]
+max_concurrent_tasks = 3
+claude_code_enabled = true
+enabled = true
+
+[managers.global_market_manager]
+name = "出海子公司管理器"
+subsidiary_id = "global_market"
+worker_types = ["global"]
+max_concurrent_tasks = 3
+claude_code_enabled = true
+enabled = true
+
+[managers.devops_manager]
+name = "运维子公司管理器"
+subsidiary_id = "devops"
+worker_types = ["devops"]
+max_concurrent_tasks = 3
+claude_code_enabled = true
+enabled = true
+
+# 全局管理器配置
+[global]
+manager_dispatcher_enabled = true
+default_claude_code_enabled = true
+max_total_concurrent_tasks = 50
+metrics_collection_enabled = true
+health_check_interval_seconds = 30
+
+# 降级配置
+[fallback]
+fallback_to_direct_worker = true
+claude_code_fallback_threshold_seconds = 10
+max_fallback_attempts = 3

@@ -1,0 +1,29 @@
+growth:
+  approval_level: medium
+  config:
+    prompt_path: prompts/growth_system.txt
+  cost_level: high
+  description: 负责用户增长、营销
+  enabled: true
+  max_concurrent: 3
+  model_preference: claude-sonnet
+  name: 增长子公司
+  prompts:
+    system: 请处理相关业务任务。
+    user_template: '请处理以下增长子公司相关任务: {task}'
+  tools:
+  - user_acquisition_tool
+  - retention_analysis_tool
+  triggers:
+    keywords:
+    - 增长
+    - 用户
+    - 营销
+    - 获客
+    - 留存
+    - 激活
+    - 转化
+    - 漏斗
+    - 渠道
+    - 投放
+    patterns: []

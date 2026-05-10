@@ -1,0 +1,29 @@
+ip:
+  approval_level: medium
+  config:
+    prompt_path: prompts/ip_system.txt
+  cost_level: medium
+  description: 负责内容创作、IP孵化
+  enabled: true
+  max_concurrent: 2
+  model_preference: claude-opus
+  name: IP子公司
+  prompts:
+    system: 请处理相关业务任务。
+    user_template: '请处理以下IP子公司相关任务: {task}'
+  tools:
+  - content_creation_tool
+  - ip_management_tool
+  triggers:
+    keywords:
+    - 内容
+    - 创作
+    - IP
+    - 文案
+    - 文章
+    - 视频
+    - 图片
+    - 设计
+    - 创意
+    - 故事
+    patterns: []

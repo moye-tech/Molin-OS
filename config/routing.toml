@@ -1,0 +1,24 @@
+# routing.toml 精简版 — 只负责并发和回退，不做关键词路由
+# 关键词路由统一在 subsidiaries.toml 定义（F6 修复）
+
+[defaults]
+fallback_agency = "ai"          # 任务类型不明时，默认给 ai 子公司
+ceo_timeout_seconds = 120        # CEO决策超时
+manager_timeout_seconds = 180    # Manager执行超时
+worker_timeout_seconds = 90      # Worker执行超时
+
+[parallel]
+max_total_concurrent = 10        # 系统级并发上限
+max_agencies_per_task = 5        # 单任务最多调度N个子公司
+
+# 每个子公司的并发限制
+[per_agency_limits]
+edu = 2; order = 1; ip = 3; dev = 1; ai = 2; shop = 2
+data = 2; growth = 3; secure = 2; research = 2; product = 2; ads = 2
+finance = 2; crm = 3; knowledge = 3; cs = 5; legal = 2; bd = 2
+global_market = 2; devops = 3
+
+# ── 删除的配置（移至 subsidiaries.toml，不在这里重复）──────────────
+# ❌ [task_types.*] 的 keywords 字段 → 全部删除
+# ❌ [manager_routing] 的 keyword_match_weight → 删除
+# ❌ 所有 default_manager / default_agency 字段 → 删除

@@ -1,0 +1,4 @@
+xiaohongshu_publish_content:
+  description: 小红书内容发布
+  enabled: true
+  name: 小红书内容发布工具

@@ -1,0 +1,39 @@
+vision:
+  approval_level: high
+  config:
+    prompt_path: prompts/vision_system.txt
+  cost_level: high
+  description: 负责实时图像分析、对象检测、人脸识别、异常事件检测等合规视觉分析功能
+  enabled: true
+  max_concurrent: 1
+  model_preference: claude-3-sonnet
+  name: 视觉分析子公司
+  prompts:
+    system: 你是一个专业的视觉分析专家，精通图像处理、对象检测、人脸识别、视频分析等计算机视觉技术。严格遵守伦理准则，仅提供合规的分析服务，禁止用于深度伪造、隐私侵犯或非法监控。
+    user_template: '请处理以下视觉分析任务: {task}'
+  tools: []
+  triggers:
+    keywords:
+      - 视觉
+      - 图像
+      - 图片
+      - 照片
+      - 视频
+      - 人脸识别
+      - 对象检测
+      - 实时分析
+      - 异常检测
+      - 监控
+      - 视觉分析
+      - 图像处理
+      - 视觉识别
+      - 目标检测
+      - 面部识别
+      - 人脸检测
+      - 图像分类
+      - 计算机视觉
+      - 深度分析
+      - 安防监控
+      - 质量检测
+      - 视觉自动化
+    patterns: []

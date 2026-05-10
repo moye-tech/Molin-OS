@@ -1,0 +1,37 @@
+social_media:
+  approval_level: low
+  config:
+    prompt_path: prompts/social_media_system.txt
+  cost_level: medium
+  description: 负责小红书、微博等社交媒体内容发布、用户互动数据分析、营销活动自动化
+  enabled: true
+  max_concurrent: 2
+  model_preference: qwen3.6-plus
+  name: 社交媒体子公司
+  prompts:
+    system: 请处理相关业务任务。
+    user_template: '请处理以下社交媒体子公司相关任务: {task}'
+  tools:
+  - xiaohongshu_publish_content
+  triggers:
+    keywords:
+    - 小红书
+    - 社交媒体
+    - 内容发布
+    - 粉丝互动
+    - 数据分析
+    - 营销
+    - 微博
+    - 抖音
+    - B站
+    - 内容
+    - 发布
+    - 帖子
+    - 粉丝
+    - 互动
+    - 分析
+    - 推广
+    - 社交
+    - 媒体
+    - 运营
+    patterns: []

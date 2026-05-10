@@ -1,0 +1,286 @@
+# Paperclip技能配置
+# 将原始Paperclip工作流DAG适配为hermes-agent原生技能
+# 负责任务审批、合规检查、多步骤流程管理
+
+skill:
+  name: "Paperclip工作流引擎"
+  id: "paperclip"
+  description: "负责任务审批、合规检查、多步骤流程管理，集成到原始7层架构的Paperclip层"
+
+  # 触发配置
+  triggers:
+    keywords:
+      - "工作流"
+      - "审批"
+      - "流程"
+      - "paperclip"
+      - "合规检查"
+      - "多步骤"
+      - "审批流程"
+      - "workflow"
+      - "approval"
+      - "compliance"
+      - "合规"
+      - "批准"
+      - "审核"
+
+    # 上下文匹配规则
+    context_rules:
+      - field: "text"
+        operator: "contains"
+        value: ["工作流", "审批", "流程", "paperclip", "合规"]
+        weight: 0.4
+      - field: "action"
+        operator: "in"
+        value: ["start_workflow", "approve_task", "check_compliance", "workflow_status"]
+        weight: 0.3
+      - field: "metadata.requires_approval"
+        operator: "=="
+        value: true
+        weight: 0.3
+
+    # 意图匹配
+    intents:
+      - "start_workflow"
+      - "approve_task"
+      - "check_compliance"
+      - "workflow_status"
+      - "cancel_workflow"
+
+  # 模型和成本配置
+  model_preference: "claude-3-sonnet"
+  cost_level: "medium"
+  approval_level: "medium"  # 审批操作需要中等审批级别
+  max_concurrent: 3  # 可以并行处理多个工作流
+
+  # 技能工具
+  tools:
+    - "start_workflow_tool"
+    - "approve_task_tool"
+    - "check_compliance_tool"
+    - "workflow_status_tool"
+
+  # 技能实现类
+  implementation:
+    module: "hermes_fusion.skills.paperclip.skill"
+    class: "PaperclipSkill"
+
+  # 技能参数
+  parameters:
+    workflow_defs_dir: "config/hermes-agent/workflows"
+    approval_config:
+      default_timeout_hours: 24
+      reminder_interval_hours: 6
+      escalation_path:
+        - "team_lead"
+        - "department_head"
+        - "ceo"
+    compliance_config:
+      check_types:
+        - "sensitive_words"
+        - "copyright"
+        - "platform_policy"
+        - "advertising_rules"
+      severity_level: "high"
+      auto_reject_on_fail: true
+
+    # 原始7层架构集成
+    layer_integration:
+      layer_name: "paperclip"
+      upstream_layers: ["agency"]
+      downstream_layers: ["clawteam"]
+      data_flow_format: "task_context"
+
+  # 提示词配置
+  prompts:
+    system: |
+      你是墨麟科技工作流审批专家，负责 Paperclip 工作流层。
+
+      【核心职责】
+      1. 工作流管理：根据预定义的工作流模板启动、监控和管理多步骤流程
+      2. 审批处理：管理人工审批队列，发送提醒，处理审批决策
+      3. 合规检查：自动检查内容、任务、请求是否符合合规要求
+      4. 流程协调：协调工作流步骤之间的数据传递和状态同步
+      5. 异常处理：处理工作流执行中的异常和错误情况
+
+      【工作流类型】
+      1. 内容审批工作流：内容发布前的多级审批
+      2. 项目审批工作流：新项目启动审批
+      3. 预算审批工作流：预算申请和审批
+      4. 合规检查工作流：自动合规检查流程
+
+      【审批规则】
+      - 审批超时：默认24小时，超时后自动升级
+      - 审批级别：根据任务重要性和预算自动确定审批级别
+      - 审批链：支持多级审批和并行审批
+      - 审批理由：重要审批需要提供理由
+
+      【合规检查】
+      - 敏感词检测：检查内容中是否包含敏感词汇
+      - 版权检查：检查是否侵犯版权
+      - 平台政策：检查是否符合各平台发布政策
+      - 广告规则：检查是否符合广告法规
+
+      【输出格式】
+      根据操作类型返回结构化数据：
+
+      1. 启动工作流：
+      {
+        "workflow_id": "工作流ID",
+        "workflow_name": "工作流名称",
+        "status": "started|pending_approval|failed",
+        "current_step": "当前步骤",
+        "next_steps": ["下一步1", "下一步2"],
+        "approval_required": true|false
+      }
+
+      2. 审批任务：
+      {
+        "task_id": "任务ID",
+        "approved": true|false,
+        "approver": "审批人",
+        "reason": "审批理由（可选）",
+        "next_step": "下一步骤"
+      }
+
+      3. 合规检查：
+      {
+        "compliance_passed": true|false,
+        "failed_checks": ["失败检查项1", "失败检查项2"],
+        "severity": "high|medium|low",
+        "recommendation": "建议操作"
+      }
+
+      4. 工作流状态：
+      {
+        "workflow_id": "工作流ID",
+        "status": "running|completed|failed|pending_approval",
+        "current_step": "当前步骤",
+        "progress": "进度百分比",
+        "start_time": "开始时间",
+        "estimated_completion": "预计完成时间"
+      }
+
+    user_template: |
+      请处理以下工作流请求：
+
+      用户请求: {text}
+      用户ID: {user_id}
+      平台: {platform}
+
+      工作流配置:
+      - 操作类型: {action}
+      - 工作流ID: {workflow_id}
+      - 任务ID: {task_id}
+      - 审批决策: {approval_decision}
+
+      请根据请求类型执行工作流操作，并严格按照输出格式返回结果。
+
+  # 输出格式
+  output_format:
+    required_fields:
+      - "success"
+      - "skill"
+      - "action"
+      - "data"
+      - "timestamp"
+    optional_fields:
+      - "execution_time"
+      - "warning"
+      - "next_actions"
+    validation_rules:
+      - field: "data.workflow_id"
+        required: false
+        type: "string"
+        condition: "action in ['start_workflow', 'workflow_status']"
+      - field: "data.task_id"
+        required: false
+        type: "string"
+        condition: "action == 'approve_task'"
+      - field: "data.compliance_passed"
+        required: false
+        type: "boolean"
+        condition: "action == 'check_compliance'"
+
+  # 性能配置
+  performance:
+    timeout_seconds: 60  # 工作流操作应该在60秒内完成
+    retry_count: 1
+    cache_enabled: true
+    cache_ttl_seconds: 300  # 工作流状态缓存5分钟
+    rate_limit_per_minute: 30  # 每分钟最多30个工作流操作
+
+  # 监控配置
+  monitoring:
+    metrics:
+      - "workflows_started"
+      - "workflows_completed"
+      - "workflows_failed"
+      - "approval_response_time"
+      - "compliance_check_rate"
+      - "average_workflow_duration"
+    alerts:
+      - metric: "workflows_failed"
+        operator: ">"
+        threshold: 5
+        period: "hour"
+        severity: "warning"
+      - metric: "approval_response_time"
+        operator: ">"
+        threshold: 3600  # 1小时
+        severity: "warning"
+      - metric: "compliance_check_rate"
+        operator: "<"
+        threshold: 0.9
+        severity: "critical"
+
+  # 数据质量配置
+  data_quality:
+    required_fields:
+      - "text"
+    validation_rules:
+      - field: "workflow_id"
+        required: false
+        type: "string"
+        condition: "action in ['workflow_status', 'approve_task']"
+      - field: "task_id"
+        required: false
+        type: "string"
+        condition: "action == 'approve_task'"
+
+  # 集成配置
+  integrations:
+    memory_providers:
+      - "sqlite"  # 存储工作流历史
+      - "redis"   # 缓存工作流状态
+    notification_channels:
+      - "feishu"  # 审批通知
+    downstream_systems:
+      - "clawteam"  # 调度执行层
+
+  # 调度配置（定时清理过期工作流）
+  scheduling:
+    cleanup_workflows:
+      enabled: true
+      cron: "0 2 * * *"  # 每天凌晨2点清理
+      timezone: "Asia/Shanghai"
+    stats_collection:
+      enabled: true
+      interval_minutes: 60
+
+  # 版本和元数据
+  version: "1.0.0"
+  author: "墨麟AI团队"
+  created_at: "2026-04-19"
+  updated_at: "2026-04-19"
+  dependencies:
+    - "hermes_fusion.skills.hermes_skill_base"
+    - "hermes_fusion.skills.paperclip.workflow_dag"
+    - "hermes_fusion.skills.paperclip.approval_queue"
+    - "hermes_fusion.skills.paperclip.compliance_checker"
+  tags:
+    - "workflow"
+    - "approval"
+    - "compliance"
+    - "paperclip"
+    - "automation"

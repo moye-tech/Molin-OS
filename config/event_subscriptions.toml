@@ -1,0 +1,68 @@
+# ============================================================
+# 墨麟AI智能系统 v6.6 — 事件订阅配置
+# 定义子公司间的事件发布/订阅关系
+# ============================================================
+
+# ─── 广告投放完成 → 财务记账 + 数据分析 + CRM 更新 ───
+[[subscriptions]]
+event = "campaign_complete"
+publisher = "ads"
+subscribers = ["finance", "data", "crm"]
+description = "广告投放完成后，自动触发财务记账、数据更新和CRM转化跟踪"
+
+# ─── 任务完成 → 知识库自动沉淀 ───
+[[subscriptions]]
+event = "task_complete"
+publisher = "*"
+subscribers = ["knowledge"]
+description = "任何子公司任务完成后，知识库自动提炼经验"
+min_score = 5.0  # 仅 score >= 5 的任务触发
+
+# ─── 投诉升级 → 客服 + CEO 通知 ───
+[[subscriptions]]
+event = "complaint_escalated"
+publisher = "cs"
+subscribers = ["crm", "legal"]
+description = "投诉升级时，通知CRM更新用户状态、法务评估风险"
+
+# ─── 合同签署 → 财务 + BD 跟进 ───
+[[subscriptions]]
+event = "contract_signed"
+publisher = "bd"
+subscribers = ["finance", "order", "legal"]
+description = "合同签署后，触发财务入账、订单创建和法务归档"
+
+# ─── 预算告警 → 全局广播 ───
+[[subscriptions]]
+event = "budget_alert"
+publisher = "finance"
+subscribers = ["ads", "growth", "ceo"]
+description = "预算告警时，通知高消耗子公司和CEO"
+
+# ─── 系统故障 → 运维 + CEO ───
+[[subscriptions]]
+event = "service_down"
+publisher = "devops"
+subscribers = ["ceo"]
+description = "服务宕机时，立即通知CEO"
+
+# ─── 用户流失预警 → CRM + 客服 ───
+[[subscriptions]]
+event = "churn_alert"
+publisher = "crm"
+subscribers = ["cs", "growth"]
+description = "用户流失预警触发时，客服和增长团队介入"
+
+# ─── 内容发布 → 出海本地化 ───
+[[subscriptions]]
+event = "content_published"
+publisher = "ip"
+subscribers = ["global"]
+description = "大陆内容发布后，触发出海子公司本地化评估"
+
+# ─── SOP 更新提议 → 知识库审查 ───
+[[subscriptions]]
+event = "sop_update_proposed"
+publisher = "*"
+subscribers = ["knowledge"]
+description = "SOP 更新提议自动流入知识库审查"

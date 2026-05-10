@@ -1,0 +1,4 @@
+analyze_roi_tool:
+  description: 分析项目预算、时间线、目标收入，计算ROI
+  enabled: true
+  name: ROI分析工具
