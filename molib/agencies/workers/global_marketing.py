@@ -3,9 +3,9 @@
 所属: VP战略
 技能: molin-global, weblate-localization
 """
-from .base import SubsidiaryWorker, Task, WorkerResult
+from .base import SmartSubsidiaryWorker as _Base, Task, WorkerResult
 
-class GlobalMarketing(SubsidiaryWorker):
+class GlobalMarketing(_Base):
     worker_id = "global_marketing"
     worker_name = "墨海出海"
     description = "多语言、全球化、出海运营"

@@ -1,8 +1,8 @@
 """墨学教育 Worker — 课程设计 + 多Agent互动课堂 (LLM驱动)"""
-from .base import SubsidiaryWorker, Task, WorkerResult
+from .base import SmartSubsidiaryWorker as _Base, Task, WorkerResult
 
 
-class Education(SubsidiaryWorker):
+class Education(_Base):
     worker_id = "education"
     worker_name = "墨学教育"
     description = "课程设计与知识付费 | 多Agent互动课堂"

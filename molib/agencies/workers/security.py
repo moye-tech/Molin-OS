@@ -4,9 +4,9 @@
 技能: red-teaming, ag-vulnerability-scanner
 """
 import json
-from .base import SubsidiaryWorker, Task, WorkerResult
+from .base import SmartSubsidiaryWorker as _Base, Task, WorkerResult
 
-class Security(SubsidiaryWorker):
+class Security(_Base):
     worker_id = "security"
     worker_name = "墨安安全"
     description = "代码审计、安全评估"

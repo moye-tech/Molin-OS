@@ -4,9 +4,9 @@
 技能: molin-audio-engine, songwriting
 """
 import json
-from .base import SubsidiaryWorker, Task, WorkerResult
+from .base import SmartSubsidiaryWorker as _Base, Task, WorkerResult
 
-class VoiceActor(SubsidiaryWorker):
+class VoiceActor(_Base):
     worker_id = "voice_actor"
     worker_name = "墨声配音"
     description = "AI语音合成、播客制作"

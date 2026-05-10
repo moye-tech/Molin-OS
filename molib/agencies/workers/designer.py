@@ -3,9 +3,9 @@
 所属: VP营销
 技能: molin-design, excalidraw, pixel-art
 """
-from .base import SubsidiaryWorker, Task, WorkerResult
+from .base import SmartSubsidiaryWorker as _Base, Task, WorkerResult
 
-class Designer(SubsidiaryWorker):
+class Designer(_Base):
     worker_id = "designer"
     worker_name = "墨图设计"
     description = "图片/UI/封面/视觉设计"

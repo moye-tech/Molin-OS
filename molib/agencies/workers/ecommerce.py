@@ -12,7 +12,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
-from molib.agencies.workers.base import SubsidiaryWorker, Task, WorkerResult
+from molib.agencies.workers.base import SmartSubsidiaryWorker as _Base, Task, WorkerResult
 
 
 # ── Platform Adapters ─────────────────────────────────────────────────
@@ -134,7 +134,7 @@ class OrderPipeline:
 # ── Ecommerce Worker ──────────────────────────────────────────────────
 
 
-class Ecommerce(SubsidiaryWorker):
+class Ecommerce(_Base):
     worker_id = "ecommerce"
     worker_name = "墨链电商"
     description = "订单管理、交易、电商平台 — 商品上架、订单追踪、多平台适配"

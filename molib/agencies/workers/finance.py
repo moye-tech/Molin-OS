@@ -3,10 +3,10 @@
 所属: VP财务
 """
 
-from .base import SubsidiaryWorker, Task, WorkerResult
+from .base import SmartSubsidiaryWorker as _Base, Task, WorkerResult
 from molib.shared.finance.stock_engine import StockPipeline, Pipeline, Stage, TaskQueue
 
-class Finance(SubsidiaryWorker):
+class Finance(_Base):
     worker_id = "finance"
     worker_name = "墨算财务"
     description = "记账、预算、成本控制"

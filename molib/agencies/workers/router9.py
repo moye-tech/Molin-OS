@@ -20,7 +20,7 @@ from pathlib import Path
 from dataclasses import dataclass
 from typing import Any
 
-from .base import SubsidiaryWorker, Task, WorkerResult
+from .base import SmartSubsidiaryWorker as _Base, Task, WorkerResult
 
 # ---------------------------------------------------------------------------
 # 9router binary path
@@ -255,7 +255,7 @@ async def _token_stats() -> dict:
 # Worker class (for Hermes subsidiary worker registry)
 # ===================================================================
 
-class Router9(SubsidiaryWorker):
+class Router9(_Base):
     """9Router Proxy Worker — Token-saving AI routing layer."""
 
     worker_id = "router9"

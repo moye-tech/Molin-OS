@@ -1,8 +1,8 @@
 """墨研竞情 Worker — 竞争情报 + 群体智能预测（基于MiroFish设计模式）"""
-from .base import SubsidiaryWorker, Task, WorkerResult
+from .base import SmartSubsidiaryWorker as _Base, Task, WorkerResult
 
 
-class Research(SubsidiaryWorker):
+class Research(_Base):
     worker_id = "research"
     worker_name = "墨研竞情"
     description = "竞品监控、行业情报与群体智能预测"

@@ -1,5 +1,5 @@
 """墨投交易 Worker — 量化交易策略研究/回测/信号生成"""
-from .base import SubsidiaryWorker, Task, WorkerResult, WorkerRegistry
+from .base import SmartSubsidiaryWorker as _Base, Task, WorkerResult, WorkerRegistry
 from pathlib import Path
 
 
@@ -27,7 +27,7 @@ def _load_skill_instructions() -> dict[str, str]:
 # ---------------------------------------------------------------------------
 # Worker
 # ---------------------------------------------------------------------------
-class Trading(SubsidiaryWorker):
+class Trading(_Base):
     worker_id = "trading"
     worker_name = "墨投交易"
     description = "量化交易策略研究/回测/信号解读"

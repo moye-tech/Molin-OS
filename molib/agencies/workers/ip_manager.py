@@ -3,9 +3,9 @@
 所属: VP营销
 技能: ai-taste-quality
 """
-from .base import SubsidiaryWorker, Task, WorkerResult
+from .base import SmartSubsidiaryWorker as _Base, Task, WorkerResult
 
-class IpManager(SubsidiaryWorker):
+class IpManager(_Base):
     worker_id = "ip_manager"
     worker_name = "墨韵IP"
     description = "IP衍生、商标、版权、品牌管理"

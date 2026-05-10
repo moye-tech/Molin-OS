@@ -7,7 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from .base import SubsidiaryWorker, Task, WorkerResult
+from .base import SmartSubsidiaryWorker as _Base, Task, WorkerResult
 
 # ─── 目录常量（零空转：目录检查只在主动调用时执行） ──────────────────────────
 DREAM_DIR = Path(os.path.expanduser("~/.hermes/dream"))
@@ -339,7 +339,7 @@ def _append_insights_to_skill(patterns: list[dict[str, Any]]) -> None:
 
 # ─── AutoDream Worker 类 ─────────────────────────────────────────────────────
 
-class AutoDream(SubsidiaryWorker):
+class AutoDream(_Base):
     worker_id = "auto_dream"
     worker_name = "墨梦AutoDream"
     description = "记忆整合与战略复盘 + 记忆蒸馏(dream_distill/reflect/consolidate)"

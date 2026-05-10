@@ -1,7 +1,7 @@
 """墨脑知识 Worker — RAG + SOP管理 + 知识图谱"""
-from .base import SubsidiaryWorker, Task, WorkerResult
+from .base import SmartSubsidiaryWorker as _Base, Task, WorkerResult
 
-class Knowledge(SubsidiaryWorker):
+class Knowledge(_Base):
     worker_id = "knowledge"
     worker_name = "墨脑知识"
     description = "知识库RAG与SOP管理 | 知识图谱构建"

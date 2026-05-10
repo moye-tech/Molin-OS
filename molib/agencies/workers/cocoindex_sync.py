@@ -27,7 +27,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from .base import SubsidiaryWorker, Task, WorkerResult
+from .base import SmartSubsidiaryWorker as _Base, Task, WorkerResult
 
 logger = logging.getLogger(__name__)
 
@@ -743,7 +743,7 @@ def cmd_sync(args: List[str]) -> dict:
 # Worker 实现（面向内部 Worker 调度）
 # ---------------------------------------------------------------------------
 
-class CocoIndexSync(SubsidiaryWorker):
+class CocoIndexSync(_Base):
     """墨域同步 Worker — 基于 CocoIndex 的增量同步。
 
     负责：

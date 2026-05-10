@@ -4,9 +4,9 @@
 技能: molin-customer-service, xianyu-automation
 """
 import json
-from .base import SubsidiaryWorker, Task, WorkerResult
+from .base import SmartSubsidiaryWorker as _Base, Task, WorkerResult
 
-class CustomerService(SubsidiaryWorker):
+class CustomerService(_Base):
     worker_id = "customer_service"
     worker_name = "墨声客服"
     description = "自动化客服（消息检测→回复）"

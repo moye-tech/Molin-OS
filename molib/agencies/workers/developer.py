@@ -3,9 +3,9 @@
 所属: VP技术
 技能: agent-engineering-backend-architect, cli-anything
 """
-from .base import SubsidiaryWorker, Task, WorkerResult
+from .base import SmartSubsidiaryWorker as _Base, Task, WorkerResult
 
-class Developer(SubsidiaryWorker):
+class Developer(_Base):
     worker_id = "developer"
     worker_name = "墨码开发"
     description = "软件开发、代码编写"

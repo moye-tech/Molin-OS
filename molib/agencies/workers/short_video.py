@@ -8,10 +8,10 @@
 """
 
 import json
-from .base import SubsidiaryWorker, Task, WorkerResult
+from .base import SmartSubsidiaryWorker as _Base, Task, WorkerResult
 
 
-class ShortVideo(SubsidiaryWorker):
+class ShortVideo(_Base):
     worker_id = "short_video"
     worker_name = "墨播短视频"
     description = "短视频脚本生成 + MPT/Pixelle双引擎合成"

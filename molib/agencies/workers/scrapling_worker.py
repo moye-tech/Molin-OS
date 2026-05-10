@@ -8,7 +8,7 @@
 可作为 Molib Research 子公司的辅助 Worker 使用。
 """
 
-from .base import SubsidiaryWorker, Task, WorkerResult
+from .base import SmartSubsidiaryWorker as _Base, Task, WorkerResult
 
 # ── 工具函数（可直接被 CLI 或别的模块调用）────────────────────────────────────
 
@@ -237,7 +237,7 @@ def crawl(
 # ── Worker 类（墨研竞情 · Scrapling）──────────────────────────────────────
 
 
-class ScraplingWorker(SubsidiaryWorker):
+class ScraplingWorker(_Base):
     worker_id = "scrapling"
     worker_name = "墨研Scrapling"
     description = "基于 Scrapling 的 Web 抓取、自适应解析与并发爬虫"

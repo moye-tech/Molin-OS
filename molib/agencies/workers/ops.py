@@ -3,9 +3,9 @@
 所属: VP技术
 技能: ghost-os, cli-anything, opensre-sre-agent
 """
-from .base import SubsidiaryWorker, Task, WorkerResult
+from .base import SmartSubsidiaryWorker as _Base, Task, WorkerResult
 
-class Ops(SubsidiaryWorker):
+class Ops(_Base):
     worker_id = "ops"
     worker_name = "墨维运维"
     description = "服务器、部署、DevOps"

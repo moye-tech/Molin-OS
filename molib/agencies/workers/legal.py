@@ -3,9 +3,9 @@
 所属: 共同服务
 技能: molin-legal
 """
-from .base import SubsidiaryWorker, Task, WorkerResult
+from .base import SmartSubsidiaryWorker as _Base, Task, WorkerResult
 
-class Legal(SubsidiaryWorker):
+class Legal(_Base):
     worker_id = "legal"
     worker_name = "墨律法务"
     description = "合同审查、合规、风险评估"

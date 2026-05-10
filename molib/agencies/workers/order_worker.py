@@ -44,7 +44,7 @@ from molib.business.order_engine import (
 )
 
 
-class OrderWorker(SubsidiaryWorker):
+class OrderWorker(_Base):
     worker_id = "order_worker"
     worker_name = "墨单订单"
     description = "订单 Worker：询盘处理、报价生成、交付跟踪、状态管理、发票与支付"

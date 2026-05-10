@@ -3,9 +3,9 @@
 所属: VP战略
 技能: molin-bd-scanner, agent-sales-deal-strategist
 """
-from .base import SubsidiaryWorker, Task, WorkerResult
+from .base import SmartSubsidiaryWorker as _Base, Task, WorkerResult
 
-class Bd(SubsidiaryWorker):
+class Bd(_Base):
     worker_id = "bd"
     worker_name = "墨商BD"
     description = "商务拓展、合作洽谈"

@@ -3,10 +3,10 @@
 所属: 共同服务
 技能: molin-data-analytics, molin-vizro
 """
-from .base import SubsidiaryWorker, Task, WorkerResult
+from .base import SmartSubsidiaryWorker as _Base, Task, WorkerResult
 
 
-class DataAnalyst(SubsidiaryWorker):
+class DataAnalyst(_Base):
     worker_id = "data_analyst"
     worker_name = "墨测数据"
     description = "数据分析、测试、质量"
