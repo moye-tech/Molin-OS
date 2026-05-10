@@ -1,28 +1,14 @@
 ---
-
 name: claude-code
-description: Delegate coding tasks to Claude Code (Anthropic's CLI agent). Use for building features, refactoring, PR reviews, and iterative coding. Requires the claude CLI installed.
+description: "Delegate coding to Claude Code CLI (features, PRs)."
 version: 2.2.0
 author: Hermes Agent + Teknium
 license: MIT
+platforms: [linux, macos, windows]
 metadata:
   hermes:
     tags: [Coding-Agent, Claude, Anthropic, Code-Review, Refactoring, PTY, Automation]
-    related_skills: [codex, hermes-agent, opencode, oh-my-claudecode]
-    omc_integrated:
-      - source: https://github.com/Yeachan-Heo/oh-my-claudecode (32K⭐)
-      - upstream_fork: https://github.com/moye-tech/oh-my-claudecode
-      - value: 团队优先的多Agent编排，零学习曲线
-      - patterns: [multi-agent-coordination, agent-templates, workflow-automation]
-    best_practice_integrated:
-      - source: https://github.com/shanraisshan/claude-code-best-practice (51K⭐)
-      - upstream_fork: https://github.com/moye-tech/claude-code-best-practice
-      - value: 从 vibe coding 到 agentic engineering 的最佳实践
-    generic_agent_integrated:
-      - source: https://github.com/lsdefine/GenericAgent (9K⭐)
-      - upstream_fork: https://github.com/moye-tech/GenericAgent
-      - value: 自进化Agent，种子代码自生长技能树
-    molin_owner: 墨智（AI研发）
+    related_skills: [codex, hermes-agent, opencode]
 ---
 
 # Claude Code — Hermes Orchestration Guide

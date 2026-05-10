@@ -3,7 +3,7 @@ name: feishu-message-formatter
 description: 飞书消息输出格式化 — 噪声过滤 + 结构化卡片 + 分级透明。Hermes OS 发给用户（尹建业）的所有消息必须经过此规范。
 version: 1.0.0
 tags: [feishu, ux, message, format, noise-filter, card]
-related_skills: [molin-ceo-persona, molin-governance]
+related_skills: [molin-ceo-persona, molin-governance, feishu-cli]
 metadata:
   hermes:
     molin_owner: CEO
@@ -19,6 +19,13 @@ metadata:
 1. **结果导向** — 只发送「任务完成/失败/需要你决策」三种状态。执行过程（terminal 命令、文件读写、中间步骤）全部静默。
 2. **卡片优先** — 结构化输出用分隔线卡片格式（见下方模板）。
 3. **分级透明** — L0 自动完成 → 简洁卡片。L2 人工确认 → 含"待你审批"标注。
+4. **长短分流** — 短内容（<500字）→ 直接飞书纯文本。长内容或含表格/图表 → 写入 Markdown → `feishu-cli doc import` 导入为飞书文档 → 只发文档链接 + 一句话摘要。
+5. **不修改 Hermes 配置** — 此规范只约束终端输出内容格式，不改变 Hermes 的 config.yaml/.env/skills 结构。
+
+## 权威来源
+
+此规范源自 Molin-OS SOUL.md（`~/Molin-OS/SOUL.md` § 飞书消息输出格式，第 213-217 行）。
+SOUL.md 是飞书输出规范的单一真相源，本技能是其在 Hermes 中的执行映射。
 
 ## 噪声过滤规则
 
@@ -133,3 +140,35 @@ metadata:
 - ✅ 结构化信息用分隔线卡片包裹
 - ✅ L2 事项明确标注"待你审批"
 - ✅ 异常场景直接说问题，不绕弯子
+
+## 常见违规与纠正
+
+以下是在实际使用中发现的违规模式，**每次违规都是高优先级的学习信号**：
+
+| 违规 | 犯法 | 正确做法 |
+|:-----|:-----|:---------|
+| `# 标题` / `## 副标题` | 用了 Markdown 标题 | 用 `📊 标题名` + 空行分段 |
+| `---` 水平线 | 用了 Markdown 分隔线 | 用 `━━━━━━` 分隔线卡片 |
+| `**粗体**` | 用了 Markdown 加粗 | 直接用纯文本，靠位置和 emoji 强调 |
+| `| col | col |` | 用了 Markdown 表格 | 改用 • 列表或飞书文档导入 |
+| `\`code\`` | 用了行内代码 | 直接用引号或纯文本 |
+| 带 ASCII 框线的表格（`┌─┐`） | 用了框线字符 | 纯文本缩进或卡片格式 |
+| 长篇 Markdown 回复 | 超过 500 字用 Markdown | 写入 `/tmp/hermes_reply.md` → `feishu-cli doc import` → 只发链接 |
+
+**自检方法**：把回复内容粘贴到微信输入框，如果看起来奇怪/有格式破损，就是违规。
+
+## 实际应用经验
+
+### 语气切换
+回复语气应与内容类型匹配：
+- 系统操作结果 → 客观陈述，emoji状态标识
+- CEO简报 → 结构化卡片，数据优先
+- 日常对话 → 自然轻松，但保持格式规范
+
+### 卡片适度使用
+卡片格式用于结构化信息（操作结果/简报/审批），
+日常对话和简单确认不需要卡片，保持自然。
+
+### 与 feishu-cli 协作
+长内容（>500字或含表格/图表）→ 写入 Markdown → feishu-cli import 为飞书文档
+短内容 → 本规范的卡片/纯文本格式

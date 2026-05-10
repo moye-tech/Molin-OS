@@ -1,9 +1,10 @@
 ---
 name: systematic-debugging
-description: Use when encountering any bug, test failure, or unexpected behavior. 4-phase root cause investigation — NO fixes without understanding the problem first.
+description: "4-phase root cause debugging: understand bugs before fixing."
 version: 1.1.0
 author: Hermes Agent (adapted from obra/superpowers)
 license: MIT
+platforms: [linux, macos, windows]
 metadata:
   hermes:
     tags: [debugging, troubleshooting, problem-solving, root-cause, investigation]
@@ -271,7 +272,6 @@ pytest tests/ -q
 
 This is NOT a failed hypothesis — this is a wrong architecture.
 
-    molin_owner: 墨码（软件工坊）
 ---
 
 ## Red Flags — STOP and Follow Process

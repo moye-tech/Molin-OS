@@ -1,17 +1,16 @@
 ---
-
 name: ascii-art
-description: Generate ASCII art using pyfiglet (571 fonts), cowsay, boxes, toilet, image-to-ascii, remote APIs (asciified, ascii.co.uk), and LLM fallback. No API keys required.
+description: "ASCII art: pyfiglet, cowsay, boxes, image-to-ascii."
 version: 4.0.0
 author: 0xbyt4, Hermes Agent
 license: MIT
 dependencies: []
+platforms: [linux, macos, windows]
 metadata:
   hermes:
     tags: [ASCII, Art, Banners, Creative, Unicode, Text-Art, pyfiglet, figlet, cowsay, boxes]
     related_skills: [excalidraw]
 
-    molin_owner: 墨工（设计）
 ---
 
 # ASCII Art Skill

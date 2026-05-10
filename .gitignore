@@ -112,3 +112,12 @@ CLAUDE.md
 # Backup directories
 *_backup_*/
 .gitnexus
+
+# Cron database (contains delivery tokens)
+backup/cron.db
+
+# Restore logs
+restore_*.log
+
+# Hermes internal (never commit live config)
+.molin/

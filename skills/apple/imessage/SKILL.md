@@ -1,5 +1,4 @@
 ---
-
 name: imessage
 description: Send and receive iMessages/SMS via the imsg CLI on macOS.
 version: 1.0.0
@@ -9,7 +8,6 @@ platforms: [macos]
 metadata:
   hermes:
     tags: [iMessage, SMS, messaging, macOS, Apple]
-    molin_owner: 墨维（运维）
 prerequisites:
   commands: [imsg]
 ---

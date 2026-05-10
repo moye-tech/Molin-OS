@@ -1,15 +1,14 @@
 ---
-
 name: github-auth
-description: Set up GitHub authentication for the agent using git (universally available) or the gh CLI. Covers HTTPS tokens, SSH keys, credential helpers, and gh auth — with a detection flow to pick the right method automatically.
+description: "GitHub auth setup: HTTPS tokens, SSH keys, gh CLI login."
 version: 1.1.0
 author: Hermes Agent
 license: MIT
+platforms: [linux, macos, windows]
 metadata:
   hermes:
     tags: [GitHub, Authentication, Git, gh-cli, SSH, Setup]
     related_skills: [github-pr-workflow, github-code-review, github-issues, github-repo-management]
-    molin_owner: 墨维（运维）
 ---
 
 # GitHub Authentication Setup
@@ -83,12 +82,28 @@ After entering credentials once, they're saved and reused for all future operati
 git config --global credential.helper 'cache --timeout=28800'
 ```
 
-**Alternative: set the token directly in the remote URL (per-repo)**
+**Alternative: embed token in clone URL (one-shot, simplest)**
 
 ```bash
-# Embed token in the remote URL (avoids credential prompts entirely)
+# Clone directly with token — no credential helper needed at all
+git clone https://<username>:<token>@github.com/<owner>/<repo>.git
+```
+
+For private repos, the token must have `repo` scope. Test access first:
+
+```bash
+curl -s -o /dev/null -w "%{http_code}" -H "Authorization: token <token>" https://api.github.com/repos/<owner>/<repo>
+# HTTP 200 → token has access. 404 → repo not found or token lacks scope.
+```
+
+**Alternative: set the token in the remote URL (per-repo)**
+
+```bash
+# Rewrite an existing clone's remote to embed the token
 git remote set-url origin https://<username>:<token>@github.com/<owner>/<repo>.git
 ```
+
+This stores the token in `.git/config` per-repo. Drawback: if the token is rotated, every repo's remote URL must be updated.
 
 **Step 3: Configure git identity**
 

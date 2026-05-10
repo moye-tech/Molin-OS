@@ -1,11 +1,8 @@
 ---
-
 name: songwriting-and-ai-music
-description: >
-  Songwriting craft, AI music generation prompts (Suno focus), parody/adaptation
-  techniques, phonetic tricks, and lessons learned. These are tools and ideas,
-  not rules. Break any of them when the art calls for it.
+description: "Songwriting craft and Suno AI music prompts."
 tags: [songwriting, music, suno, parody, lyrics, creative]
+platforms: [linux, macos, windows]
 triggers:
   - writing a song
   - song lyrics
@@ -14,9 +11,6 @@ triggers:
   - parody song
   - adapting a song
   - AI music generation
-metadata:
-  hermes:
-    molin_owner: 墨工（设计）
 ---
 
 # Songwriting & AI Music Generation
