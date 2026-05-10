@@ -291,46 +291,18 @@ class FeishuGateway:
             return {"error": str(e)}
 
     def _format_ceo_response(self, ceo_result: Dict[str, Any]) -> Dict[str, Any]:
-        """格式化CEO响应为飞书消息（使用互动卡片构建器）"""
-        from molib.infra.gateway.feishu_card_builder import FeishuCardBuilder
+        """格式化CEO响应为飞书消息（使用 3 消息回复流水线）"""
+        from molib.infra.gateway.feishu_reply_pipeline import FeishuReplyPipeline
 
-        decision = ceo_result.get("decision", "UNKNOWN")
-        score = ceo_result.get("score", {})
-        composite = score.get("composite", 0)
-        model_used = ceo_result.get("model_used", "unknown")
+        pipeline = FeishuReplyPipeline()
+        user_query = ceo_result.get("intent", {}).get("raw_text", "") or ceo_result.get("task_id", "")
+        messages = pipeline.build(user_query, ceo_result)
 
-        # 决策 → 卡片颜色和标题
-        decision_map = {
-            "GO": ("green", "✅ 批准执行"),
-            "NO_GO": ("red", "❌ 不建议执行"),
-            "NEED_INFO": ("orange", "🔄 需要更多信息"),
-        }
-        color, title = decision_map.get(decision, ("grey", f"决策: {decision}"))
-
-        card = FeishuCardBuilder()
-        card.header(title, template=color)
-        card.field_list([
-            ("综合评分", f"{composite}/10"),
-            ("使用模型", model_used),
-        ])
-
-        if ceo_result.get("strategy"):
-            card.divider()
-            strategies = ceo_result["strategy"][:3]
-            items = "\n".join(f"• {s}" for s in strategies)
-            card.section("🧭 推荐策略", items)
-
-        if ceo_result.get("tasks"):
-            tasks = ceo_result["tasks"][:3]
-            items = "\n".join(f"• {t}" for t in tasks)
-            card.section("📋 建议任务", items)
-
-        card.divider()
-        card.note("墨麟OS · CEO自动化决策 | L1 通知")
-
+        # 返回第一条（主回复）；在实际飞书发送循环中会依次发送全部
         return {
             "msg_type": "interactive",
-            "card": card.build(),
+            "card": messages[1]["card"] if len(messages) > 1 else messages[0]["card"],
+            "_all_messages": messages,  # 上游可遍历发送全部
         }
 
     async def start(self):

@@ -136,6 +136,65 @@ class FeishuCardBuilder:
         })
         return self
 
+    def thinking_card(
+        self,
+        user_query: str,
+        understanding: dict[str, str],
+        agencies: list[str],
+        confidence: float,
+        cost: float = 0,
+        duration_s: float = 0,
+    ) -> "FeishuCardBuilder":
+        """思维链折叠卡片 — CEO 推理过程独立展示。
+        
+        Args:
+            user_query: 用户原始问题
+            understanding: {"L1": "字面需求", "L2": "真实目标", "L3": "隐含约束"}
+            agencies: 调度的子公司列表
+            confidence: 信心度 0-1
+            cost: 成本（元）
+            duration_s: 耗时（秒）
+        """
+        self.header("🧠 CEO 推理过程", template="purple")
+        
+        # 用户问题
+        self._elements.append({
+            "tag": TAG_DIV,
+            "text": {"tag": TAG_PLAIN_TEXT, "content": user_query[:120]},
+        })
+        
+        # 三层分析
+        l1 = understanding.get("L1", "")
+        l2 = understanding.get("L2", "")
+        l3 = understanding.get("L3", "")
+        
+        analysis_lines = []
+        if l1:
+            analysis_lines.append(f"✅ **L1 字面需求:** {l1}")
+        if l2:
+            analysis_lines.append(f"✅ **L2 真实目标:** {l2}")
+        if l3:
+            analysis_lines.append(f"✅ **L3 隐含约束:** {l3}")
+        analysis_lines.append(f"✅ **调度决策:** {' · '.join(agencies)} ({len(agencies)}路{'并发' if len(agencies) >= 3 else ''})")
+        
+        self._elements.append({
+            "tag": TAG_DIV,
+            "text": {"tag": TAG_LARK_MD, "content": "\n".join(analysis_lines)},
+        })
+        
+        # 底部统计
+        stats_parts = []
+        if duration_s > 0:
+            stats_parts.append(f"⏱ {duration_s:.0f}s")
+        if cost > 0:
+            stats_parts.append(f"¥{cost:.3f}")
+        stats_parts.append(f"{len(agencies)}子公司")
+        if confidence > 0:
+            stats_parts.append(f"信心度 {confidence:.0%}")
+        
+        self.note(" · ".join(stats_parts))
+        return self
+
     def markdown(self, text: str) -> "FeishuCardBuilder":
         """添加富文本块（支持 Lark MD 语法）。"""
         self._elements.append({
