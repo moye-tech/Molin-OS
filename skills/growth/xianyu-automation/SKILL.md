@@ -802,9 +802,41 @@ Additional state files:
 - `~/.hermes/xianyu_bot/state.json` — messages_handled, replies_sent counters
 - `~/.hermes/xianyu_bot/activity.log` — timestamped cron run log
 - `~/.hermes/state/xianyu_conversations.json` — per-conversation memory (Section 1)
+## Pitfalls — 已知故障模式
 
-### Pitfalls
+### P0: h5api.m.goofish.com SSL 错误 (2026-05-10+)
 
+**症状:** API 持续返回 `SSL: UNEXPECTED_EOF_WHILE_READING`，Cookie 文件完整（17字段）
+**影响:** 无法获取消息、Token 验证失败、WebSocket 进入「连接→20秒断开→重连」循环
+**可能原因:** 闲鱼服务端 SSL 配置变更 或 国内网络层干扰
+**排查方向:**
+1. 浏览器访问 goofish.com 确认是否可正常打开
+2. 检查是否需更新 Cookie
+3. 尝试切换网络环境或使用代理测试 SSL 握手
+4. 如持续超24h，考虑回退到网页版手动检查消息
+
+### 自动升级规则
+
+| 条件 | 动作 |
+|------|------|
+| API 单次失败 | L0 自动重试，记录日志 |
+| API 连续失败 ≥3 次 | 下次 cron 仍继续尝试 |
+| API 连续失败 ≥10 次/天 | 升级到 L2 — 推送飞书告警卡片 |
+| WebSocket 断连 >30 分钟 | L2 告警 — 可能已错失买家咨询 |
+| 退款信号检出 | L2 — 需人工审批介入 |
+
+## State File Locations
+
+本地状态文件位于 `~/.hermes/xianyu_bot/`:
+- `state.json` — 监听器运行状态 (PID, 连接状态, 消息计数)
+- `activity.log` — cron 巡检日志 (API 状态, 异常详情)
+- `ws.log` — WebSocket 连接日志
+- `cookies.json` — 闲鱼登录 Cookie
+- `config.json` — 监听器配置
+
+## Reference: Production Integration
+
+This skill is derived from `/integrations/xianyu/listener.py` in the Molin AI Intelligent System. In production:
 - Messages are queued via **Redis** (`xianyu:incoming_queue` and `xianyu:processed` pub/sub)
 - The listener runs as an **async coroutine** with `asyncio.sleep(30)`
 - The `XianyuListener` class is a **singleton** accessed via `get_xianyu_listener()`

@@ -175,9 +175,31 @@ def get_relay(prefix, date_str=None):
     return {"fallback": True, "files": outputs[:5]}
 ```
 
+## 初始化（首次使用）
+
+**CRITICAL: relay 目录必须手动创建。** 当前系统（2026-05-11）`~/.molin/relay/` 目录不存在，接力协议仅定义但未部署。
+
+```bash
+# 创建接力目录
+mkdir -p ~/.molin/relay
+
+# 验证
+ls -la ~/.molin/relay/
+```
+
+三个活跃 cron 作业（备份、闲鱼、同步）目前独立运行，未通过 relay 共享数据。初始化 relay 目录后，需要更新 cron 作业配置使其写入接力文件。
+
+### 首次初始化后需要的 cron 更新
+
+1. 墨思情报 cron (08:00) → 写入 `intelligence_morning_YYYY-MM-DD.json`
+2. 墨迹内容 cron (09:00) → 读取墨思 + 写入 `content_flywheel_YYYY-MM-DD.json`
+3. 墨增增长 cron (10:00) → 读取墨迹 + 写入 `growth_flywheel_YYYY-MM-DD.json`
+4. CEO简报 cron (09:00) → 读取墨思 + 墨迹 → 写入 `briefing_YYYY-MM-DD.json`
+
 ## 接力失败处理
 
 如果上游接力数据不存在（文件未找到），cron job 应该：
 1. 记录到 errors: `"upstream_relay_not_found"`
 2. 从其他可用数据源获取替代信息（如技能树、memory）
 3. 继续执行，不要因缺失接力数据而停止
+4. 如果 `~/.molin/relay/` 目录本身不存在，回落读取 `~/.hermes/cron/output/` 中最近相关的文件
