@@ -46,9 +46,19 @@ def scrape_url(url: str, formats: list[str] = None) -> dict:
         from firecrawl import FirecrawlApp
 
         app = FirecrawlApp(api_key=_get_api_key())
-        params = {"formats": formats or ["markdown", "links"]}
-        result = app.scrape_url(url, params=params)
+        result = app.scrape(url, formats=(formats or ["markdown", "links"]))
 
+        # 处理 firecrawl v2 Document 对象
+        if hasattr(result, 'markdown'):
+            return {
+                "url": url,
+                "markdown": result.markdown or "",
+                "title": getattr(result.metadata, 'title', '') if result.metadata else '',
+                "links": result.links or [],
+                "status": "success",
+                "source": "firecrawl",
+            }
+        # 兼容旧版 dict
         data = result.get("data", result) if isinstance(result, dict) else {}
         return {
             "url": url,
@@ -90,7 +100,7 @@ def search_and_scrape(query: str, limit: int = 5, source: str = "web") -> dict:
         app = FirecrawlApp(api_key=_get_api_key())
 
         # 使用 /search 端点 + scrape
-        search_result = app.search(query, params={"limit": limit, "source": source})
+        search_result = app.search(query, limit=limit, sources=[source])
         results = []
 
         items = search_result.get("data", []) if isinstance(search_result, dict) else []

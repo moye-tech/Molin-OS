@@ -48,6 +48,10 @@ async def deep_research(
     try:
         from gpt_researcher import GPTResearcher
 
+        # 从环境变量获取 API key
+        api_key = os.environ.get("OPENAI_API_KEY") or os.environ.get("DEEPSEEK_API_KEY", "")
+        llm_kwargs = {"timeout": 120, "temperature": 0.2}
+
         researcher = GPTResearcher(
             query=query,
             report_type=report_type,
@@ -56,6 +60,11 @@ async def deep_research(
             language=language,
             max_subtopics=3 if depth == "basic" else 5 if depth == "medium" else 8,
         )
+        # 注入 API key
+        if api_key:
+            researcher.set_verbose(False)
+            if hasattr(researcher, 'llm_kwargs'):
+                researcher.llm_kwargs = {**getattr(researcher, 'llm_kwargs', {}), "api_key": api_key}
 
         report = await asyncio.wait_for(
             researcher.conduct_research(), timeout=120
