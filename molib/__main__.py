@@ -88,6 +88,10 @@ def cmd_help(args: list[str]) -> dict:
         "intel trending": "热门趋势（墨研竞情）",
         "intel predict --topic T --context C": "群体智能预测（基于MiroFish⭐59K）",
         "intel save --topic T --summary S": "保存情报（墨研竞情）",
+        "intel firecrawl scrape --url URL": "Firecrawl单页抓取→Markdown（墨研竞情）",
+        "intel firecrawl search --query Q": "Firecrawl网络搜索（墨研竞情）",
+        "intel firecrawl crawl --url URL": "Firecrawl全站爬取（墨研竞情）",
+        "intel firecrawl research --topic T": "Firecrawl深度研究（墨研竞情）",
         "scrap fetch --url URL": "Scrapling单页抓取（curl_cffi浏览器指纹模拟）",
         "scrap scrape --html H --css S": "Scrapling自适应解析（CSS/XPath提取）",
         "scrap crawl --start-urls U --max-pages N": "Scrapling并发爬虫（Spider框架）",
@@ -198,6 +202,24 @@ async def cmd_intel(args: list[str]) -> dict:
             else:
                 i += 1
         return {"saved": True, "topic": topic, "summary": summary}
+
+    if subcmd == "firecrawl":
+        # Firecrawl 网页采集 — scrape/crawl/search/batch/research/map/status
+        from molib.intelligence.firecrawl_client import (
+            scrape, crawl, search, batch_scrape, deep_research,
+            map_site, crawl_status, _cli
+        )
+        # 将剩余参数传给 firecrawl_client 的 CLI
+        import sys as _sys
+        _orig = _sys.argv[:]
+        _sys.argv = ["molib intel firecrawl"] + rest
+        try:
+            _cli()
+            return {"firecrawl": "done"}
+        except SystemExit:
+            return {"firecrawl": "done"}
+        finally:
+            _sys.argv = _orig
 
     return {"error": f"未知子命令: {subcmd}"}
 
