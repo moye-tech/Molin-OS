@@ -195,6 +195,87 @@ print(f'✅ <Module> OK: {result}')
 " 2>&1 | grep -v 'DEBUG\|__pycache'
 ```
 
+## Python 3.11 Pitfall: TypeVar Compatibility + `from __future__` Placement
+
+**FOUND AND FIXED 2026-05-10 (twice — MolinDB session + v2.0 migration):**
+
+### Root cause: `TypeVar | dict` is invalid in Python 3.11
+
+Python 3.11 does not support the `X | Y` union syntax when `X` is a `TypeVar`. The fix is `from __future__ import annotations`, which makes ALL annotations lazy strings — but it must be placed correctly.
+
+**Symptom:** `TypeError: unsupported operand type(s) for |: 'TypeVar' and 'type'` — entire worker subsystem blocked.
+
+**Affected file:** `molib/agencies/workers/base.py` line 13: `payload: T | dict = field(default_factory=dict)`
+
+### Placement: `from __future__` MUST be first statement
+
+**Fix:**
+```python
+# ❌ Wrong — SyntaxError
+"""docstring"""
+from abc import ABC
+from __future__ import annotations  # SyntaxError: must be at beginning!
+
+# ❌ Wrong — ImportError (3.11 can't parse T | dict)
+from abc import ABC
+from dataclasses import dataclass
+T = TypeVar("T")
+class Task(Generic[T]):
+    payload: T | dict  # TypeError!
+
+# ✅ Correct — works
+from __future__ import annotations  # ← MUST be line 1 or 2 (after docstring)
+"""docstring"""
+from abc import ABC
+from dataclasses import dataclass
+```
+
+**Verification:**
+```bash
+# Line 2 must be __future__
+head -3 molib/agencies/workers/base.py
+# Expected: line 1 = from __future__ import annotations, line 2 = docstring
+```
+
+## Mac M2 Network Constraints
+
+**CRITICAL — GitHub downloads >10MB reliably fail** on this machine. Symptoms: 9-byte truncated files, timeout, "truncated gzip input". This affects: git clone, curl -L release downloads, brew install (from source).
+
+### Proven Workaround: Pure Python Fallback
+
+When a popular tool's binary download fails due to network, create a pure-Python stdlib equivalent:
+
+| Original | Stars | Problem | Molib Fallback | Status |
+|----------|-------|---------|----------------|--------|
+| PocketBase | 54K | Go binary download truncated | `molib_db.py` — SQLite CRUD + auth | ✅ |
+| listmonk | 15K | brew install timeout | `molib_mail.py` — SMTP + list management | ✅ |
+| MedusaJS | 27K | Node + PostgreSQL too heavy | `molib_order.py` — order lifecycle + invoice | ✅ |
+| Umami | 23K | git clone timeout | `molib_analytics.py` — pageview tracking + stats | ✅ |
+| Kill Bill | 4K | Java runtime too heavy | `molib_order.py` (invoice engine) | ✅ |
+| NocoBase | 12K | Node + DB too heavy | `molib_db.py` (collection CRUD + auth) | ✅ |
+
+### What DOES download reliably
+
+- **PyTorch CPU wheels** from `download.pytorch.org` — works with 120s timeout. Install recipe:
+  ```bash
+  pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+  ```
+- **npm packages** via npx — works for small packages (n8n worked at 2.19.5)
+- **Small GitHub files** (<1MB) — curl works
+- **PyPI packages** — pip install usually works, but large ones (~500MB+) may fail
+
+### Network Decision Flow
+
+```
+New external tool needed?
+├── Can we download the binary? (<1MB, not from GitHub releases)
+│   └── YES → download + wrap with molib module
+├── Can we `pip install` it?
+│   └── YES → install + wrap
+├── Can we `npm/npx` it?
+│   └── YES → use + wrap
+└── NO → Create pure Python stdlib equivalent
+    └── This is the MolibDB/MolibMail/MolibOrder pattern
 ## Mac M2 Deck — What Runs Locally
 
 | Capability | Engine | Status | Cost |
@@ -202,9 +283,18 @@ print(f'✅ <Module> OK: {result}')
 | TTS (Chinese) | macOS `say` (Tingting/Meijia/Sinji) | ✅ Built-in | Free |
 | TTS (50+ voices) | macOS `say -v '?'` | ✅ Built-in | Free |
 | Digital human (static) | ffmpeg + say → image+audio→video | ✅ Tier 1 | Free |
-| Digital human (lip-sync) | SadTalker + PyTorch MPS | 🔜 Tier 2 | Free (needs `pip install torch`) |
+| Digital human (lip-sync) | SadTalker + PyTorch MPS | 🔜 Tier 2 | Free (`pip install torch` ✅ done 2026-05-10) |
 | Video compositing | ffmpeg 8.1.1 | ✅ | Free |
-| ML inference (small) | PyTorch MPS (8GB unified) | ⚠️ OK for <2GB models | Free |
+| AI image generation | ComfyUI + PyTorch MPS 2.11.0 | ⚠️ Tier 2 MPS ✅, Tier 3 (ComfyUI repo clone) blocked by network — shallow clone also fails (Connection reset by peer) | |
+| ML inference (small) | PyTorch MPS 2.11.0 (8GB unified) | ✅ Installed 2026-05-10 via `pip install torch --index-url https://download.pytorch.org/whl/cpu` | Free |
+| Workflow automation | n8n 2.19.5 (npx) | ✅ Available on-demand (`npx n8n`) | 200MB RAM (temporary) |
+| Email marketing | MolibMail (SMTP stdlib) | ✅ No external binary needed | Free |
+| Order management | MolibOrder (SQLite) | ✅ No external binary needed | Free |
+| Analytics | MolibAnalytics (SQLite) | ✅ No external binary needed | Free |
+| Unified backend | MolibDB (SQLite: collection/record/auth) | ✅ No external binary needed | Free |
+| Revenue pipeline | MolibDB + MolibMail + MolibOrder + MolibAnalytics | ✅ 4 SQLite files, <30MB total | Free |
+| Speech recognition | MolibSTT (ffprobe metadata + whisper optional) | ✅ Tier 1+2, Tier 3 needs `pip install openai-whisper` | Free |
+| CRM pipeline | MolibDB-backed CRM (6-stage pipeline) | ✅ No external binary needed | Free |
 
 ## Mac M2 Deployment Constraints
 
@@ -257,6 +347,11 @@ When the user provides design documents (HTML/Markdown), process them systematic
 4. **Prioritize by impact** — Fix the UX/pipeline issues first, backend bugs only if they actually affect us
 5. **Declare what's skipped AND WHY** — Every skip must have a technical rationale
 
+## Reference Files
+
+- `references/worker-activation-pattern.md` — From SKILL.md-only to working code+CLI (2026-05-10)
+- `references/worker-v2-migration-pattern.md` — Batch upgrade to SmartSubsidiaryWorker + collaboration injection (2026-05-10)
+
 ## Module Catalog
 
 | Module | Location | Lines | CLI | Dependencies |
@@ -271,6 +366,17 @@ When the user provides design documents (HTML/Markdown), process them systematic
 | `distiller.py` | `molib/infra/memory/` | 250 | `molib memory distill/stats` | sqlite3 |
 | `feishu_noise_filter.py` | `molib/infra/` | 200 | automatic | re |
 | `swarm_bridge.py` | `molib/agencies/` | 568 | `molib swarm list/run/visualize` | stdlib |
+| `molib_db.py` ⭐ | `molib/infra/` | 370 | `molib db collection/record/auth/stats` | sqlite3 (PocketBase 54K★ 替代) |
+| `molib_mail.py` ⭐ | `molib/infra/` | 350 | `molib mail list/subscriber/campaign/stats` | smtplib (listmonk 15K★ 替代) |
+| `molib_order.py` ⭐ | `molib/infra/` | 380 | `molib order create/list/invoice/stats` | sqlite3 (MedusaJS 27K★ + KillBill 4K★ 替代) |
+| `molib_analytics.py` ⭐ | `molib/infra/` | 200 | `molib analytics track/stats/top-pages` | sqlite3 (Umami 23K★ 替代) |
+| `molib_comfy.py` ⭐ | `molib/infra/` | 180 | `molib comfy check/generate` | PyTorch MPS (ComfyUI 60K★ 桥) |
+| `molib_flow.py` ⭐ | `molib/infra/` | 80 | `molib flow check/start/compare` | npx n8n (55K★ 桥) |
+| `molib_stt.py` ⭐ | `molib/infra/` | 130 | `molib stt check/transcribe` | ffmpeg (Whisper 替代) |
+| `designer_worker.py` ⭐ | `molib/agencies/workers/` | 100 | — | PyTorch MPS (墨图设计升级) |
+| `voice_actor_worker.py` ⭐ | `molib/agencies/workers/` | 115 | — | macOS say + ffmpeg (墨声配音升级) |
+| `data_analyst_worker.py` ⭐ | `molib/agencies/workers/` | 100 | — | MolibAnalytics + CocoIndex (墨测数据升级) |
+| `crm_worker.py` ⭐ | `molib/agencies/workers/` | 130 | — | MolibDB (墨域CRM升级, twenty CRM 20K★ 替代) |
 
 ## Skip List (vetted, but user may override)
 

@@ -255,6 +255,21 @@ json_output = card.build()  # 飞书 Card JSON API 格式
 
 6 种预设模板：`ceo_brief()` / `system_alert()` / `content_preview()` / `finance_report()` / `intel_summary()` / `make_text_card()`
 
+**思维链卡片**（v2.2 新增 — CEO 推理过程独立展示）：
+
+```python
+card = FeishuCardBuilder()
+card.thinking_card(
+    user_query="帮我看看闲鱼有哪些可以接的单子",
+    understanding={"L1": "闲鱼接单", "L2": "快速变现", "L3": "平台合规"},
+    agencies=["research", "shop", "ip", "data", "legal"],
+    confidence=0.94,
+    duration_s=87,
+)
+```
+
+思维链卡片使用紫色 `template="purple"` header，底部 note 显示 ⏱耗时 · ¥成本 · 子公司数 · 信心度%。
+
 **ASCII 分隔线（`━━━━`）为旧方案，新代码优先使用 CardBuilder。**
 
 ### `molib.infra.feishu_noise_filter` — UX 噪声过滤器

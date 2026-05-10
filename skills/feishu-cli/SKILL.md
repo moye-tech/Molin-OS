@@ -330,7 +330,16 @@ ssl.SSLEOFError: [SSL: UNEXPECTED_EOF_WHILE_READING]
 - 验证：`feishu-cli msg send <chat_id> --msg-type text --content "test"`
 - 解决：检查 `~/.hermes/.env` 中的 `FEISHU_APP_ID` 和 `FEISHU_APP_SECRET` 是否有效
 
-**模式 4 消息已收到但回复被抑制**
+**模式 5 回调服务不在线（系统警告）**
+- 表现：飞书聊天窗口持续出现"回调服务不在线"系统提示
+- 原因：Hermes 网关只启动 WebSocket 长连接，不启动 HTTP 回调服务器。飞书平台有独立的 HTTP 事件回调 URL 健康检查机制，与 WebSocket 是分开的两条通道。`_connect_websocket()` 方法不调用 `_connect_webhook()`，两个连接模式在原始代码中互斥。
+- 影响：不影响消息收发（WebSocket 正常），但飞书后台持续报健康检查失败
+- 修复：在 `gateway/platforms/feishu.py` 的 `_connect_websocket()` 方法中，WebSocket 连接后追加 aiohttp HTTP 回调服务器（仅处理 `url_verification` challenge，实际事件仍走 WebSocket）。回调地址默认 `127.0.0.1:8765/feishu/webhook`。
+- 验证：`curl -X POST http://localhost:8765/feishu/webhook -d '{"type":"url_verification","challenge":"ping"}'` 应返回 `{"challenge":"ping"}`
+- ⚠️ 本地回调修好后仍需隧道穿透：飞书服务器无法访问 `127.0.0.1`，需要 ngrok/cloudflared 等隧道将 `:8765` 暴露为公网 URL，然后去飞书开发者后台更新事件回调地址
+- 详见：`references/feishu-callback-fix.md`
+
+**模式 6 消息已收到但回复被抑制**
 - 表现：日志显示 `Suppressing normal final send`——这是正常的，表示同一会话已有回复正在处理
 - 日志行示例：`Suppressing normal final send for session ... final delivery already confirmed`
 

@@ -1,17 +1,23 @@
-"""墨学教育 Worker — 课程设计 + 多Agent互动课堂 (LLM驱动)"""
+"""墨学教育 Worker — v2.1 开源武装升级 (STORM ⭐22k)
+
+升级内容:
+  - storm_outline: 用STORM生成深度调研后自动设计课程大纲
+  - multi_agent_classroom: 多Agent互动课堂编排
+  - debate: 辩论式教学场景
+"""
 from .base import SmartSubsidiaryWorker as _Base, Task, WorkerResult
 
 
 class Education(_Base):
     worker_id = "education"
     worker_name = "墨学教育"
-    description = "课程设计与知识付费 | 多Agent互动课堂"
-    oneliner = "课程设计知识付费课堂"
+    description = "课程设计与知识付费 (v2.1: STORM深度调研+课程大纲自动生成)"
+    oneliner = "STORM深度调研驱动课程设计·互动课堂·辩论教学"
 
     @staticmethod
     def get_capabilities() -> list[str]:
         return [
-            "课程大纲与学习路径设计",
+            "STORM深度调研驱动课程大纲 (⭐22k)",
             "多Agent互动课堂编排",
             "辩论式教学场景搭建",
             "知识付费定价策略建议",
@@ -22,129 +28,25 @@ class Education(_Base):
         return {
             "name": "墨学教育",
             "vp": "运营",
-            "description": "课程设计与知识付费 | 多Agent互动课堂",
+            "description": "课程设计 (v2.1: STORM调研+大纲自动生成)",
         }
 
     async def execute(self, task: Task, context: dict | None = None) -> WorkerResult:
         try:
             action = task.payload.get("action", "course_design")
 
-            if action == "multi_agent_classroom":
-                # LLM驱动：生成多Agent课堂编排方案
-                prompt = f"""你是一位教育技术架构师。根据以下需求设计多Agent互动课堂编排方案：
+            # ── v2.1: STORM深度调研驱动课程大纲 ──
+            if action in ("storm_outline", "deep_course"):
+                output = await self._storm_course_design(task.payload)
 
-主题：{task.payload.get("topic", "未指定")}
-最大轮次：{task.payload.get("max_turns", 10)}
-教学风格：{task.payload.get("style", "互动式")}
-
-请以JSON格式返回：
-- classroom_type: 课堂类型（interactive/debate/guided）
-- agents: 每个Agent的名称和角色定义列表
-- topic: 主题
-- max_turns: 最大轮次
-- status: "orchestrator_initialized"
-"""
-                system = "你是一位专业的AI教育架构师，擅长多Agent互动课堂编排。返回严格JSON。"
-                llm_output = await self.llm_chat_json(prompt, system=system)
-
-                # fallback
-                if not llm_output:
-                    llm_output = {
-                        "action": "classroom_ready",
-                        "classroom_type": "interactive",
-                        "agents_available": ["AI教师", "AI助教", "思考者", "好奇宝"],
-                        "topic": task.payload.get("topic", ""),
-                        "max_turns": task.payload.get("max_turns", 10),
-                        "orchestrator_ready": True,
-                        "status": "orchestrator_initialized",
-                    }
-                else:
-                    llm_output.setdefault("action", "classroom_ready")
-                    llm_output.setdefault("orchestrator_ready", True)
-
-                output = llm_output
+            elif action == "multi_agent_classroom":
+                output = await self._classroom(task.payload)
 
             elif action == "debate":
-                # LLM驱动：生成辩论式教学场景
-                prompt = f"""你是一位教育辩论设计师。根据以下需求设计辩论式教学场景：
-
-主题：{task.payload.get("topic", "未指定")}
-最大轮次：{task.payload.get("max_turns", 12)}
-难度：{task.payload.get("difficulty", "中等")}
-
-请以JSON格式返回：
-- topic: 辩论主题
-- participants: 参与者角色列表（如主持人、正方辩手、反方辩手、评审）
-- max_rounds: 辩论轮数（max_turns / 4）
-- debate_rules: 辩论规则简要列表
-- status: "debate_initialized"
-"""
-                system = "你是一位专业的辩论教学设计师。返回严格JSON。"
-                llm_output = await self.llm_chat_json(prompt, system=system)
-
-                if not llm_output:
-                    llm_output = {
-                        "action": "debate_ready",
-                        "topic": task.payload.get("topic", ""),
-                        "participants": ["主持人", "正方辩手", "反方辩手", "评审"],
-                        "max_rounds": task.payload.get("max_turns", 12) // 4,
-                        "status": "debate_initialized",
-                    }
-                else:
-                    llm_output.setdefault("action", "debate_ready")
-
-                output = llm_output
+                output = await self._debate(task.payload)
 
             else:
-                # 默认课程设计：LLM生成课程大纲
-                course_name = task.payload.get("course_name", "未命名课程")
-                weeks = task.payload.get("duration_weeks", 4)
-                price = task.payload.get("price", 299)
-
-                prompt = f"""你是一位课程设计师。根据以下信息设计课程大纲：
-
-课程名称：{course_name}
-持续周数：{weeks}周
-目标受众：{task.payload.get("target_audience", "通用")}
-定价：{price}元
-
-请以JSON格式返回：
-- course_name: 课程名称
-- duration: 持续周数字符串（如"4周"）
-- outline: 每周的课程大纲列表，每个元素包含 week (int), title (str), topics (list[str])
-- pricing: 定价方案，包含 original (int), early_bird (int, original的7折)
-- status: "course_outline_ready"
-"""
-                system = "你是一位专业的课程设计师，擅长结构化课程大纲设计。返回严格JSON。"
-                llm_output = await self.llm_chat_json(prompt, system=system)
-
-                if not llm_output:
-                    llm_output = {
-                        "course_name": course_name,
-                        "duration": f"{weeks}周",
-                        "outline": [
-                            {"week": i + 1, "title": f"第{i + 1}周：{course_name}"}
-                            for i in range(weeks)
-                        ],
-                        "pricing": {
-                            "original": price,
-                            "early_bird": int(price * 0.7),
-                        },
-                        "status": "course_outline_ready",
-                    }
-                else:
-                    # 确保必要字段存在
-                    llm_output.setdefault("course_name", course_name)
-                    llm_output.setdefault("duration", f"{weeks}周")
-                    llm_output.setdefault("pricing", {"original": price, "early_bird": int(price * 0.7)})
-                    if "outline" not in llm_output or not llm_output["outline"]:
-                        llm_output["outline"] = [
-                            {"week": i + 1, "title": f"第{i + 1}周：{course_name}"}
-                            for i in range(weeks)
-                        ]
-                    llm_output.setdefault("status", "course_outline_ready")
-
-                output = llm_output
+                output = await self._course_design(task.payload)
 
             return WorkerResult(
                 task_id=task.task_id,
@@ -160,3 +62,79 @@ class Education(_Base):
                 output={},
                 error=str(e),
             )
+
+    async def _storm_course_design(self, payload: dict) -> dict:
+        """STORM深度调研驱动课程大纲设计 (⭐22k)"""
+        course_name = payload.get("course_name", "未命名课程")
+        weeks = payload.get("duration_weeks", 4)
+        price = payload.get("price", 299)
+
+        storm_result = None
+        try:
+            from molib.infra.external.storm_research import storm_report
+            storm_result = await storm_report(f"{course_name} 课程设计：行业现状、学员痛点、竞品课程分析、差异化定位")
+        except Exception:
+            pass
+
+        # 基于STORM结果生成课程大纲 (LLM)
+        storm_context = ""
+        if storm_result and storm_result.get("status") == "success":
+            storm_context = storm_result.get("report", "")[:3000]
+
+        system = "你是课程设计师。请基于深度调研结果设计课程大纲。返回严格JSON。"
+        prompt = (
+            f"课程: {course_name}\n周数: {weeks}周\n受众: {payload.get('target_audience', '通用')}\n定价: {price}元\n"
+        )
+        if storm_context:
+            prompt += f"\n【STORM深度调研】\n{storm_context}\n"
+
+        prompt += (
+            "输出JSON: course_name, duration('N周'), outline[{week, title, topics[]}], "
+            "pricing{original, early_bird}, target_audience, unique_selling_points[], "
+            "competitor_gap(与竞品差异), storm_research_used: true/false, status='course_outline_ready'"
+        )
+
+        result = await self.llm_chat_json(prompt, system=system)
+        if result:
+            result.setdefault("course_name", course_name)
+            result.setdefault("duration", f"{weeks}周")
+            result.setdefault("storm_research_used", bool(storm_context))
+            return {**result, "source": "llm+storm"}
+        return self._fallback_outline(course_name, weeks, price)
+
+    def _fallback_outline(self, course_name: str, weeks: int, price: int) -> dict:
+        return {
+            "course_name": course_name,
+            "duration": f"{weeks}周",
+            "outline": [{"week": i+1, "title": f"第{i+1}周：{course_name}", "topics": ["核心概念", "案例实战"]} for i in range(weeks)],
+            "pricing": {"original": price, "early_bird": int(price * 0.7)},
+            "storm_research_used": False,
+            "status": "course_outline_ready",
+            "source": "mock",
+        }
+
+    async def _classroom(self, payload: dict) -> dict:
+        prompt = f"设计多Agent课堂：主题={payload.get('topic')}, 轮次={payload.get('max_turns',10)}, 风格={payload.get('style','互动式')}\n输出JSON: classroom_type, agents[], topic, max_turns, status='orchestrator_initialized'"
+        result = await self.llm_chat_json(prompt, system="你是教育技术架构师。返回严格JSON。")
+        if result:
+            result.setdefault("status", "orchestrator_initialized")
+            return result
+        return {"classroom_type": "interactive", "agents_available": ["AI教师", "AI助教", "思考者"], "topic": payload.get("topic", ""), "status": "orchestrator_initialized", "source": "mock"}
+
+    async def _debate(self, payload: dict) -> dict:
+        prompt = f"设计辩论教学：主题={payload.get('topic')}, 轮次={payload.get('max_turns',12)}, 难度={payload.get('difficulty','中等')}\n输出JSON: topic, participants[], max_rounds, debate_rules[], status='debate_initialized'"
+        result = await self.llm_chat_json(prompt, system="你是辩论教学设计师。返回严格JSON。")
+        if result:
+            return result
+        return {"topic": payload.get("topic", ""), "participants": ["主持人", "正方", "反方", "评审"], "max_rounds": 3, "status": "debate_initialized", "source": "mock"}
+
+    async def _course_design(self, payload: dict) -> dict:
+        course_name = payload.get("course_name", "未命名课程")
+        weeks = payload.get("duration_weeks", 4)
+        price = payload.get("price", 299)
+        prompt = f"设计课程大纲：名称={course_name}, 周数={weeks}, 受众={payload.get('target_audience','通用')}, 定价={price}\n输出JSON: course_name, duration, outline[{week,title,topics}], pricing{{original,early_bird}}, status='course_outline_ready'"
+        result = await self.llm_chat_json(prompt, system="你是课程设计师。返回严格JSON。")
+        if result:
+            result.setdefault("course_name", course_name)
+            return {**result, "source": "llm"}
+        return self._fallback_outline(course_name, weeks, price)
