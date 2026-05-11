@@ -155,6 +155,7 @@ def cmd_help(args: list[str]) -> dict:
         "query --sources": "列出 MQL 数据源",
         "manifest validate": "验证所有技能的 Manifest 标准",
         "manifest fix": "自动修复缺失的 Manifest 字段",
+        "validate <message>": "验证飞书消息格式（pre-send 5 类检测）",
         "bitable schema [table]": "查看飞书多维表格结构",
         "bitable write <table> --json '{...}'": "写入飞书多维表格记录",
         "bitable list <table> [--filter expr]": "查询飞书多维表格记录",
@@ -1183,10 +1184,40 @@ async def cmd_design_web(subcmd: str, args: list[str]) -> dict:
 
 async def run(command: str, args: list[str]) -> dict:
     """分发命令到具体模块"""
+
+
+def cmd_validate(args: list[str]) -> dict:
+    """验证飞书消息格式（pre-send 自检）"""
+    from molib.infra.gateway.feishu_pre_send import validate, PreSendResult
+
+    if not args:
+        return {"error": "用法: python -m molib validate <message>", "hint": "提供待验证的消息文本"}
+
+    message = " ".join(args)
+    result = validate(message)
+
+    return {
+        "status": "pass" if result.clean else "fail",
+        "suggested_action": result.suggested_action,
+        "original_length": len(message),
+        "cleaned_length": len(result.cleaned),
+        "needs_thinking_strip": result.needs_thinking_strip,
+        "needs_doc_import": result.needs_doc_import,
+        "needs_card_router": result.needs_card_router,
+        "violations": [
+            {"code": v.code, "severity": v.severity.value, "message": v.message, "suggestion": v.suggestion}
+            for v in result.violations
+        ],
+    }
+
+
+async def run(command: str, args: list[str]) -> dict:
+    """分发命令到具体模块"""
     # 同步命令映射（直接返回 dict）
     sync_commands = {
         "health": cmd_health,
         "help": cmd_help,
+        "validate": cmd_validate,
         "sync": cmd_sync,
         "index": cmd_index,
         "query": cmd_query,

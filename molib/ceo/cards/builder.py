@@ -106,6 +106,37 @@ class CardBuilder:
         self.elements.append(_note(text))
         return self
 
+    def add_table(self, data: list[dict], max_rows: int = 20) -> "CardBuilder":
+        """
+        添加数据表格（缺口② — 表格→CardBuilder 转换）。
+
+        将 [{\"col1\": \"val1\", \"col2\": \"val2\"}, ...] 渲染为
+        飞书原生友好的结构化表格。
+
+        Args:
+            data: 表格数据，每行为一个 dict
+            max_rows: 最大行数，超出截断并标注
+        """
+        if not data:
+            return self
+
+        # 提取表头（从第一行 dict 的 keys）
+        headers = list(data[0].keys())
+        header_text = " | ".join(f"**{h}**" for h in headers)
+        self.elements.append(_div(header_text))
+        self.elements.append(_hr())
+
+        # 渲染数据行
+        for i, row in enumerate(data[:max_rows]):
+            cells = [str(row.get(h, "")) for h in headers]
+            row_text = " | ".join(cells)
+            self.elements.append(_div(row_text))
+
+        if len(data) > max_rows:
+            self.elements.append(_div(f"… 等共 {len(data)} 行（已截断显示前 {max_rows} 行）"))
+
+        return self
+
     def build(self) -> dict:
         return {"config": {"wide_screen_mode": True}, "header": _header(self.title, self.color), "elements": self.elements}
 

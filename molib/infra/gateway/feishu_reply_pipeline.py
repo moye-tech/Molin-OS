@@ -18,6 +18,11 @@ from __future__ import annotations
 from typing import Any
 
 from molib.infra.gateway.feishu_card_builder import FeishuCardBuilder
+from molib.infra.gateway.feishu_pre_send_validator import FeishuPreSendValidator
+
+
+# 全局预发送验证器（单例）
+_pre_send_validator = FeishuPreSendValidator()
 
 
 class FeishuReplyPipeline:
@@ -57,7 +62,24 @@ class FeishuReplyPipeline:
         detail = self._build_detail_cards(ceo_result)
         messages.extend(detail)
 
+        # ── 缺口③+④+⑤: pre-send 验证（每条消息） ──
+        messages = self._validate_all(messages)
+
         return messages
+
+    def _validate_all(
+        self, messages: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
+        """对所有消息执行 pre-send 验证（thinking截断+markdown检测+长度检测）"""
+        validated = []
+        for msg in messages:
+            if isinstance(msg, dict) and "content" in msg:
+                text = msg.get("content", "")
+                if isinstance(text, str) and text:
+                    result = _pre_send_validator.validate(text, auto_fix=True)
+                    msg["content"] = result["message"]
+            validated.append(msg)
+        return validated
 
     # ── 消息① ──────────────────────────────────────────────
 

@@ -15,6 +15,28 @@ logger = logging.getLogger("molin.ceo.cards.sender")
 
 API_BASE = "https://open.feishu.cn/open-apis"
 
+# ── Cron 双重投递抑制（sentinel 标记文件机制）────────────────────────────
+# FeishuCardSender 直接调用飞书 Open API 发送卡片，与 Hermes cron 调度器的
+# 文本投递管道完全独立。为避免 Agent 发完卡片后 cron 又投递一份 final response
+# 纯文本（造成群内一张卡片+一条文本的重复输出），send_card() 成功后在
+# ~/.hermes/cron/card_sent/ 写入一个标记文件。cron 调度器在投递文本前检查此
+# 标记，如存在则跳过文本投递。
+_CARD_SENT_DIR = Path.home() / ".hermes" / "cron" / "card_sent"
+
+
+def _write_card_sentinel(chat_id: str) -> None:
+    """发送卡片成功后写入 sentinel 标记文件，通知 cron 调度器跳过文本投递。"""
+    # 仅 cron 会话需要（交互会话没有双重投递问题）
+    if os.environ.get("HERMES_CRON_SESSION") != "1":
+        return
+    try:
+        _CARD_SENT_DIR.mkdir(parents=True, exist_ok=True)
+        sentinel = _CARD_SENT_DIR / chat_id
+        sentinel.write_text(str(time.time()))
+        logger.debug("sentinel 写入: %s", sentinel)
+    except OSError:
+        pass  # 静默降级：标记文件写入失败不影响卡片发送
+
 
 def card_payload(card_dict: dict) -> dict:
     """将卡片嵌入飞书 interactive 消息格式"""
@@ -80,6 +102,9 @@ class FeishuCardSender:
         result = r.json()
         if result.get("code") != 0:
             logger.error("飞书卡片发送失败: %s", result)
+        else:
+            # 写入 sentinel 标记文件，防止 cron 调度器重复投递纯文本
+            _write_card_sentinel(chat_id)
         return result
 
     def send_text(self, chat_id: str, text: str, receive_id_type: str = "chat_id") -> dict:

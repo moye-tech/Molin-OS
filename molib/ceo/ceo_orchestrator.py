@@ -108,7 +108,41 @@ class CEOOrchestrator:
         logger.info("[CEO] ======== 开始处理任务 %s ========", task_id)
         logger.info("[CEO] 用户输入: %s", user_input[:200])
 
-        # ── 步骤1: 意图分析 ──────────────────────────────────────
+        # ── 步骤0: DARE 推理（v3.0 — 替代旧关键词匹配） ──────────
+        from molib.ceo.dare_reasoner import DAREReasoningLayer
+
+        dare = await DAREReasoningLayer(self.llm_client).analyze(
+            user_input, context
+        )
+
+        if dare.is_conversational:
+            logger.info("[CEO] DARE判断为闲聊，跳过Worker调度")
+            return {
+                "task_id": task_id,
+                "intent": {"intent_type": "conversational"},
+                "risk": {"risk_score": 0},
+                "execution": {"mode": "direct_chat"},
+                "dare": dare.to_dict(),
+                "status": "conversational",
+                "duration": time.time() - start_time,
+            }
+
+        logger.info(
+            "[CEO] DARE推理: gaps=%s workers=%s research_first=%s",
+            dare.gaps, [w["worker"] for w in dare.worker_plan],
+            dare.needs_research_first,
+        )
+
+        # 将DARE结果注入context供后续使用
+        context["dare"] = dare.to_dict()
+
+        # ── 步骤0.5: DARE说需要先做研究 → 强制前置墨研竞情 ──────────
+        if dare.needs_research_first:
+            logger.info("[CEO] DARE要求前置研究，调用墨研竞情")
+            # 传递研究需求给context，由后续流程处理
+            context["dare_research_required"] = True
+
+        # ── 步骤1: 意图分析（原有IntentRouter，保留但增加DARE引导） ──
         intent: IntentResult = await self.intent_router.analyze(user_input)
         logger.info(
             "[CEO] 意图分析: type=%s complexity=%.1f vps=%s risk=%s",
