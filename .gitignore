@@ -33,7 +33,7 @@ build/
 
 # Runtime output — not committed
 output/
-relay/*.md
+relay/
 
 # Virtual Environment
 venv/

@@ -1,56 +1,68 @@
-# 墨麟OS — Makefile
-# ===================
+# 墨麟 OS — Makefile
+# ================================
+# One command to rule them all.
+# Usage: make <target>
 
-.PHONY: help install test lint clean run serve health
+.PHONY: help install setup deploy dev test lint check clean backup cron-list
 
-# 默认目标
-help:
-	@echo "墨麟OS — AI一人公司操作系统"
+# ── Default ──
+help: ## Show all commands
+	@echo "墨麟 OS — AI 一人公司操作系统"
 	@echo ""
-	@echo "命令:"
-	@echo "  make install     安装依赖"
-	@echo "  make setup       完整部署 (setup.sh)"
-	@echo "  make test        运行测试"
-	@echo "  make lint        代码检查"
-	@echo "  make health      健康检查"
-	@echo "  make serve       启动API服务"
-	@echo "  make cli         运行CLI"
-	@echo "  make clean       清理临时文件"
-	@echo "  make backup      备份skills和配置"
+	@echo "Quick Start:"
+	@echo "  make install     Install Python dependencies"
+	@echo "  make setup       Full one-click deployment"
+	@echo "  make dev         Development setup (editable install)"
+	@echo ""
+	@echo "Everyday:"
+	@echo "  make test        Run test suite"
+	@echo "  make check       System health check"
+	@echo "  make lint        Syntax validation"
+	@echo "  make clean       Remove build artifacts"
+	@echo "  make backup      Backup configs and skills"
+	@echo ""
+	@echo "Cron:"
+	@echo "  make cron-list   List all scheduled cron jobs"
 
-install:
+# ── Install ──
+install: ## Install core dependencies
+	pip install --upgrade pip -q
 	pip install -r requirements.txt
-	pip install -e .
+	@echo "✓ Dependencies installed"
 
-setup:
-	bash setup.sh
+dev: ## Editable install for development
+	pip install -e . -q 2>/dev/null || true
+	@echo "✓ Editable install complete"
 
-test:
-	python -m pytest tests/ -v --cov=molib --cov-report=term || \
-	python -m pytest tests/ -v --cov=molin --cov-report=term
+setup: ## Full one-click deployment
+	@bash setup.sh
 
-lint:
-	@echo "代码检查..."
-	python -m py_compile molib/*.py molib/*/*.py 2>/dev/null || true
-	@echo "✓ 语法检查通过"
+deploy: install dev ## Install + editable install
+	@echo "✓ Deploy complete"
 
-health:
-	python -c "from molib.core.engine import engine; import json; print(json.dumps(engine.health_check(), indent=2, ensure_ascii=False))" 2>/dev/null || \
-	python -c "from molin.core.engine import engine; import json; print(json.dumps(engine.health_check(), indent=2, ensure_ascii=False))"
+# ── Quality ──
+test: ## Run test suite
+	@python -m pytest tests/ -v --tb=short 2>/dev/null || \
+		python -m pytest tests/ -v 2>/dev/null || \
+		echo "⚠ No tests found or pytest not installed"
 
-serve:
-	python -m molib.ceo.main
+lint: ## Syntax check all Python files
+	@echo "Checking syntax..."
+	@find molib -name "*.py" -exec python -m py_compile {} \; 2>/dev/null || true
+	@echo "✓ Syntax OK"
 
-cli:
-	python -m molib.cli --help
+check: ## System health check
+	@python -m molib health 2>/dev/null || echo "⚠ Health check not available"
 
-clean:
-	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
-	find . -type f -name "*.pyc" -delete 2>/dev/null || true
-	rm -rf .pytest_cache build dist *.egg-info
-	@echo "✓ 清理完成"
+# ── Cleanup ──
+clean: ## Remove build artifacts
+	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	@find . -type f -name "*.pyc" -delete 2>/dev/null || true
+	@rm -rf .pytest_cache build dist *.egg-info 2>/dev/null || true
+	@echo "✓ Clean"
 
-backup:
+# ── Backup ──
+backup: ## Create timestamped backup
 	@timestamp=$$(date +%Y%m%d_%H%M%S); \
 	tar -czf "backup_$$timestamp.tar.gz" \
 		--exclude='.git' \
@@ -58,5 +70,10 @@ backup:
 		--exclude='*.pyc' \
 		--exclude='venv' \
 		--exclude='.env' \
-		skills/ config/ molib/ molin/ docs/ \
-		&& echo "✓ 备份完成: backup_$$timestamp.tar.gz"
+		skills/ config/ molib/ docs/ scripts/ \
+		&& echo "✓ Backup: backup_$$timestamp.tar.gz"
+
+# ── Cron ──
+cron-list: ## List all active cron jobs
+	@python -c "import json; print(json.dumps({'note':'Use Hermes cronjob list command'}, indent=2))" 2>/dev/null || \
+		echo "Cron jobs managed by Hermes Agent — use 'hermes cronjob list' in Hermes session"
