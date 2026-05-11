@@ -211,25 +211,25 @@ python -m molib plan decompose --plan-id xxx
 系统每日自动运行的飞轮管线，三棒全自动通过 relay/ 目录接力：
 
 ```
-🕐 08:00  第一棒：情报采集 (墨研竞情)
-   daily_hot_report.py → relay/intelligence_morning.json
+🕐 08:00  第一棒：情报银行 (墨思情报)
+   Agent → relay/intelligencemorning.json
+   Cron: bf670fd0a49d · skills: blogwatcher+arxiv+firecrawl
 
-🕐 09:00  第二棒：内容生成 (墨笔文创)
-   flywheel_content.py ← intelligence_morning.json → relay/content_flywheel.json
+🕐 09:20  第二棒：内容工厂 (墨迹内容)
+   Agent ← intelligencemorning.json → 生成内容+SEO → relay/
+   Cron: 8d3480b7a03e · 前置检查: 上游文件存在且<90分钟
 
-🕐 09:30  第三棒：分发策略 (墨测数据)
-   flywheel_distribute.py ← content_flywheel.json → relay/distribution_plan.json
-
-🕐 10:00  简报推送 (墨研竞情)
-   daily_briefing.py ← intelligence_morning.json → relay/briefing_daily.md
+🕐 10:45  第三棒：增长引擎 (墨增增长)
+   Agent ← relay/内容文件 → SEO优化+审计+追踪+策略调整
+   Cron: e2d424db0a17 · 前置检查: 上游文件存在且<90分钟
 ```
 
 飞轮接力关键规则：
-1. 每棒必须先检查 relay/ 中是否有上一棒的文件
-2. 如果没有，用上次可用数据或跳过该环节
-3. 文件格式必须严格对齐（intelligence_morning.json → content_flywheel.json → distribution_plan.json）
-4. 所有脚本使用纯Python标准库，零外部依赖
-5. 日志备份至 ~/.hermes/daily_reports/
+1. 每棒必须先检查 relay/ 中是否有上一棒的文件（flywheel_guard.check_upstream）
+2. 如果没有且超过90分钟 → 发T4飞书告警"飞轮断裂"，退出不空转
+3. 第1棒失败 → 第2棒自动断链告警 → 第3棒也会断链（级联保护）
+4. 所有Cron任务prompt禁止直接调用FeishuCardSender → 统一通过Enforcer
+5. Cron输出格式: cron-output-formatter卡片规范（加粗标题+hr分割+note脚注）
 
 ## 记忆系统文件位置
 

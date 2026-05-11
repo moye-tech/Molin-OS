@@ -18,11 +18,7 @@ from __future__ import annotations
 from typing import Any
 
 from molib.infra.gateway.feishu_card_builder import FeishuCardBuilder
-from molib.infra.gateway.feishu_pre_send_validator import FeishuPreSendValidator
-
-
-# 全局预发送验证器（单例）
-_pre_send_validator = FeishuPreSendValidator()
+from molib.infra.gateway.feishu_pre_send import validate as pre_send_validate
 
 
 class FeishuReplyPipeline:
@@ -76,8 +72,8 @@ class FeishuReplyPipeline:
             if isinstance(msg, dict) and "content" in msg:
                 text = msg.get("content", "")
                 if isinstance(text, str) and text:
-                    result = _pre_send_validator.validate(text, auto_fix=True)
-                    msg["content"] = result["message"]
+                    result = pre_send_validate(text)
+                    msg["content"] = result.cleaned
             validated.append(msg)
         return validated
 
