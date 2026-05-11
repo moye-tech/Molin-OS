@@ -22,6 +22,10 @@ min_hermes_version: 0.13.0
 
 ## 具体规则
 
+### 模型降级（HTTP 402 防护）
+当主模型（如 `deepseek-v4-pro`）返回 HTTP 402 余额不足时，即使实际余额充足也可能是临时计费系统故障。修复方案：
+在 `~/.hermes/config.yaml` 添加 `fallback_model: deepseek-v4-flash`，cron 调度器自动降级，同 Provider 零额外配置，全局生效。
+
 ### 闲鱼操作
 | 操作 | 级别 |
 |------|------|
@@ -92,6 +96,15 @@ min_hermes_version: 0.13.0
 ```
 2026-05-04 14:30 L1 增长中心 新商品上架"AI绘画-赛博朋克风格" 市场热度高 待客户反馈
 ```
+
+## API 故障诊断
+
+当 cron 任务报 HTTP 402/429/5xx 时，先区分是余额问题还是临时故障。三步诊断法见 [references/provider-error-diagnosis.md](references/provider-error-diagnosis.md)。
+
+**快速自查：**
+- 余额检查：`curl /user/balance`（余额充足 ≠ 一定可用）
+- 直接测试：`curl /chat/completions`（排除中间层）
+- 时域分布：grep 错误日志看是持续还是窗口内
 
 ## 回滚机制
 

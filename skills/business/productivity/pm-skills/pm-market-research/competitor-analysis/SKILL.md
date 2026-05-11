@@ -99,6 +99,22 @@ For each of the 5 competitors:
 - Competitive threats to monitor
 - 12-18 month competitive risks and opportunities
 
+## Pitfalls
+
+- **Xianyu/Taobao direct scraping is blocked.** PC browser access to goofish.com and s.2.taobao.com returns empty pages or login walls. Use `web_search` with targeted queries (e.g., "闲鱼 PPT代做 价格 2026") as the primary data source. Web search snippets provide enough detail for pricing bands, though exact listing counts are unavailable.
+- **web_extract often fails on Chinese ecommerce sites.** Taobao, Zhihu, SegmentFault, and similar .cn domains frequently return "Blocked: private/internal network" errors. Rely on web_search result snippets and cross-reference across multiple sources (什么值得买, 掘金, CSDN, 简书).
+- **Pricing data is directional, not exact.** Web search gives ranges (low/median/high), not precise real-time prices. Treat as competitive intelligence bands, not order-book quotes.
+- **Always save a pricing_cache.json** after analysis runs so future sessions can detect price movements. Format: `{last_check, suggestions[{sku, our_price, market_low, market_median, market_high, recommendation}]}`. Store at `~/.hermes/xianyu_bot/pricing_cache.json`.
+
+## Cron Automation
+
+When run as a scheduled cron job (no user present):
+- Scrape via web_search (not browser — login walls block it)
+- Compare against last pricing_cache.json if it exists; flag deltas >15%
+- Import full report as Feishu doc via `feishu-cli doc import` (content >500 chars or has tables)
+- Send summary card to automation control group per feishu-message-formatter cron template
+- Update pricing_cache.json with new data
+
 ## Best Practices
 
 - Research current competitor websites, pricing pages, and customer reviews
@@ -110,6 +126,18 @@ For each of the 5 competitors:
 - Look for emerging competitors or new market entrants
 - Flag competitors gaining traction or gaining market share
 - Consider long-term competitive dynamics and market shifts
+
+## Molin-OS Cron 集成
+
+当用于 cron 定时竞品定价巡检时，详见 `references/xianyu-pricing-monitor.md`：
+- 数据存储：`~/.hermes/xianyu_bot/pricing_cache.json`
+- 异常检测阈值：价格变动 >15%（MEDIUM）/ >30%（HIGH）
+- 输出格式：遵循 cron-output-formatter 卡片模板
+- 支持 SKU：BP代写、PPT美化、LOGO设计、AI数字人
+
+## References
+
+- `references/benchmark-pricing-20260511.md` — Real benchmark pricing data from 2026-05-11 cron run across Xianyu + Taobao + content platforms
 
 metadata:
   hermes:

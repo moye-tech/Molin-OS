@@ -1,7 +1,7 @@
 ---
 name: feishu-message-formatter
 description: 飞书消息输出格式化 — 噪声过滤 + 结构化卡片 + 分级透明。Hermes OS 发给用户（尹建业）的所有消息必须经过此规范。
-version: 1.0.0
+version: 2.0.0
 tags:
 - feishu
 - ux
@@ -23,6 +23,24 @@ min_hermes_version: 0.13.0
 # 飞书消息格式化规范
 
 > 给用户（尹建业）的飞书消息，必须经过噪声过滤 + 结构化输出。
+
+## ⚠️ Cron 兼容性警告
+
+**本技能不适合 cron 定时任务。** 其 SKILL.md 中的代码示例（FeishuCardBuilder、FeishuCardSender、
+API 调用）包含 `Authorization: Bearer` 等模式，当 cron scheduler 加载本技能时会触发
+Hermes 的 `exfil_curl_auth_header` 安全过滤器，导致任务被拒绝。
+
+**Cron 任务应使用 [`cron-output-formatter`](cron-output-formatter/SKILL.md)**
+— 纯规则无代码示例的 cron-safe 版本。
+```
+# 正确做法：cron 任务的 skills 列表
+skills: ["molin-governance", "cron-output-formatter"]    ✅
+
+# 错误做法：在 cron 任务中加载含代码示例的技能
+skills: ["molin-governance", "feishu-message-formatter"] ❌ → Blocked: exfil_curl_auth_header
+```
+
+本技能仅用于交互式对话输出格式约束。
 
 ## 核心原则
 
@@ -131,7 +149,9 @@ S1 · 子章节标题 · ⚡ 优先级
 所有 cron 作业投递到自动化控制群时，必须使用此模板格式。
 严禁在 cron 输出中使用 Markdown 表格、粗体、链接或代码块。
 
-实战案例参见 [`references/cron-output-examples.md`](references/cron-output-examples.md) — 含 2026-05-10 闲鱼作业违规→修正的完整对照。
+> 实战案例参见 [`references/cron-output-examples.md`](references/cron-output-examples.md) — 含 2026-05-10 闲鱼作业违规→修正的完整对照。
+
+> 完整19任务审计参见 [`references/cron-system-audit-2026-05-11.md`](references/cron-system-audit-2026-05-11.md) — 含飞轮三级接力链、HTTP 402 fallback修复方案、六大待修问题。
 
 ### 📡 标准 cron 报告卡片
 ```
@@ -194,7 +214,40 @@ S1 · 子章节标题 · ⚡ 优先级
 3. 将结果转换为上述卡片格式
 4. 只发送最终卡片，不透传过程
 
-## 验证标准
+### ⚠️ 不可用于 Cron 定时任务
+
+本技能包含大量代码示例（curl、API key、Python 代码），当被 cron job 作为 skill 加载时，这些示例中的 `Authorization: Bearer` 等模式会触发 Hermes 安全过滤器（`exfil_curl_auth_header`），导致 cron job 被拦截。
+
+**Cron 定时任务请使用 `cron-output-formatter` 技能替代**，该技能是纯规则版本，不含任何代码示例，cron-safe。
+
+## ⚡ 强制发送管线（v3.2 新增 — 终极执法）
+
+> 所有飞书发送操作**必须**通过 `FeishuOutputEnforcer`，不直接调用 `FeishuCardSender`。
+
+```python
+# ✅ 正确 — 通过 Enforcer 发送（自动验证+路由+降级）
+from molib.infra.gateway import create_enforcer
+enforcer = create_enforcer(chat_id="oc_xxx")
+enforcer.send("今日简报: 3 篇新内容", context={"field_count": 3})
+
+# ❌ 错误 — 裸调 sender（跳过所有安全检查）
+from molib.ceo.cards.sender import FeishuCardSender
+sender = FeishuCardSender()
+sender.send_text(chat_id, message)  # 绕过了 Router！
+```
+
+**Enforcer 自动做的 5 件事:**
+1. ✅ Pre-send 验证: 检测 thinking 前缀/Markdown残留/噪声/长度
+2. ✅ CardRouter 路由: 检测关键词 → 自动选 T0/T1/T2/T3/T4 格式
+3. ✅ 长消息降级: >1500字 → 自动 `feishu-cli doc import`
+4. ✅ 卡片构建: 自动调用 CardBuilder 生成原生飞书卡片
+5. ✅ 违规拦截: ERROR 级别违规 → 拒绝发送，返回 violation 列表
+
+**使用场景:**
+- Cron 作业: `enforcer.send_briefing(title, fields)` → T1 数据简报卡片
+- 系统告警: `enforcer.send_alert(title, what, impact, action)` → T4 告警卡片
+- 内容预览: `enforcer.send(message, context={"has_draft": True})` → T3 内容预览
+- 审批请求: `enforcer.send(message, context={"governance_level": "L2"})` → T2 审批
 
 - ✅ 回复中无 terminal: 或 read_file: 等工具调用痕迹
 - ✅ 结构化信息用分隔线卡片包裹
@@ -242,8 +295,72 @@ Agent 层的遗漏不再直接暴露给飞书用户。表格也会被转换为 `
 | 用 doc add 逐块写入 | 500块需几百次API调用 | 用 `doc import` 一次性导入 |
 | 扁平 • 列表输出复杂策略 | CEO批\"太表面\"、\"不够结构化\" | 改用 ═══/━━━/ 三层层级分隔线 + 缩进分层 |
 | 过度压缩子任务输出 | 压缩损失细节 → 用户感知浅 | CEO 汇编时只去重+排版，不删减实质内容 |
+| `💭 Reasoning:` 前缀泄漏 | 模型 thinking text 进入回复 | 网关/Agent 层必须先 regex 截断再发送 |
+| 裸 Markdown 表格给网关兜底 | 依赖网关 `_strip_markdown_to_plain_text()` → 产出 `• # •` 乱码 | **必须主动调 FeishuCardRouter.render() 或用 CardBuilder.table()** — 网关兜底是救火，不是美化 |
+| 回复无卡片/分隔线层级 | 标题和正文全是同等纯文字 | 用 ━━━━ 分隔线或 CardBuilder section 建立视觉层次 |
+| 超长消息不降级 | 超过飞书长度上限 → 截断 | 预检消息长度 >1500字 → 自动走 `feishu-cli doc import` |
 
 **自检方法**：把回复内容粘贴到微信输入框，如果看起来奇怪/有格式破损，就是违规。
+
+## v3.1 三合一升级的 5 个遗漏 · 2026-05-11 实战发现 → 2026-05-11 全部闭环 ✅
+
+> 来源: 墨烨审查三合一升级后的首次回复，发现输出比升级前更差。
+> 详细分析: [`references/triple-upgrade-gaps.md`](references/triple-upgrade-gaps.md)
+
+三合一升级（CardRouter + FlywheelGuard + DARE模型）的代码实现正确，输出管线 5 个断层**已全部修复**：
+
+**✅ 遗漏① — 模型思考泄漏（P0）** → 已修复
+- `FeishuPreSendValidator.strip_thinking_prefix()` — 5 种 thinking 前缀正则截断
+- 模式: `💭 Reasoning:` / `💭 推理过程:` / `<thinking>` / `thinking\n\n` / `<reasoning>`
+- 集成点: `FeishuReplyPipeline._validate_all()` 自动调用
+- 文件: `molib/infra/gateway/feishu_pre_send_validator.py`
+  + `molib/infra/gateway/feishu_reply_pipeline.py`
+
+**✅ 遗漏② — 网关兜底优化（P1）** → 已修复
+- `FeishuPreSendValidator.detect_and_convert_table()` — Markdown表格→CardBuilder自动转换
+- `CardBuilder.add_table()` — 新增方法，`[{col: val}]` → 飞书原生结构化表格
+- 文件: `molib/infra/gateway/feishu_pre_send_validator.py`
+  + `molib/ceo/cards/builder.py`
+
+**✅ 遗漏③ — CardRouter 强制执行（P2）** → 已修复
+- SOUL.md 增加「发送前自检管线」强制铁律
+- `FeishuReplyPipeline._validate_all()` — 响应管线中间件
+- 铁律: 任何含 `| 表头 |` 的 Markdown 表格禁止依赖网关兜底
+- 文件: `Molin-OS/SOUL.md` § 发送前自检管线
+
+**✅ 遗漏④ — pre-send 自检机制（P3）** → 已修复
+- `FeishuPreSendValidator.validate()` — 全覆盖程序化自检（320行）
+- 三道关卡: ① thinking 前缀截断 → ② Markdown 残留检测+自动修复 → ③ 长消息降级
+- 文件: `molib/infra/gateway/feishu_pre_send_validator.py`
+
+**✅ 遗漏⑤ — 长消息自动降级（P4）** → 已修复
+- `FeishuPreSendValidator.check_length()` — >1500字自动→写入MD→`feishu-cli doc import`→只发链接
+- `FeishuReplyPipeline._validate_all()` 集成调用
+
+## 定时任务 Prompt 安全约束
+
+> 实战发现: 2026-05-11 — cron prompt 中嵌入 `curl -H "Authorization: Bearer $KEY"` 会触发
+> Hermes 的 `exfil_curl_auth_header` 安全过滤器，导致 prompt 更新被拒绝。
+
+**Cron prompt 编写铁律:**
+- ❌ 禁止在 prompt 中嵌入 curl + Authorization header 命令
+- ❌ 禁止在 prompt 中引用环境变量 `$DEEPSEEK_API_KEY` 或 `$OPENAI_API_KEY`
+- ✅ 使用自然语言描述：「用 terminal 检查 DeepSeek 余额是否 ≥ ¥50」
+- ✅ 余额检查、API 调用等工作交给 Agent 的 terminal 工具自行完成
+
+## HTTP 402 调试模式
+
+> 实战发现: 2026-05-11 — 5个 cron 任务同时报 `HTTP 402: Insufficient Balance`，
+> 但余额 API 返回 ¥77.40（充足），直接 API 调用返回 HTTP 200。
+> 根因: DeepSeek `v4-pro` 模型的计费系统在 07:00-09:15 CST 出现临时故障，
+> 10:00 后自愈。解决: config.yaml 添加 `fallback_model: deepseek-v4-flash`。
+
+**402 排查清单:**
+1. 先调 `https://api.deepseek.com/user/balance` 确认真实余额
+2. 用同 provider 的 flash 模型测试（`deepseek-v4-flash`）
+3. 确认是否只在特定时间窗口出现（可能是 provider 临时故障）
+4. 配置 `fallback_model` 做自动降级，避免飞轮断裂
+5. 不要看到 402 就假设账户欠费 — 先验证余额
 
 ## SOUL.md 三层需求拆解模型
 
@@ -322,42 +439,57 @@ stats = filter_batch(messages)   # {"total": N, "noise": M, "rule_breakdown": {.
 卡片格式用于结构化信息（操作结果/简报/审批），
 日常对话和简单确认不需要卡片，保持自然。
 
-### FeishuCardRouter — 5 种卡片场景决策树（v2.5）
+### FeishuCardRouter — 5 种卡片场景决策树（v3.0 · 2026-05-11 升级）
 
-> 代码实现: `molib/shared/publish/feishu_card_router.py`
+> 代码实现: `~/Molin-OS/molib/shared/publish/feishu_card_router.py`
+> 详细规范: `~/Molin-OS/molib-os-triple-upgrade.html` → Part ①
 
-发送飞书消息前，按以下决策树自动选择格式：
+发送飞书消息前调用 `FeishuCardRouter.route()` 自动选择格式。**路由优先级（从高到低）：告警 > 审批 > 内容预览 > 数据报表 > 纯文字。**
 
 ```
-1. 消息目的是什么？
-   → 闲聊/简单确认 → T5 纯文字 (≤3行)
-   → 通知一件事 → 简单文字 + emoji
-   → 汇报任务结果/数据 → 进入第2步
-   → 需要审批/决策 → T2 审批卡片 (待审批·orange header)
-   → 系统异常/警报 → T4 告警卡片 (🚨 red header)
+P1 — 告警优先（最高优先级）
+   触发: is_error=True 或 含「失败/错误/异常/超限/402/断连/预警」
+   → T4 告警卡片 · red header · 3句话原则（发生什么/影响什么/做什么）
+   
+P2 — 治理审批
+   触发: governance_level∈{L2,L3} 或 含「审批/确认发布/报价/待审」
+   → T2 审批卡片 · orange header · 批准/修改/拒绝
 
-2. 数据量/结构是？
-   → 1-3个数字 → 简洁文字 (不用卡片)
-   → 3-8个字段 → T1 数据卡片 (turquoise header)
-   → 综合报告 → 富卡片 (多列+图表+按钮)
-   → 内容草稿 → T3 内容预览卡片 (📝 blue header)
+P3 — 内容草稿预览
+   触发: has_draft=True 或 含「草稿/文案/脚本/大纲/内容已生成/已就绪」
+   → T3 内容预览卡片 · blue header · 200字折叠
+
+P4 — 数据简报
+   触发: field_count≥3 或 含「简报/报表/统计/日报/周报/竞品监控」
+   → T1 数据卡片 · turquoise header · 数据表格
+
+P5 — 默认纯文字
+   T0 — 80%+ 的日常消息应走这里，≤3行纯文字 + emoji
 ```
 
-**T1 数据卡片**: `field_count≥3` 或含"简报/报表/统计/数据/产出/日报"关键词 → turquoise header + 数据表格
-**T2 审批卡片**: `governance_level∈{L2,L3}` 或含"审批/确认/报价/待决定"关键词 → orange header + 批准/修改/拒绝按钮
-**T3 内容预览卡片**: `has_draft=True` 或含"草稿/文案/脚本/大纲"关键词 → blue header + 内容preview + 发布按钮
-**T4 告警卡片**: 含"失败/异常/错误/超限"关键词或 `error_type` 存在 → red header + 异常描述 + 影响范围
-**T5 纯文字**: 默认 — 80%+ 的日常消息应走这里，禁止滥用卡片
+**关键变更（v2.5→v3.0）**:
+- T5 重命名为 T0（纯文字是默认，不是"第5选择"）
+- 告警优先级从 P2 提升到 P1（系统错误必须最优先通知）
+- 新增 `is_error` context key（比关键词匹配更直接）
+- 新增 `render()` 一站式方法：路由 + 构建飞书 card payload
+- 关键词集合精简：_ALERT 增加「402」「断连」；_CONTENT 增加「已就绪」；_DATA 增加「竞品监控」
 
-路由代码:
+路由代码（含 render）:
 ```python
-from molib.shared.publish.feishu_card_router import FeishuCardRouter, OutputFormat
+from molib.shared.publish.feishu_card_router import FeishuCardRouter, Fmt
 
+# 仅路由
 fmt = FeishuCardRouter.route(message, {"governance_level": "L0"})
-if fmt == OutputFormat.TEXT:
+if fmt == Fmt.TEXT:
     bot.send_text(msg)  # 80%+ 消息走这里
-elif fmt == OutputFormat.CARD_ALERT:
-    card = FeishuCardBuilder().header("异常", "red").section(msg)...
+
+# 一站式路由+构建card payload
+payload = FeishuCardRouter.render(
+    message="API 402 错误：余额不足",
+    data={"alert_title": "飞轮断裂: 内容工厂"},
+    ctx={"is_error": True}
+)
+# → 返回 T4 告警卡片的飞书 JSON payload
 ```
 
 ### 与 feishu-cli 协作

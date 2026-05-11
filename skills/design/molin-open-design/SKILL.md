@@ -189,3 +189,28 @@ cd ~/Projects/open-design && pnpm tools-dev start daemon
 | Daemon 预览 | `http://127.0.0.1:55888/artifacts/{timestamp}-{slug}/index.html` |
 | 本地 HTML | `~/Molin-OS/output/designs/od_{title}_{uuid}.html` |
 | Daemon 日志 | `~/Projects/open-design/.tmp/tools-dev/default/logs/daemon/latest.log` |
+
+## 参考
+
+- `references/daemon-api-catalog.md` — 完整 API 端点目录 (30+ 端点)
+
+## Obsidian 知识库同步
+
+设计产出可自动同步到 Obsidian iCloud 知识库，实现多端查看：
+
+```
+设计产出 (HTML/MD)
+    │
+    ▼
+~/Molin-OS/scripts/obsidian_sync.py
+    ├── 10-Daily/   ← 日报/GitHub雷达
+    ├── 20-Reports/ ← 周报/专项报告
+    └── 30-Knowledge/ ← 知识卡片
+    │
+    ▼
+☁️ iCloud → 所有设备自动同步
+```
+
+**手动同步:** `python3 ~/Molin-OS/scripts/obsidian_sync.py`
+
+**Vault 路径:** `~/Library/Mobile Documents/iCloud~md~obsidian/Documents/`

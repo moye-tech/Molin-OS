@@ -22,11 +22,15 @@ metadata:
 
 ## Vault 操作
 
-**Location:** Set via `OBSIDIAN_VAULT_PATH` environment variable (in `~/.hermes/.env`).
+**Location:** Set via `OBSIDIAN_VAULT_PATH` in `~/.hermes/.env`.
 
-Default: `~/Library/Mobile Documents/iCloud~md~obsidian/Documents/` (iCloud 多端同步).
+Default: `~/Library/Mobile Documents/iCloud~md~obsidian/Documents/` (iCloud multi-device sync, no subscription needed).
 
-If unset, falls back to `~/Library/Mobile Documents/iCloud~md~obsidian/Documents/`.
+**Sync script:** `~/Molin-OS/scripts/obsidian_sync.py` — copies Molin-OS reports into the vault with Obsidian frontmatter.
+
+Vault structure: `00-Inbox/`, `10-Daily/`, `20-Reports/`, `30-Knowledge/`, `40-Projects/`, `50-Archive/`, `99-Templates/`.
+
+Note: paths contain spaces — always quote them in shell commands.
 
 **Multi-device sync:** This vault lives in iCloud — files written here appear on all devices with Obsidian + same iCloud account. No Obsidian Sync subscription needed.
 
@@ -115,6 +119,27 @@ python3 ~/Molin-OS/scripts/obsidian_sync.py --dry-run
 Source directories:
 - `~/.hermes/daily_reports/` → Vault `10-Daily/`
 - `~/Molin-OS/output/reports/` → Vault `20-Reports/`
+
+## iCloud Multi-Device Sync
+
+The vault lives in `~/Library/Mobile Documents/iCloud~md~obsidian/Documents/` — Apple's standard Obsidian iCloud sync path. All Macs signed into the same Apple ID automatically sync. No Obsidian Sync subscription needed.
+
+**On another Mac:**
+```
+1. Install Obsidian → Open
+2. Click "Open folder as vault"
+3. Select: ~/Library/Mobile Documents/iCloud~md~obsidian/Documents/
+4. All notes appear — iCloud syncs automatically in background
+```
+
+**Note:** The Obsidian app must be installed in `/Applications/Obsidian.app`. If not installed, download from https://obsidian.md/download and drag to /Applications (or `brew install --cask obsidian`).
+
+## Feishu Doc Cross-Tenant Limitation
+
+Feishu docs on a different tenant (e.g., `sparkedu.feishu.cn`) CANNOT be accessed via `feishu-cli doc export` even with correct App credentials — the API returns `code=1770032, msg=forBidden`. Workarounds:
+1. User copy-pastes content directly into chat
+2. User exports doc as Markdown from Feishu UI and shares
+3. User grants the app cross-tenant access (requires tenant admin)
 
 ## MQL 查询 Obsidian 笔记
 

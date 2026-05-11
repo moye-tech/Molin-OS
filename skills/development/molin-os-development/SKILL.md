@@ -625,6 +625,55 @@ Verdict: cloud → comfy-cloud
 
 **Decision:** Use Comfy Cloud API ($0 free tier) or DashScope qwen-image-2.0-pro for image generation. The existing ComfyUI skill at `~/.hermes/skills/creative/comfyui/` supports both local and cloud via `scripts/hardware_check.py` → `scripts/comfyui_setup.sh`.
 
+## System Audit Workflow
+
+When the user requests a system audit ("梳理", "标准化", "清理冗余"), run this 6-phase pipeline:
+
+```
+Phase 1: Git sync — stash local → pull origin → pop + resolve conflicts
+Phase 2: Audit — __pycache__ count, empty dirs, broken symlinks, $HOME literal dirs, .gitignore overreach
+Phase 3: Clean — rm -rf __pycache__, rmdir empty refs dirs, delete broken paths
+Phase 4: Import test — importlib all key modules, verify CLI health
+Phase 5: Standardize — fix .gitignore rules, restore accidentally-ignored source files
+Phase 6: Commit + push — git add, commit with audit summary, push origin
+```
+
+### Audit checklist
+
+```bash
+# __pycache__
+find . -type d -name '__pycache__' -not -path './.git/*' | wc -l
+
+# Empty directories (exclude .git internals)
+find . -type d -empty -not -path './.git/*' -not -path '*/.git/*'
+
+# Literal $HOME paths (BUG — $HOME not expanded)
+find . -maxdepth 2 -name '$HOME' -type d 2>/dev/null
+
+# .gitignore overreach (py files incorrectly ignored)
+git ls-files --others --exclude-standard -i | grep '\.py$' | grep -v '__pycache__'
+
+# Check WHY a file is ignored
+git check-ignore -v path/to/file.py
+```
+
+### .gitignore pitfalls (from audit session)
+
+| Bad rule | Why | Fix |
+|:--|:--|:--|
+| `**/auth.*` | Matches `auth.py`, `auth.js` source files | `**/auth.json` + `**/auth.env` |
+| `*token*` | Matches `token_manager.py`, `token_utils.js` | `**/token.*` + explicit exclude for managers |
+
+**Fix pattern:** narrow the glob to only match credential extensions (`.json`, `.env`, `.key`, `.pem`), and add `!` excludes for known source files.
+
+### \$HOME literal directory BUG
+
+**Symptom:** `find /Users/moye/Molin-OS -maxdepth 2 -name '$HOME'` returns a real directory. The project grows a literal `$HOME/Library/...` tree inside its root.
+
+**Root cause:** A script used single-quoted or un-expanded `$HOME` in a path, creating a literal directory named `$HOME` instead of expanding to `/Users/moye`.
+
+**Fix:** `rm -rf '$HOME'` from project root. Trace source via `grep -r '\$HOME' scripts/`.
+
 ## Skip List (vetted, but user may override)
 
 These were evaluated. Do NOT skip them without re-checking current viability:

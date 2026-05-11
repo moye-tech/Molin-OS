@@ -53,7 +53,12 @@ class Severity(Enum):
 
 # P0 — 思考模式前缀
 THINKING_RE = re.compile(
-    r"^💭\s*Reasoning:.*?\n\n",  # deepseek 格式
+    # deepseek-v4-pro thinking mode: "💭 Reasoning:..."
+    # Three patterns:
+    #   1. Multiline with double-newline separator: 💭 Reasoning:\n...\n\n
+    #   2. Multiline with content-start on next line: 💭 Reasoning:\n...\n(not whitespace)
+    #   3. Single-line compressed: 💭 Reasoning: text. (before emoji response)
+    r"^💭\s*Reasoning:.*?(?:\n\n|\n(?=[^\n\s])|(?=\s*[✅⚠️❌📊🚨📋📝📄🔗]))",
     re.DOTALL,
 )
 THINKING_TAG_RE = re.compile(

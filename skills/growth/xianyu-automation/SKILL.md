@@ -448,6 +448,70 @@ hit `SSLEOFError` / `UNEXPECTED_EOF_WHILE_READING` errors on Xianyu's API.
 
 ---
 
+## 6. CRON HEALTH CHECK — 定时巡检诊断
+
+The cron job (schedule: `15,45 9-21 * * *`, cron_id: `1a6bd56a00cc`) runs a health check every 30 minutes during business hours. This section documents the diagnostic workflow for when the agent is invoked as a cron task.
+
+### Diagnostic Script
+
+Run the token check script in its own venv (TLS 1.2 fix):
+
+```
+/Users/moye/Molin-OS/molib/xianyu/.venv/bin/python3 /Users/moye/.hermes/scripts/xianyu_check.py
+```
+
+Output JSON: `{"status": "ok|token_invalid|api_error|no_cookies", "token_ok": bool, "cookies_ok": bool, "error": null|string}`
+
+### WebSocket Listener Health Check
+
+The WebSocket listener runs as a persistent process. Key diagnostic commands:
+
+```bash
+# 1. Check if process exists
+ps aux | grep ws_listener.py | grep -v grep
+
+# 2. Check TCP connections (process may be alive but log silent)
+lsof -p <pid> 2>/dev/null | grep -i tcp
+```
+
+**CRITICAL PITFALL:** A silent ws.log does NOT mean the listener is dead. The log only writes on connect/disconnect/error events. If the WebSocket is stable with no messages, the log will be silent. Always verify with `lsof` for ESTABLISHED TCP before concluding the listener is down.
+
+**Log file:** `~/.hermes/xianyu_bot/ws.log` — last modified timestamp is the best proxy for "last activity" when no log entries exist.
+
+### Key File Locations
+
+| File | Purpose |
+|------|---------|
+| `~/.hermes/scripts/xianyu_check.py` | Token/cookie validation script |
+| `~/.hermes/xianyu_bot/config.json` | Notification chat_id, auto_reply toggle |
+| `~/.hermes/xianyu_bot/state.json` | Listener PID, messages handled, replies sent |
+| `~/.hermes/xianyu_bot/ws.log` | WebSocket connect/disconnect/error log |
+| `~/.hermes/xianyu_bot/activity.log` | Cron execution history (append-only) |
+| `~/.hermes/xianyu_bot/cookies.json` | Xianyu session cookies (17 fields) |
+| `~/.hermes/state/xianyu_cron_report_latest.json` | Latest cron report snapshot |
+| `~/.hermes/state/xianyu_conversations.json` | Conversation memory (if exists) |
+| `~/.hermes/state/xianyu_setup_checklist.md` | One-time setup blockers |
+
+### Cron Card Output
+
+Use `CardBuilder` (blue, `"📋 闲鱼消息巡检 · {datetime}"`) with sections: API余额 → Token状态 → WebSocket监听 → 新消息处理 → 成交信号 → 巡检结论. Each section separated by `add_hr()`. Footer via `add_note()` with next execution time.
+
+Send to: `oc_94c87f141e118b68c2da9852bf2f3bda`
+
+**Iron rule:** After `FeishuCardSender.send_card()`, final response MUST be empty or a single emoji (suppressed double-delivery sentinel). The cron scheduler's text-delivery pipe must not fire.
+
+### Balance Check
+
+DeepSeek balance via `curl -s https://api.deepseek.com/user/balance -H "Authorization: Bearer $DEEPSEEK_API_KEY"` (key from `~/.hermes/.env`). Alert threshold: < ¥50.
+
+### State Update
+
+After each cron run, update:
+1. `~/.hermes/state/xianyu_cron_report_latest.json` — full snapshot
+2. `~/.hermes/xianyu_bot/activity.log` — append one-line summary `[timestamp] [CRON] 巡检完成 | ...`
+
+---
+
 ## Execution Checklist
 
 When processing Xianyu messages as the agent, follow this exact order:
@@ -613,3 +677,14 @@ This skill is derived from `/integrations/xianyu/listener.py` in the Molin AI In
 - Logging uses **loguru** at INFO/ERROR levels
 
 For the agent, these are replaced with equivalent in-session patterns (described in Section 5) without requiring Redis or async infrastructure.
+
+## Pitfalls & Known Limitations
+
+### goofish_apis has no search_items method
+`XianyuApis` only supports token verification and message operations — there is NO `search_items()` or similar keyword-search method. Do not attempt to use it for product/price discovery. For competitive pricing research, use `web_search` or `Scrapling` as fallbacks.
+
+### molib intel trending is not production-ready
+`python -m molib intel trending` returns "功能仍在建设中". Use `web_search` for trending data instead.
+
+### Pricing data is directional, not real-time
+Web search results provide price bands (low/median/high), not exact competitor quotes. This is sufficient for trend detection and anomaly flagging, but not for order-book pricing decisions.
