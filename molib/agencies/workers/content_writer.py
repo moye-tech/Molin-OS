@@ -72,6 +72,19 @@ class ContentWriter(_Base):
                 except Exception:
                     pass
 
+            # ── v2.5: crawl4ai 爆款对标写作（新增）──
+            crawl4ai_ref = ""
+            try:
+                from molib.shared.content.reference_engine import ReferenceEngine
+                ref_engine = ReferenceEngine()
+                references = await ref_engine.fetch_references(topic, platform, count=3)
+                if references:
+                    crawl4ai_ref = ref_engine.build_reference_context(references, platform)
+            except ImportError:
+                pass
+            except Exception:
+                pass
+
             # ── 构建增强system prompt ──
             system = (
                 "你是墨笔文创——墨麟AI集团专业内容创作子公司。"
@@ -85,7 +98,9 @@ class ContentWriter(_Base):
             if chain_ctx:
                 system += f"\n\n【上游协作背景】\n{chain_ctx}"
             if firecrawl_ref:
-                system += f"\n\n【竞品爆款参考】\n{firecrawl_ref}"
+                system += f"\n\n【竞品爆款参考 (Firecrawl)】\n{firecrawl_ref}"
+            if crawl4ai_ref:
+                system += f"\n\n【爆款对标写作 (crawl4ai 数据驱动)】\n{crawl4ai_ref}"
 
             prompt = (
                 f"创作一篇{platform}风格文章：\n"
@@ -109,6 +124,7 @@ class ContentWriter(_Base):
                         "experience_used": bool(exp_hint),
                         "chain_used": bool(chain_ctx),
                         "firecrawl_used": bool(firecrawl_ref),
+                        "crawl4ai_used": bool(crawl4ai_ref),
                     },
                 }]
                 output = {"articles": articles, "count": 1, "topic": topic, "platform": platform, "source": "llm"}
