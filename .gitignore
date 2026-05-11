@@ -9,9 +9,12 @@
 *.pem
 *secret*
 *password*
-*token*
+**/token.*
+!**/token_manager.*
+!**/token_manager/**
 credentials*
-**/auth.*
+**/auth.json
+**/auth.env
 **/.env.*
 !**/.env.example
 !**/.env.dev.example

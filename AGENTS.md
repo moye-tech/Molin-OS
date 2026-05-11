@@ -63,8 +63,11 @@ python -m molib help                 # 查看所有命令
 python -m molib content write --topic "主题" --platform xhs
 python -m molib content publish --platform xhs --draft-id xxx
 
-# 设计（墨图设计）
+# 设计（墨图设计 v2.2）
 python -m molib design image --prompt "描述" --style 写实
+python -m molib design web --prompt "墨麟AI集团官网" --action landing_page --ds apple
+python -m molib design web --prompt "销售数据看板" --action dashboard --ds stripe
+python -m molib design web --prompt "融资计划" --action pitch_deck --ds airbnb
 
 # 短视频（墨播短视频）
 python -m molib video script --topic "主题" --duration 60s
@@ -128,7 +131,7 @@ python -m molib moneymaker score --plan xxx  # 变现路径评分
 |---------|------------|---------|---------|
 | 墨笔文创 | content_writer.py | 文字内容创作、文案、公众号、博客 | molin-xiaohongshu, copywriting, content-strategy |
 | 墨韵IP | ip_manager.py | IP衍生、商标、版权、品牌管理 | ai-taste-quality |
-| 墨图设计 | designer.py | 图片/UI/封面/视觉设计 | molin-design, excalidraw, pixel-art |
+| 墨图设计 | designer.py | Open Design全栈(149设计系统×134技能) + FLUX.2生图 + 封面/UI | molin-design, excalidraw, pixel-art, open-design |
 | 墨播短视频 | short_video.py | 短视频脚本+生成 | ffmpeg-video-engine, pixelle-video-engine |
 | 墨声配音 | voice_actor.py | AI语音合成、播客制作 | molin-audio-engine, songwriting |
 
