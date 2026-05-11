@@ -170,6 +170,25 @@ async_commands = {
 - Merging code blocks where the new_string drops the function definition
 - Always verify with `python -c "import molib.__main__"` after any __main__.py patch
 
+**CRITICAL — async CLI commands:** NEVER call `asyncio.run()` inside a `cmd_xxx()` that's registered in `sync_commands`. `run()` itself is async, so `cmd_xxx` is called from within an already-running event loop — nesting `asyncio.run()` inside it raises `RuntimeError: asyncio.run() cannot be called from a running event loop`.
+
+**Fix:** Make the command function `async def` and register it in `async_commands`:
+```python
+# ❌ Wrong — crash: asyncio.run() inside running event loop
+def cmd_design(args):          # registered in sync_commands
+    ...
+    return asyncio.run(_run()) # RuntimeError!
+
+# ✅ Right — async function in async_commands
+async def cmd_design(args):    # registered in async_commands
+    ...
+    return await _run()        # natural await, no nested loop
+```
+
+**Symptom:** `RuntimeError: asyncio.run() cannot be called from a running event loop` + `RuntimeWarning: coroutine was never awaited`.
+
+**Pattern:** When a new CLI command needs to `await` anything (Worker.execute, API calls, etc.), always make it async and register in `async_commands`. Keep sync-only commands (stdlib dict returns) in `sync_commands`.
+
 **Safe patch pattern:** Include the full `def ...:` line + docstring in old_string to ensure the patch anchor is unique:
 
 ```python
@@ -382,6 +401,13 @@ When the user provides design documents (HTML/Markdown), process them systematic
 4. **Prioritize by impact** — Fix the UX/pipeline issues first, backend bugs only if they actually affect us
 5. **Declare what's skipped AND WHY** — Every skip must have a technical rationale
 6. **"继续" = exhaustive** — When user says "继续", push ALL remaining tasks to completion: check system state, deploy services, verify, commit. Don't stop at one action.
+7. **Restart from scratch when user pushes back** — If user provides a new document or corrects the approach, re-assess the entire system state. Don't assume previous partial work is still valid.
+
+### External Project Assessment Framework
+
+See `references/open-design-assessment.md` for the full 4-phase methodology:
+1. Information gathering (web_search + web_extract + git clone), 2. 4-dimension scoring (architecture/capability/deployment/maintenance), 3. 3-option integration path (transplant/bridge/deploy), 4. Actionable day-plan.
+6. **"继续" = exhaustive** — When user says "继续", push ALL remaining tasks to completion: check system state, deploy services, verify, commit. Don't stop at one action.
 
 ### Upgrade Document → Implementation Pipeline
 
@@ -426,6 +452,9 @@ key = get_env("DASHSCOPE_API_KEY")  # Safe access with .env loading
 - `references/plan-b-pure-python-fallback.md` — 方案2: when network blocks external tools, create pure Python equivalents (2026-05-11)
 - `references/gap-driven-upgrade-workflow.md` — GAP分析→并行实现→验证→提交 的系统升级流水线 + OpenRouter 免费模型路由作为 Ollama 替代 (2026-05-11)
 - `references/service-activation-pattern.md` — MPT/ComfyUI/MuseTalk/LivePortrait 本地服务激活清单 + API Key 从 config.yaml 注入 .env 模式 (2026-05-11)
+- `references/node-daemon-bridge.md` — Node.js daemon bridge pattern: Open Design v0.6.0 deployment, API catalog, corepack/pnpm workarounds, LLM pipeline (2026-05-11)
+- `references/smart-dispatcher-routing-pattern.md` — SmartDispatcher COLLAB_RULES substring matching gotcha + bidirectional keyword strategy (2026-05-11)
+- `references/open-design-assessment.md` — 外部GitHub项目评估框架 (4维度×3集成方案) + Open Design 34K★实例 (2026-05-11)
 
 ## Mac M2 Pip Timeout → Tsinghua Mirror / Clash Proxy
 
@@ -467,6 +496,57 @@ This pattern applies to all shared/infra modules. The wrapper:
 - Adds new functionality in a separate class/function
 - Returns unified results
 - Doesn't change the original's API or behavior
+
+## Node.js Daemon Bridge Pattern
+
+When integrating a Node.js project that runs as a local daemon (Express/Next.js server), use HTTP API bridging from Python workers:
+
+```
+Molin-OS (Python)                  Open Design (Node.js)
+  └─ Worker (designer.py)            └─ daemon (Express :55888)
+       ├─ _od_api_get(path)  ──GET──→  /api/skills/:id
+       ├─ _od_api_get(path)  ──GET──→  /api/design-systems/:id
+       ├─ LLM generates HTML          (stateless — daemon is passive)
+       └─ _od_api_post(path) ──POST──→ /api/artifacts/save → preview URL
+```
+
+**Corepack/pnpm workarounds (critical — every Node.js daemon project):**
+
+```bash
+# Problem 1: corepack enable fails without sudo
+# Fix: use corepack directly without enabling
+corepack pnpm@<version> install           # ✅ no sudo needed
+corepack pnpm@<version> --version         # ✅ verify
+
+# Problem 2: pnpm tools-dev version check rejects corepack-managed pnpm
+# Fix: use system pnpm directly — --pm-on-fail flag consumed by pnpm exec layer
+pnpm tools-dev start daemon               # ✅ system pnpm handles version dispatch
+```
+
+**Worker integration recipe:**
+
+```python
+# 1. Static API helpers (stdlib only — urllib, no requests)
+@staticmethod
+def _od_api_get(path: str) -> dict | None:
+    req = Request(f"{DAEMON_URL}{path}")
+    req.add_header("Accept", "application/json")
+    with urlopen(req, timeout=10) as resp:
+        return json.loads(resp.read().decode())
+
+# 2. Action → skill mapping (declarative, extensible)
+ACTION_SKILL_MAP = {
+    "landing_page": "saas-landing",
+    "dashboard": "dashboard",
+    "pitch_deck": "html-ppt-pitch-deck",
+}
+
+# 3. LLM generation pipeline
+#    GET skill definition + design system → build system prompt →
+#    LLM generates HTML → POST /api/artifacts/save → preview URL
+```
+
+**Key insight:** The daemon is *passive* — it stores skills/design-systems/artifacts but does NOT generate content. The agent (Hermes LLM) generates HTML code following the skill specification, then saves it back to the daemon for preview. The daemon provides: skill definitions, design system tokens (color/font/spacing), artifact persistence, and lint checks.
 
 ## External Integration Module Pattern
 
@@ -528,7 +608,7 @@ async def main_function(param: str) -> dict:
 | `observability.py` ⭐ v2.5 | `molib/shared/` | 250 | `langfuse` | Langfuse追踪: @observe_worker装饰器, 自动捕获耗时/token/异常 |
 | `fault_tolerance.py` ⭐ v2.5 | `molib/shared/` | 300 | `prefect` | Prefect断点续跑: WorkerChain崩溃后从上次成功步骤继续, 指数退避重试 |
 | `env_loader.py` ⭐ v2.5 | `molib/shared/` | 80 | stdlib | 统一.env→os.environ加载, 解决子进程API key不可见问题 |
-| `designer_worker.py` ⭐ | `molib/agencies/workers/` | 100 | — | PyTorch MPS (墨图设计升级) |
+| `designer.py` ⭐ v2.2 | `molib/agencies/workers/` | 270 | — | Open Design v0.6.0 daemon bridge (149设计系统×134技能) + FLUX.2生图 + 14个快捷action (landing_page/dashboard/pitch_deck/...) |
 | `voice_actor_worker.py` ⭐ | `molib/agencies/workers/` | 115 | — | macOS say + ffmpeg (墨声配音升级) |
 | `data_analyst_worker.py` ⭐ | `molib/agencies/workers/` | 100 | — | MolibAnalytics + CocoIndex (墨测数据升级) |
 | `crm_worker.py` ⭐ | `molib/agencies/workers/` | 130 | — | MolibDB (墨域CRM升级, twenty CRM 20K★ 替代) |

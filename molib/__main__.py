@@ -9,7 +9,9 @@ Hermes（大脑）通过 terminal（神经）调用本 CLI。
     python -m molib health                   # 系统健康检查
     python -m molib help                      # 命令列表
     python -m molib content <subcmd> [args]   # 内容创作
-    python -m molib design <subcmd> [args]    # 设计
+    python -m molib design <subcmd> [args]    # 设计（生图 + Open Design全栈网页）
+    python -m molib design image --prompt P --style S  # AI生图
+    python -m molib design web --prompt P --action landing_page --ds apple  # Open Design全栈
     python -m molib video <subcmd> [args]     # 视频
     python -m molib xianyu <subcmd> [args]    # 闲鱼
     python -m molib crm <subcmd> [args]       # 私域
@@ -94,6 +96,8 @@ def cmd_help(args: list[str]) -> dict:
         "content write --topic T --platform P": "创作内容（墨笔文创）",
         "content publish --platform P --draft-id ID": "发布内容（墨笔文创）",
         "design image --prompt P --style S": "生成图片（墨图设计）",
+        "design web --prompt P --action landing_page --ds apple": "全栈网页生成 (Open Design 149设计系统×134技能)",
+        "design web --prompt P --action dashboard --ds stripe": "仪表盘/PPT/落地页/原型等14种页面类型",
         "video script --topic T --duration D": "生成视频脚本（墨播短视频）",
         "video generate --topic T --engine mpt|pixelle": "全自动生成视频（MPT⭐57K/Pixelle⭐13K）",
         "xianyu reply --msg-id ID --content C": "回复闲鱼消息（墨声客服）",
@@ -1098,6 +1102,85 @@ def cmd_manifest(args: list[str]) -> dict:
         sys.argv = old_argv
 
 
+async def cmd_design(args: list[str]) -> dict:
+    """墨图设计 — 图片生成 + Open Design 全栈设计工程
+
+    用法:
+        python -m molib design image --prompt P --style S
+        python -m molib design web --prompt P --action landing_page --ds apple
+        python -m molib design web --prompt P --action dashboard --ds stripe
+    """
+    if not args:
+        return {"error": "缺少子命令: image / web", "hint": "python -m molib design web --prompt '...' --action landing_page"}
+
+    subcmd = args[0]
+    rest = args[1:]
+
+    if subcmd in ("image", "生图"):
+        return cmd_design_image(rest)
+    elif subcmd in ("web", "网页", "landing", "dashboard", "ppt", "全栈"):
+        return await cmd_design_web(subcmd, rest)
+    else:
+        return {"error": f"未知 design 子命令: {subcmd}", "available": ["image", "web"]}
+
+
+def cmd_design_image(args: list[str]) -> dict:
+    """墨图设计 — AI 生图"""
+    import asyncio
+    prompt = ""
+    style = "写实"
+    for a in args:
+        if a.startswith("--prompt="):
+            prompt = a.split("=", 1)[1]
+        elif a.startswith("--style="):
+            style = a.split("=", 1)[1]
+
+    if not prompt:
+        return {"error": "需要 --prompt", "usage": "design image --prompt='...' --style=写实"}
+
+    from molib.agencies.workers.designer_worker import cmd_design_generate
+    return cmd_design_generate(prompt, style)
+
+
+async def cmd_design_web(subcmd: str, args: list[str]) -> dict:
+    """墨图设计 — Open Design 全栈网页生成"""
+    prompt = ""
+    action = subcmd  # 默认用子命令名作 action
+    ds = "apple"
+
+    for a in args:
+        if a.startswith("--prompt="):
+            prompt = a.split("=", 1)[1]
+        elif a.startswith("--action="):
+            action = a.split("=", 1)[1]
+        elif a.startswith("--ds="):
+            ds = a.split("=", 1)[1]
+        elif a.startswith("--design-system="):
+            ds = a.split("=", 1)[1]
+
+    if not prompt:
+        return {"error": "需要 --prompt", "usage": "design web --prompt='墨麟AI集团官网' --action=landing_page --ds=apple"}
+
+    from molib.agencies.workers.designer import Designer
+    from molib.agencies.workers.base import Task
+
+    designer = Designer()
+    task = Task(
+        task_id=f"cli-{subcmd}",
+        task_type="design",
+        payload={
+            "action": action,
+            "prompt": prompt,
+            "design_system": ds,
+        }
+    )
+    result = await designer.execute(task)
+    return {
+        "status": result.status,
+        "output": result.output,
+    }
+
+
 async def run(command: str, args: list[str]) -> dict:
     """分发命令到具体模块"""
     # 同步命令映射（直接返回 dict）
@@ -1130,6 +1213,7 @@ async def run(command: str, args: list[str]) -> dict:
         "plan": cmd_plan,
         "cost": cmd_cost,
         "order": cmd_order,
+        "design": cmd_design,
     }
 
     if command in sync_commands:

@@ -22,9 +22,24 @@ metadata:
 
 ## Vault 操作
 
-**Location:** Set via `OBSIDIAN_VAULT_PATH` environment variable (e.g. in `~/.hermes/.env`).
+**Location:** Set via `OBSIDIAN_VAULT_PATH` environment variable (in `~/.hermes/.env`).
 
-If unset, defaults to `~/Documents/Obsidian Vault`.
+Default: `~/Library/Mobile Documents/iCloud~md~obsidian/Documents/` (iCloud 多端同步).
+
+If unset, falls back to `~/Library/Mobile Documents/iCloud~md~obsidian/Documents/`.
+
+**Multi-device sync:** This vault lives in iCloud — files written here appear on all devices with Obsidian + same iCloud account. No Obsidian Sync subscription needed.
+
+**Vault structure:**
+```
+00-Inbox/      — 临时收集、待整理
+10-Daily/      — 日报/早报/晚报 (墨研竞情自动)
+20-Reports/    — 周报/月报/专项报告
+30-Knowledge/  — 知识卡片、技术笔记
+40-Projects/   — 项目追踪、计划
+50-Archive/    — 历史归档
+99-Templates/  — 笔记模板
+```
 
 Note: Vault paths may contain spaces - always quote them.
 
@@ -81,6 +96,25 @@ New content here." >> "$VAULT/Existing Note.md"
 ### Wikilinks
 
 Obsidian links notes with `[[Note Name]]` syntax. When creating notes, use these to link related content.
+
+## Sync Reports
+
+Sync Molin-OS reports to Obsidian vault:
+
+```bash
+# 全部同步
+python3 ~/Molin-OS/scripts/obsidian_sync.py
+
+# 仅 GitHub 雷达
+python3 ~/Molin-OS/scripts/obsidian_sync.py --type=github-radar
+
+# 预览模式
+python3 ~/Molin-OS/scripts/obsidian_sync.py --dry-run
+```
+
+Source directories:
+- `~/.hermes/daily_reports/` → Vault `10-Daily/`
+- `~/Molin-OS/output/reports/` → Vault `20-Reports/`
 
 ## MQL 查询 Obsidian 笔记
 

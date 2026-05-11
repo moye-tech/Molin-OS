@@ -34,6 +34,22 @@ class SmartDispatcher:
         "语音合成": ["voice_actor", "content_writer"],
         "交易策略": ["trading", "research", "data_analyst"],
         "全球化":   ["global_marketing", "research", "legal"],
+        # ── v2.2 Open Design 集成 ──
+        "落地页":   ["designer"],
+        "landing":  ["designer"],
+        "仪表盘":   ["designer", "data_analyst"],
+        "dashboard": ["designer", "data_analyst"],
+        "PPT":      ["designer", "content_writer"],
+        "pitch":    ["designer", "content_writer"],
+        "网页设计": ["designer"],
+        "设计网页": ["designer"],
+        "web设计":  ["designer"],
+        "UI设计":   ["designer"],
+        "原型":     ["designer"],
+        "品牌视觉": ["designer", "ip_manager"],
+        "定价页":   ["designer", "bd"],
+        "文档页":   ["designer", "knowledge"],
+        "博客":     ["content_writer", "designer"],
     }
 
     async def dispatch(self, task, context: dict = None):

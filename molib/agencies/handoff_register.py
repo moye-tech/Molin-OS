@@ -48,7 +48,7 @@ def register_all_handoffs():
         target_worker="designer",
         target_worker_name="墨图设计",
         tool_name_override="transfer_to_designer",
-        tool_description_override="视觉设计：图片生成、封面设计、UI设计、生图提示词、品牌视觉"
+        tool_description_override="视觉设计：Open Design全栈网页/落地页/仪表盘/PPT生成(149设计系统×134技能) + FLUX.2 AI生图 + 封面海报设计 + 品牌视觉体系"
     )
 
     create_handoff(

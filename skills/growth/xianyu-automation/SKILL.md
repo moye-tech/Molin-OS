@@ -1,45 +1,28 @@
 ---
 name: xianyu-automation
-description: "Xianyu (闲鱼) second-hand marketplace automation — message polling, deal-signal detection, and buyer conversation pipeline. Use when managing Xianyu seller conversations, detecting purchase/refund intent, processing incoming messages, or setting up automated reply workflows."
+description: Xianyu (闲鱼) second-hand marketplace automation — message polling, deal-signal
+  detection, buyer conversation pipeline, and cron health patrol with listener restart.
+  Use when managing Xianyu seller conversations, detecting purchase/refund intent,
+  processing incoming messages, running scheduled patrol inspections, or setting up
+  automated reply workflows.
 version: 1.1.0
-tags: [xianyu, xianyu, ecommerce, automation, second-hand-market, deal-detection, message-pipeline]
+tags:
+- xianyu
+- xianyu
+- ecommerce
+- automation
+- second-hand-market
+- deal-detection
+- message-pipeline
 category: productivity
 source: molin-ai-intelligent-system/integrations/xianyu/listener.py (v6.6)
 metadata:
   hermes:
     molin_owner: 墨商销售（闲鱼实业）
+min_hermes_version: 0.13.0
 ---
 
 ## Xianyu Automation — 闲鱼接单自动化
-
-### Prerequisites & Setup
-
-Before the message pipeline can function, these must be in place:
-
-| Item | Check | Detail |
-|------|-------|--------|
-| **Python 3.12 venv** | `~/xianyu_agent/.venv/bin/python3 --version` | Required for asyncio features. `brew install python@3.12` then create venv. |
-| **XianyuApis project** | `~/xianyu_agent/` symlink → `Molin-OS/molib/xianyu/` | Must contain `goofish_apis.py`, `goofish_live.py`, `utils/goofish_utils.py`, `static/goofish_js_version_2.js` |
-| **Cookies file** | `~/.xianyu_cookies_new.txt` | **Must be semicolon-separated `key=value` format**, NOT JSON. See pitfall below. |
-| **Token valid** | Run `xianyu_bot.py cron` | Verifies cookies → token → API connectivity. |
-
-**⚠️ Cookies format pitfall:** `trans_cookies()` in `goofish_utils.py` parses cookies by splitting on `"; "` and expects `key1=val1; key2=val2` format. If cookies are saved as JSON (`{"key": "val"}`), the API call will fail with an opaque cookie-parsing error. Convert JSON cookies to `key=value; key=value` format before saving. See `references/cookies-format-fix.md` for the exact conversion script.
-
-### Running Modes
-
-The xianyu_bot.py has two distinct modes — know which one you're using:
-
-| Mode | Command | Purpose | Duration |
-|------|---------|---------|----------|
-| **cron** | `python3.12 xianyu_bot.py cron` | Health check: validate token, report state. Does NOT poll messages. | ~3s, exits |
-| **ws** | `python3.12 xianyu_bot.py ws` | WebSocket listener: real-time message polling, deal-signal detection, auto-reply. | Long-running daemon |
-
-**For cron jobs (every 15-30 min):** Run `cron` mode for connectivity health check. The ws listener should already be running as a background daemon — cron mode just verifies it's healthy.
-
-**To start real-time message handling:** Launch the ws listener as a daemon:
-```bash
-cd ~/xianyu_agent && nohup .venv/bin/python3 ~/.hermes/molin/bots/xianyu_bot.py ws > ~/.hermes/xianyu_bot/ws.log 2>&1 &
-```
 
 ### Overview
 
@@ -50,87 +33,14 @@ The core loop mirrors the production listener: poll → detect → route → not
 ### When to Use
 
 - User asks you to process incoming Xianyu buyer messages
-- Running as a **scheduled cron job** for Xianyu message detection (every 30 min, 09:00-21:00)
 - User needs deal-signal detection on buyer chat messages
 - User wants automated first-contact replies for Xianyu listings
-- User asks to set up message polling with 30-second intervals (live WebSocket mode)
+- User asks to set up message polling with 30-second intervals
 - User needs refund/escalation detection in buyer conversations
 - User wants a structured conversation memory across multi-turn chats
+- **Cron patrol**: running scheduled health checks on the Xianyu message pipeline
 
 **Don't use for:** Other marketplace platforms (Taobao, JD, Pinduoduo have different message formats). Don't use for outbound marketing campaigns — this is an inbound message handler.
-
-## Runtime Troubleshooting
-
-- **SSL/TLS errors (SSLEOFError)**: See [references/ssl-eof-error.md](references/ssl-eof-error.md) — force TLS 1.2 in `goofish_apis.py`
-- **Cookie format**: `cookies.json` stores fields individually, rebuild with `';\ '.join(f'{k}={v}'...)`
-- **WebSocket**: `websockets` v16 uses `additional_headers`, not `extra_headers`
-- **Health check**: `python ~/.hermes/scripts/xianyu_check.py` (xianyu venv, TLS fixed)
-
----
-
-## 0. PREREQUISITES & SETUP — 前置条件（首次运行必检）
-
-Before running any message detection, verify these three prerequisites. If any are missing, generate a diagnostic report (see format below) and stop — do not attempt API calls.
-
-### Required Infrastructure
-
-| # | Requirement | Check | Fix |
-|---|------------|-------|-----|
-| 1 | **Xianyu Cookies** | `~/.xianyu_cookies_new.txt` exists | 扫码登录 goofish.com，导出完整Cookies保存至此文件 |
-| 2 | **Python 3.12+** | `python3.12 --version` succeeds | `brew install python@3.12`（xianyu_bot.py 需要3.12+的asyncio特性） |
-| 3 | **Goofish项目** | `~/xianyu_agent/` 包含 `goofish_apis.py`, `utils/goofish_utils.py`, `static/goofish_js_version_2.js`, `message/types.py` | Clone完整的XianYuApis项目到 `~/xianyu_agent/`，安装requirements.txt |
-
-### State Directory
-
-The cron job maintains state at `~/.hermes/xianyu_bot/`:
-- `config.json` — notification settings (notify_chat_id, auto_reply flag)
-- `state.json` — counters (messages_handled, replies_sent, last_activity)
-- `activity.log` — timestamped activity log
-
-On first run, initialize these files if they don't exist. Default `notify_chat_id` is `oc_94c87f141e118b68c2da9852bf2f3bda`.
-
-### Cron Mode Diagnostic Report Format
-
-When invoked as a cron job and prerequisites are missing, generate this report structure:
-
-```json
-{
-  "job": "闲鱼消息检测",
-  "executed_at": "<timestamp>",
-  "status": "blocked",
-  "api_connected": false,
-  "new_messages": 0,
-  "blockers": [
-    {"item": "Xianyu Cookies", "action": "...", "owner": "创始人"},
-    {"item": "Python 3.12", "action": "brew install python@3.12", "owner": "创始人"}
-  ],
-  "infra_initialized": true,
-  "next_run": "<next cron time>"
-}
-```
-
-Write this report to `~/.hermes/state/xianyu_cron_report_latest.json` for downstream relay consumption.
-
-### Known Pitfalls
-
-1. **Goofish module import fails at module level**: `goofish_utils.py` compiles JS (`static/goofish_js_version_2.js`) with `execjs` at import time using relative paths. This breaks when not run from the `~/xianyu_agent/` directory. Fix: ensure the full XianYuApis project is cloned to `~/xianyu_agent/`, not just symlinked.
-
-2. **Missing `message/types.py`**: `goofish_apis.py` imports `from message.types import Price, DeliverySettings`. This module is part of the original XianYuApis project and is NOT included in the Molin-OS molib/xianyu directory. You need the full upstream project.
-
-3. **pip dependencies**: In addition to `requests`, the goofish project needs `blackboxprotobuf`, `PyExecJS`, `websockets`. Install with `pip install blackboxprotobuf PyExecJS websockets`.
-
-4. **Python 3.9 vs 3.12**: The xianyu_bot.py uses `asyncio` features (TaskGroup, timeout contexts) only available in Python 3.11+. System Python on macOS may be 3.9 — install 3.12 via brew.
-5. **SSL EOF 握手错误 (h5api.m.goofish.com)**: Python `requests` 库调用 `h5api.m.goofish.com` 的 Token 端点时偶发 `SSLEOFError(8, 'UNEXPECTED_EOF_WHILE_READING')`。症状是 `curl` 可正常连接（返回 404），但 Python 握手失败。多见于 macOS + Python 3.12+。通常 15-30 分钟后自动恢复（阿里侧偶发限流），如持续多轮失败需检查 Cookies 是否过期。详细排查见 `references/ssl-eof-error.md`。
-
-### Production Scripts
-
-The actual production bot scripts live at `~/.hermes/molin/bots/`:
-- **`xianyu_bot.py`** — WebSocket real-time listener + AI auto-reply (via 千问) + cron check. Run modes: `ws` (live), `cron` (status check), `test` (Feishu connection test).
-- **`xianyu_enhanced.py`** — CH5 enhancements: browsing detection (48h follow-up), auto review requests, dynamic pricing, dashboard.
-
-When prerequisites are met, prefer running `python3.12 ~/.hermes/molin/bots/xianyu_bot.py cron` for the cron check path.
-
-### Full setup checklist → `references/setup.md`
 
 ---
 
@@ -338,239 +248,23 @@ Always use this exact template (with item name substitution) for first-contact m
 
 ---
 
-## 5. API CONNECTION — goofish_apis 集成
+## 5. AUTOMATION PATTERN — 轮询自动化模式
 
-The Xianyu API is accessed through the XianYuApis project (symlinked at `~/xianyu_agent` → `Molin-OS/molib/xianyu`). This is the **only supported way** to fetch messages and send replies.
-
-### Project Structure
+### Polling Loop (30-second interval)
 
 ```
-~/xianyu_agent/
-├── goofish_apis.py          # XianyuApis class — REST API (login, messages, publish)
-├── goofish_live.py          # XianyuLive class — WebSocket real-time message listener
-├── xianyu_auto_service.py   # LLM-driven auto-reply service (OpenRouter + DeepSeek)
-├── xianyu_helper.py         # Helper functions for listing management
-├── message/
-│   ├── __init__.py
-│   └── types.py             # Message, Price, DeliverySettings models (pydantic)
-├── utils/
-│   ├── goofish_utils.py     # trans_cookies, generate_sign, generate_device_id
-│   ├── gen_tfstk.js         # Node.js script for token generation
-│   └── ...
-├── static/
-│   └── goofish_js_version_2.js  # JS engine for signature/MID/UUID generation
-└── .venv/                   # Python 3.12 virtual environment
+WHILE running:
+    1. Pop next message from incoming queue (xianyu:incoming_queue)
+    2. If message exists:
+        a. Parse into XianyuMessage { msg_id, from_user, to_user, content, item_id, item_title, timestamp, conversation_id }
+        b. Run process_message(msg) → get result dict
+        c. Publish result to processed queue (xianyu:processed)
+        d. If result.needs_approval or result.needs_bd_quote:
+            → Send Feishu/Lark notification to operator
+    3. Sleep 30 seconds
 ```
 
-### Dependency Chain
-
-| Layer | Component | Check |
-|-------|-----------|-------|
-| Runtime | Python 3.12+ | `/opt/homebrew/bin/python3.12 --version` |
-| Virtual env | `~/xianyu_agent/.venv/` | Must exist with all packages |
-| Python deps | requests, loguru, websockets, Pillow, execjs, blackboxprotobuf, pydantic, typing_extensions | `pip list` in venv |
-| JS Engine | Node.js (v24+) | `node --version` — needed for `execjs` to run signature/MID generation |
-| Auth | Cookie file | `~/.xianyu_cookies_new.txt` — exported from goofish.com browser session |
-
-### Cookie File
-
-The cookie file is the **single authentication mechanism**. Without it, the API cannot be initialized.
-
-**How to obtain (founder action required):**
-1. Open https://www.goofish.com in Chrome
-2. Scan QR code with Xianyu app to login
-3. Open DevTools → Application → Cookies → goofish.com
-4. Copy all cookies as `key=value; key=value; ...` format
-5. Save to `~/.xianyu_cookies_new.txt`
-
-**Expected format:** `cookie2=xxx; _m_h5_tk=xxx; _m_h5_tk_enc=xxx; ...`
-
-### API Initialization
-
-```python
-import sys; sys.path.insert(0, os.path.expanduser('~/xianyu_agent'))
-from goofish_apis import XianyuApis
-from goofish_live import XianyuLive
-
-api = XianyuApis(cookie_file=os.path.expanduser('~/.xianyu_cookies_new.txt'))
-# Test connectivity:
-user_info = api.get_login_user_info()  # Returns user profile if auth works
-```
-
-### Message Fetching (REST)
-
-For cron-job mode (no persistent WebSocket), use the REST API to check for new messages:
-
-```python
-# Get unread conversations / messages
-messages = api.get_unread_messages()  # Returns list of message dicts
-```
-
-### Message Sending
-
-```python
-from message import make_text
-api.send_message(to_user_id='xxx', content=make_text('回复内容'), item_id='xxx')
-```
-
-### LLM Auto-Reply
-
-The `xianyu_auto_service.py` provides LLM-driven replies via OpenRouter + DeepSeek:
-
-```python
-from xianyu_auto_service import get_auto_reply_llm
-reply = await get_auto_reply_llm(user_message_text)
-```
-
-Requires `OPENROUTER_API_KEY` in environment. Falls back to keyword-matching templates on LLM failure.
-
----
-
-## 5. DEPLOYMENT & INFRASTRUCTURE — 部署架构
-
-### Current Production Stack
-
-闲鱼自动化采用双层架构。消息只能通过 WebSocket 获取，闲鱼 REST API 不提供消息端点。
-
-### Tier 1: WebSocket 监听模式（实时消息处理）
-
-这是**唯一能检测并回复消息**的模式。必须作为常驻守护进程运行。
-
-```
-启动: cd ~/xianyu_agent && python3.12 ~/Molin-OS/bots/xianyu_bot.py ws
-
-WebSocket 生命周期:
-    1. 初始化 API (cookies → trans_cookies → token → device_id)
-    2. 连接 wss://wss-goofish.dingtalk.com/
-    3. 注册 + 同步状态初始化
-    4. 循环接收消息:
-        a. /s/chat → 新消息 → AI 生成回复(千问 qwen-plus) → WS 发回闲鱼 → 飞书通知
-        b. /s/sync → ACK 回复
-        c. /!    → 心跳(每 15 秒发送)
-    5. 断开 → 5 秒后自动重连
-    6. Token 每 600 秒自动刷新
-```
-
-WS 模式功能：实时消息检测、AI 自动回复、飞书卡片通知、自动重连。
-
-### Tier 2: Cron 巡检模式（健康检查）
-
-Cron 只能验证 API 连通性和汇报统计，**不能拉取消息**。
-
-```
-启动: python3.12 ~/Molin-OS/bots/xianyu_bot.py cron
-功能: Token 验证 + 读取状态文件汇报统计
-限制: 无消息检测能力，无自动回复能力
-```
-
-巡检报告必须遵循 feishu-message-formatter cron 模板（纯文本 + emoji + ━━━ 分隔，禁止 Markdown）。
-
-### 治理级别映射
-
-| 操作 | 级别 | 说明 |
-|------|------|------|
-| AI 自动回复（正常消息） | L0 自动 | 千问生成回复，直接通过 WS 发回闲鱼 |
-| 首次联系通知 | L1 通知 | 发送飞书卡片告知有新买家 |
-| 成交信号 / BD 报价 | L2 审批 | 需要老板确认价格/承诺后报价 |
-| 退款/投诉 | L2 审批 | 绝不自动回复，上报等待老板决策 |
-## 5. DEPLOYMENT & INFRASTRUCTURE — 部署架构
-
-### Current Production Stack
-
-In the Hermes agent context, Xianyu automation uses two tiers:
-
-**Tier 1: WS Listener (long-running daemon)**
-```
-cd ~/xianyu_agent && .venv/bin/python3 ~/.hermes/molin/bots/xianyu_bot.py ws
-```
-- Connects to Xianyu WebSocket for real-time message events
-- Runs deal-signal detection on every incoming message
-- Auto-replies via LLM (DeepSeek) or fallback templates
-- Sends Feishu notifications for L2 escalations
-- This is the **actual message processor** — must run as background daemon
-
-**Tier 2: Cron Health Check (every 15-30 min)**
-```
-cd ~/xianyu_agent && .venv/bin/python3 ~/.hermes/molin/bots/xianyu_bot.py cron
-```
-- Validates Xianyu token is still fresh
-- Reports `messages_handled` / `replies_sent` from state.json
-- Alerts if token expired or cookies missing
-- Does NOT poll messages — just verifies the WS listener is healthy
-
-> See `references/cookies-format-fix.md` for the cookies JSON→semicolon conversion pitfall.
-
-### Production Polling Loop (reference)
-
-In full production (Redis-backed, not current agent mode):
-
-When running as a scheduled cron job (no interactive user), the agent MUST first perform the pre-flight health check (Section 0), then attempt message fetching only if the API is ready.
-
-```
-CRON TICK (every 30 min):
-    0. RUN pre-flight health check → determine api_ready (bool)
-    1. IF api_ready == false:
-        a. Produce patrol report card with blocker details
-        b. Save state to ~/.hermes/state/xianyu_cron_report_latest.json
-        c. STOP (do not attempt polling)
-    2. IF api_ready == true:
-        a. Initialize XianyuApis with cookie_file
-        b. Fetch unread messages via REST API
-        c. FOR each message: run pipeline (Section 3)
-        d. Save conversation state
-        e. Produce patrol report card with message stats
-```
-## 5. DEPLOYMENT & INFRASTRUCTURE — 部署架构
-
-### Current Production Stack
-
-The production deployment uses **WebSocket real-time listening** (not polling). Three components work together:
-
-| Component | File | Role |
-|-----------|------|------|
-| **WS Listener** | `~/.hermes/xianyu_bot/ws_listener.py` | WebSocket 长连接，实时接收闲鱼消息 |
-| **Auto Agent** | `Molin-OS/molib/xianyu/xianyu_auto_service.py` | AI 回复生成 + 飞书通知（通过 goofish WebSocket 发回消息） |
-| **Cron Check** | `~/.hermes/molin/bots/xianyu_bot.py cron` | 定时健康检查（Token 验证、状态汇报） |
-
-The ws_listener runs as a **persistent process** (PID tracked in `~/.hermes/state/xianyu_cron_report_latest.json`). It is started once and stays alive, receiving messages via WebSocket push from goofish. The cron job only performs health checks — it does NOT poll for messages directly.
-
-### Python Version Requirement
-
-**Python 3.12+ is REQUIRED** for goofish API connectivity. Python 3.11 (including the Hermes venv's 3.11.15) has an SSL compatibility issue with `h5api.m.goofish.com`:
-
-```
-SSLEOFError: [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol
-```
-
-- `ws_listener.py` runs under **Homebrew Python 3.12** (`/opt/homebrew/Cellar/python@3.12/`) — this works.
-- `xianyu_bot.py cron` uses the Hermes venv Python 3.11 — this fails on the token endpoint.
-- `curl` works fine with goofish (uses macOS native SecureTransport, not OpenSSL).
-
-**Pitfall:** Running any goofish API call from within the Hermes venv will fail with SSL errors. Always use the 3.12 venv at `Molin-OS/molib/xianyu/.venv` for API operations.
-
-### Cron Job Workflow
-
-The cron job (scheduled at 15/45 of each hour 9-21) executes these steps:
-
-1. Check if ws_listener process is alive (PID from `xianyu_cron_report_latest.json`)
-2. Verify WebSocket log for recent activity (`~/.hermes/xianyu_bot/ws.log`)
-3. Read state counters from `~/.hermes/xianyu_bot/state.json`
-4. Generate patrol card following `feishu-message-formatter` cron template
-5. Write updated report to `~/.hermes/state/xianyu_cron_report_latest.json`
-6. Deliver to Feishu automation control group
-
-### Key State Files
-
-| File | Contents |
-|------|----------|
-| `~/.hermes/xianyu_bot/state.json` | `{messages_handled, replies_sent, last_activity, last_reply_time}` |
-| `~/.hermes/xianyu_bot/config.json` | `{notify_chat_id, auto_reply, cookies_configured, stat_day}` |
-| `~/.hermes/xianyu_bot/ws.log` | WebSocket connection and message logs |
-| `~/.hermes/xianyu_bot/cookies.json` | Structured cookie fields for goofish auth |
-| `~/.xianyu_cookies_new.txt` | Raw cookie string (browser export) |
-| `~/.hermes/state/xianyu_cron_report_latest.json` | Full cron report including infrastructure status |
-
-### Message Model (from WebSocket)
+### Message Model
 
 ```json
 {
@@ -585,14 +279,6 @@ The cron job (scheduled at 15/45 of each hour 9-21) executes these steps:
 }
 ```
 
-### Notification Triggers
-
-| Condition | Channel | Priority |
-|-----------|---------|----------|
-| `needs_approval == true` (refund) | Feishu @boss | HIGH — immediate |
-| `needs_bd_quote == true` (deal signal) | Feishu @bd_team | MEDIUM |
-| First contact | Log only | LOW |
-
 ### State Persistence
 
 In production, conversation memory lives in-memory during the listener's lifecycle. For agent usage:
@@ -600,353 +286,165 @@ In production, conversation memory lives in-memory during the listener's lifecyc
 - If a session spans many conversations, persist to a JSON file at `~/.hermes/state/xianyu_conversations.json`
 - Reload on session start if the file exists
 
-### Reference Files
-
-- `references/ssl-troubleshooting.md` — Python SSL compatibility issue with goofish API, workarounds, and tested approaches
-- `references/cron-report-schema.md` — Cron report JSON schema and patrol card output template
-
 ---
 
-## Execution Checklist
+## 6. CRON PATROL — 定时巡检与自动恢复
+
+The cron patrol job runs periodically to verify the health of the Xianyu message pipeline. Unlike the polling loop (Section 5) which handles individual messages, the patrol handles **infrastructure health** — detecting hung processes, token expiry, and silent failures.
+
+See `references/diagnostic-commands.md` for copy-pasteable command recipes.
+
+### Patrol Checklist (execute in order)
 
 ```
-SSLEOFError: [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol
+1. API HEALTH CHECK
+   python /Users/moye/.hermes/scripts/xianyu_check.py
+   → If token_ok=false → classify error (see below), attempt recovery
+   → If token_ok=true → proceed
+
+2. LISTENER LIVENESS CHECK
+   Read ~/.hermes/xianyu_bot/state.json → ws_listener_pid
+   Then THREE checks on that PID:
+     a. ps -p <pid> → is process alive?
+     b. lsof -p <pid> -a -i → are there open network sockets?
+     c. tail ws.log → last log entry within last 5 minutes?
+
+   ALL THREE must pass. If process is alive but has NO sockets
+   and no recent log entries → FAKE-ALIVE (hung). Kill and restart.
+
+3. MESSAGE STATS
+   Read state.json for messages_handled, replies_sent
+   Check for deal signals and pending approvals
+
+4. RECOVER if needed (see Recovery Procedures below)
 ```
 
-- `ws_listener.py` runs under **Homebrew Python 3.12** (`/opt/homebrew/Cellar/python@3.12/`) — this works.
-- `xianyu_bot.py cron` uses the Hermes venv Python 3.11 — this fails on the token endpoint.
-- `curl` works fine with goofish (uses macOS native SecureTransport, not OpenSSL).
+### Key File Paths
 
-**Pitfall:** Running any goofish API call from within the Hermes venv will fail with SSL errors. Always use the 3.12 venv at `Molin-OS/molib/xianyu/.venv` for API operations.
+| File | Purpose |
+|------|---------|
+| `~/.hermes/scripts/xianyu_check.py` | API health check (uses xianyu venv + TLS 1.2 fix) |
+| `~/.hermes/xianyu_bot/ws_listener.py` | WebSocket listener entry point |
+| `~/.hermes/xianyu_bot/ws.log` | Listener runtime log |
+| `~/.hermes/xianyu_bot/state.json` | Current state (pid, stats, last activity) |
+| `~/.hermes/xianyu_bot/activity.log` | Historical patrol results |
+| `~/.hermes/xianyu_bot/cookies.json` | Xianyu session cookies |
 
-### Cron Job Workflow
+### Correct Venv
 
-The cron job (scheduled at 15/45 of each hour 9-21) executes these steps:
-
-1. Check if ws_listener process is alive (PID from `xianyu_cron_report_latest.json`)
-2. Verify WebSocket log for recent activity (`~/.hermes/xianyu_bot/ws.log`)
-3. Read state counters from `~/.hermes/xianyu_bot/state.json`
-4. Generate patrol card following `feishu-message-formatter` cron template
-5. Write updated report to `~/.hermes/state/xianyu_cron_report_latest.json`
-6. Deliver to Feishu automation control group
-
-### Key State Files
-
-| File | Contents |
-|------|----------|
-| `~/.hermes/xianyu_bot/state.json` | `{messages_handled, replies_sent, last_activity, last_reply_time}` |
-| `~/.hermes/xianyu_bot/config.json` | `{notify_chat_id, auto_reply, cookies_configured, stat_day}` |
-| `~/.hermes/xianyu_bot/ws.log` | WebSocket connection and message logs |
-| `~/.hermes/xianyu_bot/cookies.json` | Structured cookie fields for goofish auth |
-| `~/.xianyu_cookies_new.txt` | Raw cookie string (browser export) |
-| `~/.hermes/state/xianyu_cron_report_latest.json` | Full cron report including infrastructure status |
-
-### Message Model (from WebSocket)
-
-```json
-{
-  "msg_id": "string (unique message ID)",
-  "from_user": "string (buyer ID)",
-  "to_user": "string (seller ID / your account)",
-  "content": "string (message body text)",
-  "item_id": "string (listing ID, can be empty)",
-  "item_title": "string (listing title, can be empty)",
-  "timestamp": 1234567890.0,
-  "conversation_id": "string (platform conversation ID, can be empty)"
-}
+The xianyu scripts MUST use the xianyu venv with TLS 1.2 fix:
+```
+/Users/moye/Molin-OS/molib/xianyu/.venv/bin/python3
 ```
 
-### Notification Triggers
+The default Hermes venv may work for API calls but the TLS fix is in the xianyu venv. Always prefer it when restarting the listener.
 
-| Condition | Channel | Priority |
-|-----------|---------|----------|
-| `needs_approval == true` (refund) | Feishu @boss | HIGH — immediate |
-| `needs_bd_quote == true` (deal signal) | Feishu @bd_team | MEDIUM |
-| First contact | Log only | LOW |
+### Error Classification
 
-### State Persistence
+| API Response | Meaning | Action |
+|-------------|---------|--------|
+| `FAIL_SYS_USER_VALIDATE` + `被挤爆啦` | Server-side rate limit or outage | Wait 5 min, retry. If persists >1h → escalate to manual cookie refresh |
+| `FAIL_SYS_USER_VALIDATE` alone | Token/cookie expired | Manual re-login needed — notify operator |
+| SSL/TLS errors (`SSLEOFError`, `UNEXPECTED_EOF`) | TLS version mismatch | Ensure xianyu venv is used |
 
-In production, conversation memory lives in-memory during the listener's lifecycle. For agent usage:
-- Track conversations in the current session's working memory
-- If a session spans many conversations, persist to a JSON file at `~/.hermes/state/xianyu_conversations.json`
-- Reload on session start if the file exists
+### Recovery Procedures
 
-### Reference Files
+**Restart hung listener:**
+```bash
+# Kill the old PID
+kill <old_pid> 2>/dev/null; sleep 1
 
-- `references/ssl-troubleshooting.md` — Python SSL compatibility issue with goofish API, workarounds, and tested approaches
-- `references/cron-report-schema.md` — Cron report JSON schema and patrol card output template
+# Start new listener with correct venv (use terminal background=true)
+cd /Users/moye/Molin-OS/molib/xianyu
+/Users/moye/Molin-OS/molib/xianyu/.venv/bin/python3 \
+  /Users/moye/.hermes/xianyu_bot/ws_listener.py
 
----
-
-## Execution Checklist
-
-```
-1. CHECK PREREQUISITES (Section 0)
-   ├── All met → proceed to Step 2
-   └── Any missing → generate diagnostic report, STOP
-
-2. TRY API CONNECTION
-   ├── Token valid → proceed to Step 3
-   └── Token expired / API unavailable → report status, STOP
-
-3. POLL MESSAGES
-   ├── New messages found → process with L0/L1/L2 pipeline
-   └── No new messages → report "0 messages", STOP
-
-4. PROCESS & NOTIFY
-   ├── L0 auto-reply: send template + add to memory
-   ├── L1 deal signal: log, notify BD via Feishu
-   └── L2 escalation: flag for approval, do NOT auto-reply
-
-5. SAVE & REPORT
-   ├── Update state.json counters
-   ├── Write relay file: ~/.hermes/state/xianyu_cron_report_latest.json
-   └── Push summary to Feishu notify_chat_id
+# Verify after 5 seconds:
+lsof -p <new_pid> -a -i          # must show open sockets
+tail -3 ~/.hermes/xianyu_bot/ws.log   # must show "Token OK"
 ```
 
-**Silent skip rule**: If this is a cron run and prerequisites are missing (no cookies), the response should still contain a clear diagnostic report — do NOT silently return "[SILENT]". The founder needs to know what's blocking activation.
+**Token validation failure loop:**
+The ws_listener.py has NO retry logic — it calls `sys.exit(1)` immediately
+on `FAIL_SYS_USER_VALIDATE`. If restart keeps failing:
+1. Run xianyu_check.py every 60 seconds for up to 5 attempts
+2. If all fail: the pipeline is DOWN. Log to activity.log and notify operator
+3. If any succeed: restart the listener immediately
 
-### Governance Levels (L0/L1/L2) for Cron Pipeline
+### Cron Output Format
 
-| Level | Trigger | Action | Auto? |
-|-------|---------|--------|-------|
-| **L0** | Normal inquiry, first contact, price ask | Template reply or AI-generated follow-up | ✅ Auto |
-| **L1** | Purchase intent detected (deal signal) | Log + notify BD via Feishu | ✅ Auto (notification only) |
-| **L2** | Refund request, complaint, >20% price cut | Escalate to founder for approval | ❌ Hold — do NOT reply |
-
----
-
-## 0. PRE-FLIGHT HEALTH CHECK — 启动前自检
-
-**Always run this FIRST** before attempting any message polling. In cron-job mode, the health check determines whether to enter the message pipeline or produce a blocker report.
-
-### Step-by-step
+Patrol results follow the feishu-message-formatter cron card template:
 
 ```
-0.1 Python 3.12
-    /opt/homebrew/bin/python3.12 --version
-    → Expected: Python 3.12.x
-    → If missing: blocker "Python 3.12 未安装 — brew install python@3.12"
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  [status emoji] 闲鱼巡检 · YYYY-MM-DD HH:MM
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-0.2 Virtual Environment
-    ls ~/xianyu_agent/.venv/bin/python3.12
-    → If missing: create it:
-      /opt/homebrew/bin/python3.12 -m venv ~/xianyu_agent/.venv
+📊 本轮结果
+• API Token：状态
+• WebSocket：状态（PID、连接情况）
+• 消息处理：N 条
+• 自动回复：N 条
+• 成交信号：N 条
+• 待审批项：N 条
 
-0.3 Dependencies
-    cd ~/xianyu_agent && .venv/bin/python3.12 -c "
-    for p in ['requests','loguru','websockets','PIL','execjs','blackboxprotobuf','pydantic','typing_extensions']:
-        __import__(p)
-    "
-    → If any fail: .venv/bin/pip install <package>
-    → Full install line:
-      .venv/bin/pip install requests loguru websockets Pillow PyExecJS blackboxprotobuf pydantic typing_extensions
+⚠️ 需关注（only if issues exist）
+• 事项 — 简述 + 操作建议
 
-0.4 Node.js (JS engine for signature generation)
-    node --version
-    → Expected: v24.x or similar
-    → If missing: blocker "Node.js 未安装 — brew install node"
+✅ 已自动完成
+• 项目1
+• 项目2
 
-0.5 Cookie File
-    ls ~/.xianyu_cookies_new.txt
-    → If missing: blocker "需要扫码登录 goofish.com 后导出 cookies"
-    → This step requires founder action — cannot be automated
+🔜 建议操作（only if manual action needed）
+• 步骤
 
-0.6 Project Imports
-    cd ~/xianyu_agent && .venv/bin/python3.12 -c "
-    from goofish_apis import XianyuApis
-    from goofish_live import XianyuLive
-    from message import Message
-    print('ALL_IMPORTS_OK')
-    "
-    → If any fail: check project files are intact
-
-0.7 API Connectivity (only if cookie file exists)
-    cd ~/xianyu_agent && .venv/bin/python3.12 -c "
-    import os; from goofish_apis import XianyuApis
-    api = XianyuApis(cookie_file=os.path.expanduser('~/.xianyu_cookies_new.txt'))
-    print(api.get_login_user_info())
-    "
-    → Success: login user info returned → api_ready = true
-    → Failure: cookies may be expired → blocker "Cookies 过期或无效，需重新导出"
+[if error] ❌ 简述，原因：一句话
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-### Health Check Output
-
-After running the check, produce a summary:
-
-```
-api_ready: true | false
-blockers: [list of failing checks]
-resolved: [items fixed since last check]
-```
-
-### State File
-
-Results persist to `~/.hermes/state/xianyu_cron_report_latest.json`:
-
-```json
-{
-  "api_connected": true|false,
-  "blocker_count": N,
-  "blockers": [{"item": "...", "action": "...", "owner": "创始人"}],
-  "resolved_since_last": [{"item": "...", "detail": "..."}],
-  "infra_initialized": true|false,
-  "last_run": "ISO timestamp",
-  "next_run": "human readable"
-}
-```
-
-Additional state files:
-- `~/.hermes/xianyu_bot/config.json` — auto_reply toggle, notify chat ID, daily stats
-- `~/.hermes/xianyu_bot/state.json` — messages_handled, replies_sent counters
-- `~/.hermes/xianyu_bot/activity.log` — timestamped cron run log
-- `~/.hermes/state/xianyu_conversations.json` — per-conversation memory (Section 1)
-## Pitfalls — 已知故障模式
-
-### P0: h5api.m.goofish.com SSL 错误 (2026-05-10+)
-
-**症状:** API 持续返回 `SSL: UNEXPECTED_EOF_WHILE_READING`，Cookie 文件完整（17字段）
-**影响:** 无法获取消息、Token 验证失败、WebSocket 进入「连接→20秒断开→重连」循环
-**可能原因:** 闲鱼服务端 SSL 配置变更 或 国内网络层干扰
-**排查方向:**
-1. 浏览器访问 goofish.com 确认是否可正常打开
-2. 检查是否需更新 Cookie
-3. 尝试切换网络环境或使用代理测试 SSL 握手
-4. 如持续超24h，考虑回退到网页版手动检查消息
-
-### 自动升级规则
-
-| 条件 | 动作 |
-|------|------|
-| API 单次失败 | L0 自动重试，记录日志 |
-| API 连续失败 ≥3 次 | 下次 cron 仍继续尝试 |
-| API 连续失败 ≥10 次/天 | 升级到 L2 — 推送飞书告警卡片 |
-| WebSocket 断连 >30 分钟 | L2 告警 — 可能已错失买家咨询 |
-| 退款信号检出 | L2 — 需人工审批介入 |
-
-## State File Locations
-
-本地状态文件位于 `~/.hermes/xianyu_bot/`:
-- `state.json` — 监听器运行状态 (PID, 连接状态, 消息计数)
-- `activity.log` — cron 巡检日志 (API 状态, 异常详情)
-- `ws.log` — WebSocket 连接日志
-- `cookies.json` — 闲鱼登录 Cookie
-- `config.json` — 监听器配置
-
-## 6. CRON HEALTH CHECK — 定时巡检
-
-Cron jobs should verify the listener is alive before assuming message processing is operational. Follow this checklist:
-
-### Health Check Sequence
-
-1. **API Token:** Run `python /Users/moye/.hermes/scripts/xianyu_check.py` → verify `token_ok: true`
-2. **Process alive:** Check PID from `~/.hermes/xianyu_bot/state.json` → `kill -0 <pid>` to verify
-3. **Recent activity:** Check `~/.hermes/xianyu_bot/ws.log` — last entry must be < 5 minutes old
-4. **If dead:** Restart from correct directory (see Pitfalls below)
-5. **Update state:** Write new PID and timestamp to `state.json` after restart
-
-### Restart Command
-
-```
-cd /Users/moye/Molin-OS/molib/xianyu && nohup python /Users/moye/.hermes/xianyu_bot/ws_listener.py >> /Users/moye/.hermes/xianyu_bot/ws.log 2>&1 &
-```
-
-Then update `state.json` with new PID.
-
-For a real-world recovery case, see [`references/2026-05-11-listener-death-recovery.md`](references/2026-05-11-listener-death-recovery.md).
+Key rules for cron output:
+- NEVER use Markdown tables/headers/bold/code blocks
+- Use separator lines + emoji sections + bullet lists
+- "Fake-alive" listener → flag as alert, not silent
+- Token invalid → flag as error with suggested next action
+- If genuinely nothing new AND system healthy → respond `[SILENT]`
 
 ---
 
 ## Pitfalls
 
-### 1. Working Directory Dependency (ws_listener.py)
+### Fake-Alive WebSocket Listener
+The most dangerous failure mode: `ps` shows the process running, but it has
+no open network sockets and no recent log entries. The process appears healthy
+but is completely non-functional.
 
-**Symptom:** `FileNotFoundError: [Errno 2] No such file or directory: 'static/goofish_js_version_2.js'`
+**Detection:** `lsof -p <pid> -a -i` returns empty output
+**Cause:** WebSocket silently disconnected without triggering the reconnect loop;
+           the asyncio event loop is stuck or the connection was dropped by the OS
+**Fix:** Kill and restart the listener (see Section 6 Recovery)
+**Real case:** 2026-05-11, PID 79907 ran for ~2h with zero sockets. ws.log
+              showed last entry "初始化完成: None" at 10:50, then silence.
 
-**Cause:** `ws_listener.py` imports `goofish_utils.py` which loads `static/goofish_js_version_2.js` with a **relative path**. If the CWD is `~/.hermes/xianyu_bot/`, the path resolves incorrectly.
+### ws_listener.py Has No Retry Logic
+The listener calls `sys.exit(1)` immediately when `api.get_token()` returns
+anything other than `SUCCESS`. This means any transient server error
+(rate limit, "被挤爆啦") kills the process instantly with no retry.
 
-**Fix:** Always launch from `/Users/moye/Molin-OS/molib/xianyu/`:
-```
-cd /Users/moye/Molin-OS/molib/xianyu && python /Users/moye/.hermes/xianyu_bot/ws_listener.py
-```
+**Workaround:** The cron patrol must handle the restart loop. If the listener
+               exits, the patrol retries from xianyu_check.py first.
+**Future fix:** Add exponential backoff retry to ws_listener.py main()
 
-### 2. Silent Listener Death
+### Token Degradation Window
+The API token can validate successfully at one moment and fail minutes later.
+The "被挤爆啦" (server overloaded) error uses the same `FAIL_SYS_USER_VALIDATE`
+code as real token expiry. Always distinguish by checking for "被挤爆啦" in the
+error message — server overload recovers on its own; real expiry needs manual
+cookie refresh.
 
-**Symptom:** `state.json` shows `ws_connected: true` and old PID, but `kill -0 <pid>` returns "No such process." No alert is generated when the listener dies.
-
-**Pattern:** WebSocket disconnects pile up (SSL EOF errors from goofish API), the listener eventually exits without restarting. The old PID in `state.json` becomes stale.
-
-**Detection:** Do NOT trust `state.json.ws_connected` alone. Always cross-check with `ps aux | grep ws_listener` and `ws.log` timestamp.
-
-### 3. SSL EOF from Xianyu API (h5api.m.goofish.com)
-
-**Symptom:** Frequent `[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol` errors in `ws.log`. Connection drops, then auto-reconnects after 5-15 seconds.
-
-**This is platform-side noise, not a local config issue.** The listener handles it automatically via reconnection logic. Only escalate if the listener fails to reconnect after 3+ consecutive attempts within 60 seconds.
-
----
-
-## Reference: Production Integration
-
-This skill is derived from `/integrations/xianyu/listener.py` in the Molin AI Intelligent System. In production:
-- Messages are queued via **Redis** (`xianyu:incoming_queue` and `xianyu:processed` pub/sub)
-- The listener runs as an **async coroutine** with `asyncio.sleep(30)`
-- The `XianyuListener` class is a **singleton** accessed via `get_xianyu_listener()`
-- Logging uses **loguru** at INFO/ERROR levels
-
-For the agent, these are replaced with equivalent in-session patterns (described in Section 5) without requiring Redis or async infrastructure.
-
----
-
-## 6. LISTENER HEALTH & RESTART — 监听器健康与重启
-
-The WebSocket listener (`ws_listener.py`) is a long-running daemon that can die silently — if the process exits, no messages flow through the pipeline. The cron health check job must detect this and restart it.
-
-### Health Check (cron job pre-flight)
-
-Every cron cycle, before reading messages:
-1. Run `ps aux | grep ws_listener | grep -v grep` to check if the daemon is alive
-2. Check `~/.hermes/xianyu_bot/ws.log` — last entry should be within the last 5 minutes
-3. If either check fails → restart the listener (see below)
-4. Also run `python ~/.hermes/scripts/xianyu_check.py` to verify API token validity
-
-### Restart Command (exact)
-
-```bash
-/Users/moye/Molin-OS/molib/xianyu/.venv/bin/python3 \
-  /Users/moye/.hermes/xianyu_bot/ws_listener.py \
-  > /dev/null 2>&1 &
-```
-
-Workdir: `/Users/moye/Molin-OS/molib/xianyu`
-
-### Pitfall: Wrong Python Interpreter
-
-- ❌ **DO NOT** use `/opt/homebrew/bin/python3.12` — it lacks the `execjs` module and will crash with `ModuleNotFoundError: No module named 'execjs'`
-- ❌ **DO NOT** use the hermes-agent venv Python — it's Python 3.11 with incompatible TLS
-- ✅ **ONLY** use the xianyu venv: `/Users/moye/Molin-OS/molib/xianyu/.venv/bin/python3` (Python 3.12, contains all required dependencies: execjs, websocket-client, requests, etc.)
-
-### Startup Log Pattern (healthy)
-
-```
-[xianyu-ws] Loaded 17 cookie fields
-[xianyu-ws] Verifying token with SSL fix...
-[xianyu-ws] Token OK
-[xianyu-ws] Starting WebSocket listener...
-[xianyu-ws] 正在连接闲鱼WebSocket...
-[xianyu-ws] ✅ WebSocket 已连接
-[xianyu-ws] 初始化完成: None
-```
-
-The `None` in "初始化完成: None" is normal — it's `listen_forever()`'s return after listener setup.
-
-### Cron Report Persistence
-
-After each health check cycle, update:
-- `~/.hermes/state/xianyu_cron_report_latest.json` — full status snapshot
-- `~/.hermes/xianyu_bot/state.json` — minimal fields: messages_handled, replies_sent, last_activity, ws_listener_pid, ws_connected
-- `~/.hermes/xianyu_bot/activity.log` — append one-line summary
+### Wrong Venv = TLS Failures
+The xianyu module requires custom TLS 1.2 patches in its venv. Using any other
+Python (including the Hermes venv) may work sporadically but will eventually
+hit `SSLEOFError` / `UNEXPECTED_EOF_WHILE_READING` errors on Xianyu's API.
 
 ---
 
@@ -954,10 +452,8 @@ After each health check cycle, update:
 
 When processing Xianyu messages as the agent, follow this exact order:
 
-0. **Pre-flight health check:** Verify WebSocket listener is running (ps aux) and ws.log has recent activity. If dead, restart using the exact xianyu .venv command in Section 6.
 1. **Load state:** If `~/.hermes/state/xianyu_conversations.json` exists, load it into conversation memory.
 2. **For each incoming message:**
-3. **For each incoming message:**
    - [ ] Derive `conversation_id` (use native ID or `{from_user}:{item_id}`)
    - [ ] Check `is_first_contact(conversation_id)`
    - [ ] Run deal signal detection (refund keywords first, then buy keywords)
@@ -968,51 +464,6 @@ When processing Xianyu messages as the agent, follow this exact order:
    - [ ] Append turn to conversation memory (max 20)
 3. **Save state:** Write conversation memory to `~/.hermes/state/xianyu_conversations.json`.
 4. **Wait:** 30 seconds before next poll cycle.
-
-## Setup Prerequisites（三项前置条件）
-
-闲鱼自动化必须先满足以下三项，缺一不可：
-
-### ① Python 3.12+
-```bash
-brew install python@3.12
-```
-系统自带 Python 3.9 不满足 xianyu_bot.py 的 asyncio 要求。
-
-### ② XianYuApis 项目
-```bash
-cd ~ && git clone <XianYuApis仓库URL> xianyu_agent
-```
-必须包含：`message/types.py`、`static/goofish_js_version_2.js`（20KB）、`utils/goofish_utils.py`、`utils/build_cookies.py`。
-
-### ③ 闲鱼 Cookies（17个关键字段）
-从浏览器登录 goofish.com 后导出，保存到 `~/.xianyu_cookies_new.txt`（JSON格式）：
-
-```json
-{
-  "_m_h5_tk": "...",
-  "_m_h5_tk_enc": "...",
-  "_tb_token_": "...",
-  "cookie2": "...",
-  "csg": "...",
-  "mtop_partitioned_detect": "1",
-  "sgcookie": "...",
-  "t": "...",
-  "tfstk": "...",
-  "tracknick": "...",
-  "unb": "...",
-  "xlly_s": "1",
-  "_samesite_flag_": "true",
-  "havana_lgc_exp": "...",
-  "havana_lgc2_77": "...",
-  "sdkSilent": "...",
-  "vn_lgc_77": "..."
-}
-```
-
-**Cookie 刷新机制**：goofish_apis.py 自动处理 `_m_h5_tk` 刷新和签名生成（`generate_sign()`），不需要手动更新。
-
-**自动生成**：`utils/build_cookies.py` 可生成基础 Cookie（不需要浏览器），但需要 Node.js 环境运行 `gen_tfstk.js`。
 
 ---
 
@@ -1049,177 +500,116 @@ cd ~ && git clone <XianYuApis仓库URL> xianyu_agent
 
 ---
 
-## 7. CRON PATROL REPORT — 巡检卡片输出
+## 6. CRON PATROL — 定时巡检
 
-When running as a cron job, the final output MUST be a patrol report card following the `feishu-message-formatter` cron template. The system delivers this to the automation control group.
+When running as a scheduled cron job (not interactive user session), perform a health-check patrol rather than the full message-processing loop. The listener handles real-time messages; the cron job's job is to ensure the listener is alive and report status.
 
-### Required Format
-
-See `references/patrol-report-template.md` for the exact template and compliance rules.
-
-Key rules:
-- No Markdown syntax (no `#`, `**`, tables, `[links]`, code blocks)
-- Use `━━━` card separators with emoji section headers
-- `•` bullet lists only
-- `⚠️` section only present when blockers exist — omit entirely if none
-- `✅` section lists everything that's working correctly
-- Empty values: write `0` or `暂无`, never `N/A`
-- Total card length: ≤20 lines
-- If API is not ready (blocked), `📊 本轮结果` shows all zeros
-
-### Patrol Card Template
+### Patrol Workflow
 
 ```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  🐟 闲鱼状态巡检 · M月D日 HH:MM
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📊 本轮结果
-• 新消息：N 条
-• 自动回复：N 条
-• 成交信号：N 条
-• 待审批：N 条
-
-⚠️ 需关注
-• 阻塞项 — 操作建议（需创始人处理）
-
-✅ 已就绪/正常运行
-• 状态项
-• 状态项
-
-🔜 下次巡检：时间
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. TOKEN CHECK → python ~/.hermes/scripts/xianyu_check.py
+2. PROCESS CHECK → ps aux | grep ws_listener
+3. LOG CHECK → tail ws.log for last-5-min activity
+4. STATE READ → read state.json + activity.log
+5. HEAL → restart listener if dead (token must be ok first)
+6. REPORT → generate patrol card per feishu-message-formatter
 ```
 
-### State Files Updated
+### Step 1: Token Check
 
+Run the dedicated check script (uses xianyu venv with TLS 1.2 fix):
+```bash
+python ~/.hermes/scripts/xianyu_check.py
+```
+Returns `{"status": "ok", "token_ok": true/false, ...}`.
+
+**If token_ok=false:** Do NOT attempt restart. Report API异常 and stop.
+
+### Step 2: Process Check
+
+```bash
+ps aux | grep -i ws_listener | grep -v grep
+```
+If no process found → listener is DOWN.
+
+### Step 3: Log Check
+
+```bash
+stat -f%m ~/.hermes/xianyu_bot/ws.log  # last modification timestamp
+```
+If last modification > 5 minutes ago → listener is STALE (may be hung).
+
+### Step 4: State Read
+
+Key files:
 | File | Content |
 |------|---------|
-| `~/.hermes/state/xianyu_cron_report_latest.json` | Full structured report (api_connected, blockers, resolved, stats) |
-| `~/.hermes/xianyu_bot/activity.log` | Appended timestamped log line |
-| `~/.hermes/xianyu_bot/state.json` | Cumulative counters (messages_handled, replies_sent) |
-## 6. CRON MODE VS WEBSOCKET MODE — 两种运行模式
+| `~/.hermes/xianyu_bot/state.json` | ws_listener_pid, ws_connected, api_status, messages_handled, replies_sent |
+| `~/.hermes/xianyu_bot/activity.log` | Historical cron patrol entries |
+| `~/.hermes/xianyu_bot/ws.log` | WebSocket listener runtime log |
 
-闲鱼消息系统有两种截然不同的运行模式，混用会导致功能缺失。
+### Step 5: Restart Listener
 
-### WebSocket 模式（实时处理）
-
-消息通过 WebSocket 长连接实时推送。这是**唯一能真正检测和回复消息**的模式。
+**CRITICAL — must use correct working directory.** The script imports from `goofish_apis` which internally opens `static/goofish_js_version_2.js` via relative path. The working directory MUST be:
 
 ```
-启动: cd ~/xianyu_agent && python3.12 bots/xianyu_bot.py ws
-特点: 常驻进程，断线自动重连，AI 自动回复（千问 qwen-plus）
-消息流: WebSocket (/s/chat) → 飞书通知 → AI 生成回复 → WebSocket 发回闲鱼
+/Users/moye/Molin-OS/molib/xianyu/
 ```
 
-**WebSocket 模式功能：**
-- 实时检测买家新消息
-- AI 自动回复（千问 qwen-plus，扮演卖家宋玉）
-- 飞书通知（卡片+文本）
-- 自动 Token 刷新（每 600 秒）
-- 断线自动重连
-
-### Cron 模式（健康检查）
-
-Cron 只能检查 API 连通性和运行状态。**不能拉取未读消息**，因为闲鱼 REST API 不提供消息端点（所有 `/imweb/im/*` 路径返回 404）。
-
-```
-cron 调用: python3.12 bots/xianyu_bot.py cron
-功能: Token 验证 + 状态汇报
-限制: 无消息检测能力，无自动回复能力
-```
-
-**Cron 巡检报告格式**（遵循 feishu-message-formatter）：
-- 统计项：新消息数、自动回复数、成交信号数、待审批数
-- 状态项：API 连通、Cookies 有效、WS 监听状态、依赖状态
-- 当 WS 监听未运行时必须标注 ⚠️ 阻塞项
-
-### 治理级别映射
-
-| 操作 | 级别 | 说明 |
-|------|------|------|
-| AI 自动回复（正常消息） | L0 自动 | 千问生成回复，直接通过 WS 发回闲鱼 |
-| 首次联系通知 | L1 通知 | 发送飞书卡片告知有新买家 |
-| 成交信号 / BD 报价 | L2 审批 | 需要老板确认价格/承诺后报价 |
-| 退款/投诉 | L2 审批 | 绝不自动回复，上报等待老板决策 |
-| 涉及真实现金/支付 | L4 禁止 | 直接拒绝 |
-
----
-
-## 7. DEPENDENCIES — 环境依赖
-
-运行 xianyu_bot.py 需要以下 Python 包（Python 3.12+）：
-
-```
-# 核心依赖
-pip install --break-system-packages \
-    websockets \
-    requests \
-    pydantic \
-    blackboxprotobuf \
-    typing_extensions
-
-# pyexecjs 运行环境需要 Node.js（用于闲鱼签名算法）
-# goofish_js_version_2.js 需放在 xianyu_agent/static/ 目录
-```
-
-**常见缺失修复：**
+Correct restart command:
 ```bash
-pip3.12 install --break-system-packages blackboxprotobuf pydantic typing_extensions
+# Use terminal(background=true) — never nohup/disown/setsid
+cd /Users/moye/Molin-OS/molib/xianyu && python /Users/moye/.hermes/xianyu_bot/ws_listener.py
 ```
 
+**Pitfall:** `nohup`, `disown`, and `setsid` are REJECTED by Hermes terminal tool. Always use `terminal(background=true)` for persistent processes.
+
+After starting, wait 5 seconds then check ws.log for:
+```
+✅ WebSocket 已连接
+初始化完成
+```
+
+If the process exits immediately with `FileNotFoundError: static/goofish_js_version_2.js` → wrong working directory.
+
+### Step 6: Update State Files
+
+After successful restart, update:
+- `state.json` — set pid, ws_connected=true, api_status="ok"
+- `activity.log` — append cron entry
+- `~/.hermes/state/xianyu_cron_report_latest.json` — full patrol report
+
+### Known Error Patterns
+
+| Error | Symptom | Cause | Recovery |
+|-------|---------|-------|----------|
+| **"被挤爆啦"** | `FAIL_SYS_USER_VALIDATE` / `RGV587_ERROR::SM::哎哟喂,被挤爆啦,请稍后重试` | Xianyu server congestion | Auto-recovers within 1-2 hours. Token check script will report `token_ok=true` when server clears. Restart listener after recovery. |
+| **SSL EOF** | `SSLEOFError: EOF occurred in violation of protocol` | TLS mismatch | Use `xianyu_check.py` (has TLS 1.2 fix). If persists, cookies may need refresh. |
+| **ws_listener FileNotFoundError** | `static/goofish_js_version_2.js` not found | Wrong working directory | Must run from `Molin-OS/molib/xianyu/` |
+| **Token expired** | `token_ok=false` persistently | Cookies stale (>7 days) | Escalate to user: re-login on Xianyu web, export cookies to `cookies.json` |
+
+### Patrol Card Output
+
+Follow `feishu-message-formatter` cron template exactly (Section "Cron 报告卡片"). Key fields:
+- API Token status
+- WebSocket listener PID + connection time
+- Messages/replies/deal-signals/escalations count
+- ⚠️ section for anomalies (if any)
+- ✅ section for auto-resolved items
+- 🔜 next execution time
+
+**When nothing to report (all green, zero messages):** Still generate the card — silence is itself a signal that monitoring is alive.
+
+See `references/cron-patrol-example.md` for a worked example with the "被挤爆啦" recovery pattern.
+
 ---
-
-## 8. PITFALLS — 常见坑
-
-| 坑 | 现象 | 解决 |
-|----|------|------|
-| **REST API 无消息端点** | 任何 `/imweb/im/*` GET 请求返回 404 | 消息只能通过 WebSocket 获取，不能用 REST 轮询 |
-| **cron 误以为能检测消息** | Cron 报告新消息始终为 0 | Cron 仅是健康检查，消息检测必须启动 WS 模式 |
-| **WS 监听未运行** | 状态文件 `messages_handled=0` 持续不变 | `python3.12 bots/xianyu_bot.py ws` 启动监听 |
-| **`ModuleNotFoundError: blackboxprotobuf`** | 导入 goofish_utils 时报错 | 安装缺失依赖（见 Section 7） |
-| **`ModuleNotFoundError: pydantic`** | 导入 goofish_apis 时报错 | `pip3.12 install --break-system-packages pydantic` |
-| **Cookies JSON 格式** | `trans_cookies()` 要求 `key=value; key=value` 格式 | 如果 cookies 存为 JSON，需先转换为分号分隔格式 |
-| **Token 过期** | API 返回非 SUCCESS 状态 | 重新扫码登录获取新的 cookies |
-
----
-
-## Infrastructure Pitfalls
-
-Before running any Xianyu operations, check these known issues:
-
-- **TLS 1.2 required**: Python 3.12 + OpenSSL 3.6.x cannot complete TLS 1.3 handshake with `h5api.m.goofish.com`. Force TLS 1.2 via `_GoofishAdapter` in `goofish_apis.py`. See [references/infrastructure-fixes.md](references/infrastructure-fixes.md).
-- **WebSocket API**: websockets v16 deprecated `extra_headers` → `additional_headers`. Affects `xianyu_auto_service.py`, `goofish_live.py`, `xianyu_helper.py`. All three files need the parameter renamed.
-- **Cookie format**: `~/.hermes/xianyu_bot/cookies.json` stores individual fields, not a `cookie_string`. Build the string with `'; '.join(f'{k}={v}' for k, v in data.items())`.
-- **WebSocket cache**: Clear `__pycache__` directories or use `python -B` before starting the listener after code changes.
-- **Log location**: WebSocket listener writes to `~/.hermes/xianyu_bot/ws.log`. Check this file for connection status.
 
 ## Reference: Production Integration
 
-实际的闲鱼自动化实现位于：
+This skill is derived from `/integrations/xianyu/listener.py` in the Molin AI Intelligent System. In production:
+- Messages are queued via **Redis** (`xianyu:incoming_queue` and `xianyu:processed` pub/sub)
+- The listener runs as an **async coroutine** with `asyncio.sleep(30)`
+- The `XianyuListener` class is a **singleton** accessed via `get_xianyu_listener()`
+- Logging uses **loguru** at INFO/ERROR levels
 
-| 文件 | 用途 |
-|------|------|
-| `~/Molin-OS/bots/xianyu_bot.py` | 主机器人：WS 监听 + 飞书通知 + AI 自动回复 + cron 检测 |
-| `~/Molin-OS/bots/xianyu_enhanced.py` | 增强模块：浏览触达 + 催评 + 动态定价 + 仪表盘 |
-| `~/Molin-OS/molib/xianyu/xianyu_helper.py` | 闲鱼工具：千问 AI + 图片生成 + 发布商品 |
-| `~/Molin-OS/molib/publish/xianyu.py` | 发布管线 |
-| `~/xianyu_agent/` | goofish SDK 目录（goofish_apis, utils, message） |
-
-### 参考文件
-
-| 文件 | 内容 |
-|:-----|:-----|
-| `references/ssl-eof-error.md` | SSL EOF 握手错误的诊断与恢复 |
-| `references/cron-report-schema.md` | cron 巡检报告的 JSON schema 与状态语义 |
-
-状态文件位置：
-- `~/.hermes/xianyu_bot/state.json` — 消息处理统计
-- `~/.hermes/xianyu_bot/config.json` — 飞书通知配置
-- `~/.hermes/xianyu_bot/activity.log` — 运行日志
-- `~/.hermes/xianyu_bot/cookies.json` — Cookies 缓存
-- `~/.hermes/state/xianyu_cron_report_latest.json` — 最新 cron 巡检报告
-- `~/.xianyu_cookies_new.txt` — 闲鱼登录 Cookies
-
-The production bot scripts live at `~/.hermes/molin/bots/xianyu_bot.py` (WebSocket listener) and `xianyu_enhanced.py` (CH5 enhancements). See `references/setup.md` for full installation guide.
+For the agent, these are replaced with equivalent in-session patterns (described in Section 5) without requiring Redis or async infrastructure.
