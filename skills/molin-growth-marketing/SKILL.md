@@ -123,6 +123,31 @@ video_pipeline = {
 - [ ] 竞品关键词监控
 ```
 
+## 飞轮第三棒：增长优化工作流
+
+墨增增长引擎（10:00 cron）读取上游 `content_flywheel` 接力数据，执行四步增长优化：
+
+### 步骤
+
+1. **SEO审计**（claude-seo + seo-audit）：评估内容搜索优化水平，识别小红书内部SEO + 跨平台搜索机会
+2. **Analytics追踪**（analytics-tracking）：检查埋点状态，输出多平台追踪方案
+3. **内容策略调整**（content-strategy）：基于数据调整内容方向和分发策略
+4. **写入接力文件**：`~/Molin-OS/relay/growth_flywheel_YYYY-MM-DD.json`
+
+### 输出格式
+
+参考 molin-relay-protocol 的墨增接力规范。核心字段：`seo_audit`、`content_strategy_adjustment`、`analytics_tracking_plan`、`seo_optimizations`、`ab_test_plan`、`bottlenecks`。
+
+### 小红书 SEO 特殊处理
+
+小红书是封闭平台（非搜索引擎可索引），SEO审计分为两层：
+- **平台内SEO**：标题/首段关键词、标签、双引擎算法（见 `references/xiaohongshu-seo-2026.md`）
+- **跨平台SEO**：公众号（搜狗微信搜索）+ 知乎（百度/Google）
+
+### 工具限制
+
+`web_extract` 对部分中文域名（zhihu.com、smzdm.com、sohu.com）可能被阻止。此时改用 `web_search` 摘要 + 已知领域知识。
+
 ## 与已有技能的衔接
 
 此 skill 与以下已有 Hermes skill 配合使用：

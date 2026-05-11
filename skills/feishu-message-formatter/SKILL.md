@@ -235,11 +235,13 @@ Agent 层的遗漏不再直接暴露给飞书用户。表格也会被转换为 `
 | `---` 水平线 | 用了 Markdown 分隔线 | 用 `━━━━━━` 分隔线卡片 |
 | `**粗体**` | 用了 Markdown 加粗 | 直接用纯文本，靠位置和 emoji 强调 |
 | `| col | col |` | 用了 Markdown 表格 | 改用 • 列表或飞书文档导入 |
-| `\`code\`` | 用了行内代码 | 直接用引号或纯文本 |
+| `\\`code\\`` | 用了行内代码 | 直接用引号或纯文本 |
 | 带 ASCII 框线的表格（`┌─┐`） | 用了框线字符 | 纯文本缩进或卡片格式 |
 | 长篇 Markdown 回复 | 超过 500 字用 Markdown | 写入 Markdown 文件 → `feishu-cli doc import` → 只发链接 |
 | 用 doc content-update 导大文档 | 容易超时+格式混乱 | **必须用 `feishu-cli doc import`**（三阶段流水线，支持并发表格） |
 | 用 doc add 逐块写入 | 500块需几百次API调用 | 用 `doc import` 一次性导入 |
+| 扁平 • 列表输出复杂策略 | CEO批\"太表面\"、\"不够结构化\" | 改用 ═══/━━━/ 三层层级分隔线 + 缩进分层 |
+| 过度压缩子任务输出 | 压缩损失细节 → 用户感知浅 | CEO 汇编时只去重+排版，不删减实质内容 |
 
 **自检方法**：把回复内容粘贴到微信输入框，如果看起来奇怪/有格式破损，就是违规。
 
@@ -316,8 +318,47 @@ stats = filter_batch(messages)   # {"total": N, "noise": M, "rule_breakdown": {.
 - 日常对话 → 自然轻松，但保持格式规范
 
 ### 卡片适度使用
+
 卡片格式用于结构化信息（操作结果/简报/审批），
 日常对话和简单确认不需要卡片，保持自然。
+
+### FeishuCardRouter — 5 种卡片场景决策树（v2.5）
+
+> 代码实现: `molib/shared/publish/feishu_card_router.py`
+
+发送飞书消息前，按以下决策树自动选择格式：
+
+```
+1. 消息目的是什么？
+   → 闲聊/简单确认 → T5 纯文字 (≤3行)
+   → 通知一件事 → 简单文字 + emoji
+   → 汇报任务结果/数据 → 进入第2步
+   → 需要审批/决策 → T2 审批卡片 (待审批·orange header)
+   → 系统异常/警报 → T4 告警卡片 (🚨 red header)
+
+2. 数据量/结构是？
+   → 1-3个数字 → 简洁文字 (不用卡片)
+   → 3-8个字段 → T1 数据卡片 (turquoise header)
+   → 综合报告 → 富卡片 (多列+图表+按钮)
+   → 内容草稿 → T3 内容预览卡片 (📝 blue header)
+```
+
+**T1 数据卡片**: `field_count≥3` 或含"简报/报表/统计/数据/产出/日报"关键词 → turquoise header + 数据表格
+**T2 审批卡片**: `governance_level∈{L2,L3}` 或含"审批/确认/报价/待决定"关键词 → orange header + 批准/修改/拒绝按钮
+**T3 内容预览卡片**: `has_draft=True` 或含"草稿/文案/脚本/大纲"关键词 → blue header + 内容preview + 发布按钮
+**T4 告警卡片**: 含"失败/异常/错误/超限"关键词或 `error_type` 存在 → red header + 异常描述 + 影响范围
+**T5 纯文字**: 默认 — 80%+ 的日常消息应走这里，禁止滥用卡片
+
+路由代码:
+```python
+from molib.shared.publish.feishu_card_router import FeishuCardRouter, OutputFormat
+
+fmt = FeishuCardRouter.route(message, {"governance_level": "L0"})
+if fmt == OutputFormat.TEXT:
+    bot.send_text(msg)  # 80%+ 消息走这里
+elif fmt == OutputFormat.CARD_ALERT:
+    card = FeishuCardBuilder().header("异常", "red").section(msg)...
+```
 
 ### 与 feishu-cli 协作
 长内容（>500字或含表格/图表）→ 写入 Markdown → `feishu-cli doc import` 导入为飞书文档

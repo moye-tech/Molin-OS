@@ -381,15 +381,51 @@ When the user provides design documents (HTML/Markdown), process them systematic
 3. **Map to existing modules** — Which modules can absorb the upgrade? What's new?
 4. **Prioritize by impact** — Fix the UX/pipeline issues first, backend bugs only if they actually affect us
 5. **Declare what's skipped AND WHY** — Every skip must have a technical rationale
+6. **"继续" = exhaustive** — When user says "继续", push ALL remaining tasks to completion: check system state, deploy services, verify, commit. Don't stop at one action.
+
+### Upgrade Document → Implementation Pipeline
+
+When user sends an HTML upgrade document (molin-os-v2-upgrade-map.html, molin-os-content-feishu-upgrade.html, etc.):
+
+```
+Phase 1: System scan — grep/pip list/find all relevant files, assess current state
+Phase 2: GAP analysis — map document recommendations against reality
+Phase 3: Parallel implementation — highest-impact+lowest-effort items first
+Phase 4: Verification — import test + functional test for each new module
+Phase 5: Commit + push — git add -A && git commit && git push
+```
+
+Key patterns proven in v2.5:
+- **Free model tier (OpenRouter `:free` suffix)**: Used as Ollama alternative for cost routing. Models: mistral-small-3.1-24b, qwen3-8b, gemma-3-4b, llama-4-scout. Rotate to spread rate limits.
+- **API Key injection**: Extract from config.yaml → write to ~/.hermes/.env → EnvLoader auto-loads into os.environ
+- **Three-tier backend**: Cloud API (DashScope) → Local light (moviepy+ffmpeg) → Local heavy (MPT/Docker)
+- **FeishuCardRouter**: 5 card types + decision tree + keyword trigger sets — solves "when to use card vs text"
+
+### EnvLoader Pattern
+
+**Problem:** .env API keys not visible in Python subprocesses (os.environ.get() returns empty).
+
+**Solution:** `molib/shared/env_loader.py` — auto-loads on import, caches to avoid reload.
+
+```python
+from molib.shared.env_loader import load_dotenv, get_env
+load_dotenv()  # Inject all ~/.hermes/.env vars into os.environ
+key = get_env("DASHSCOPE_API_KEY")  # Safe access with .env loading
+```
+
+**When to use:** Every bot/*.py and every molib module that reads API keys via os.environ should call `load_dotenv()` at module top.
 
 ## Reference Files
 
+- `references/content-upgrade-workflow.md` — Content/capability upgrade document → implementation pipeline (v2.5, 2026-05-11)
 - `references/worker-activation-pattern.md` — From SKILL.md-only to working code+CLI (2026-05-10)
 - `references/worker-v2-migration-pattern.md` — Batch upgrade to SmartSubsidiaryWorker + collaboration injection (2026-05-10)
 - `references/external-integration-pattern.md` — Lazy-import dict-return fallback-chain pattern for heavy GitHub deps (2026-05-11)
 - `references/firecrawl-v2-migration.md` — Firecrawl v2 API breaking changes: Document objects, scrape_url→scrape (2026-05-11)
 - `references/github-arsenal.md` — 47+ GitHub projects mapped to 20 subsidiaries, P1/P2/P3 priorities (2026-05-11)
 - `references/plan-b-pure-python-fallback.md` — 方案2: when network blocks external tools, create pure Python equivalents (2026-05-11)
+- `references/gap-driven-upgrade-workflow.md` — GAP分析→并行实现→验证→提交 的系统升级流水线 + OpenRouter 免费模型路由作为 Ollama 替代 (2026-05-11)
+- `references/service-activation-pattern.md` — MPT/ComfyUI/MuseTalk/LivePortrait 本地服务激活清单 + API Key 从 config.yaml 注入 .env 模式 (2026-05-11)
 
 ## Mac M2 Pip Timeout → Tsinghua Mirror / Clash Proxy
 
@@ -482,11 +518,32 @@ async def main_function(param: str) -> dict:
 | `molib_comfy.py` | `molib/infra/` | 418 | `molib comfy check/generate/models/preload/img2img` | PyTorch MPS + diffusers (方案2: 纯Python替代 ComfyUI 60K★, sd-turbo/sd-1.5/sdxl-turbo) |
 | `molib_flow.py` ⭐ | `molib/infra/` | 80 | `molib flow check/start/compare` | npx n8n (55K★ 桥) |
 | `molib_stt.py` ⭐ | `molib/infra/` | 130 | `molib stt check/transcribe` | ffmpeg (Whisper 替代) |
-| External bridges v2.2 | `molib/infra/external/` | 行 | — | 12模块: gpt-researcher/firecrawl/browser-use/crawl4ai/diffusers/fish-speech/fal-flux/storm/nemo-guardrails/n8n-rest/langgraph-chain/seedx-translate |
+| External bridges v2.2 | `molib/infra/external/` | — | — | 12模块: gpt-researcher/firecrawl/browser-use/crawl4ai/diffusers/fish-speech/fal-flux/storm/nemo-guardrails/n8n-rest/langgraph-chain/seedx-translate |
+| `feishu_card_router.py` ⭐ v2.5 | `molib/shared/publish/` | 200 | — | FeishuCardRouter: 5种卡片场景(T1-T5)决策树 + 4组关键词触发 + 治理级别路由 |
+| `reference_engine.py` ⭐ v2.5 | `molib/shared/content/` | 280 | — | crawl4ai 爆款对标写作: 6种标题公式 + 情绪词库 + 平台写作规范 + 离线降级 |
+| `cosyvoice_tts.py` ⭐ v2.5 | `molib/shared/tts/` | 380 | — | CosyVoice v3 TTS: 零样本声音克隆 + 18方言 + 情绪控制 + 4后端降级链 |
+| `digital_human.py` ⭐ v2.5 | `molib/content/` | 520 | — | 数字人口播: TTS→MuseTalk唇形同步→LivePortrait→MoviePy 三阶段流水线 |
+| `video_processor.py` ⭐ v2.5 | `molib/content/` | 390 | — | MoviePy 胶水层: 多平台适配 + 字幕 + BGM + 智能切片 |
+| `memory_layer.py` ⭐ v2.5 | `molib/shared/` | 280 | `mem0ai` | 双层记忆: mem0用户级 + ExperienceVault任务级, DeepSeek/OpenRouter embedding |
+| `observability.py` ⭐ v2.5 | `molib/shared/` | 250 | `langfuse` | Langfuse追踪: @observe_worker装饰器, 自动捕获耗时/token/异常 |
+| `fault_tolerance.py` ⭐ v2.5 | `molib/shared/` | 300 | `prefect` | Prefect断点续跑: WorkerChain崩溃后从上次成功步骤继续, 指数退避重试 |
+| `env_loader.py` ⭐ v2.5 | `molib/shared/` | 80 | stdlib | 统一.env→os.environ加载, 解决子进程API key不可见问题 |
 | `designer_worker.py` ⭐ | `molib/agencies/workers/` | 100 | — | PyTorch MPS (墨图设计升级) |
 | `voice_actor_worker.py` ⭐ | `molib/agencies/workers/` | 115 | — | macOS say + ffmpeg (墨声配音升级) |
 | `data_analyst_worker.py` ⭐ | `molib/agencies/workers/` | 100 | — | MolibAnalytics + CocoIndex (墨测数据升级) |
 | `crm_worker.py` ⭐ | `molib/agencies/workers/` | 130 | — | MolibDB (墨域CRM升级, twenty CRM 20K★ 替代) |
+| `larksuite_cli` ⭐ v2.5 | `npm global @larksuite/cli` | — | `lark-cli` (25+命令: im/calendar/docs/base/sheets/task/approval/mail/drive 等 17 个业务域) | Node.js v24.14.0 (Lark/Feishu 官方CLI, Agent-Native, MIT, 200+命令) |
+
+## ComfyUI Hardware Constraint (verified 2026-05-11)
+
+**M2 8GB is below the 16GB practical minimum.** Hardware check result:
+```
+GPU: Apple M2 — 8.0 GB unified memory
+Verdict: cloud → comfy-cloud
+• SD1.5 may work; SDXL/Flux will swap or OOM.
+```
+
+**Decision:** Use Comfy Cloud API ($0 free tier) or DashScope qwen-image-2.0-pro for image generation. The existing ComfyUI skill at `~/.hermes/skills/creative/comfyui/` supports both local and cloud via `scripts/hardware_check.py` → `scripts/comfyui_setup.sh`.
 
 ## Skip List (vetted, but user may override)
 

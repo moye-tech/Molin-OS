@@ -97,7 +97,18 @@ curl -s 'https://<url>/feishu/webhook' -X POST -H 'Content-Type: application/jso
 | ERR_NGROK_107 | Token valid format but invalid/revoked | Get fresh token from dashboard |
 | ERR_NGROK_4018 | No authtoken configured | Run `ngrok config add-authtoken <token>` |
 | ERR_NGROK_218 | Missing API version header | Add `Ngrok-Version: 2` header for API calls |
+| ERR_NGROK_6024 | Browser interstitial active | Switch to localhost.run/cloudflared for browser access; API clients pass through |
 | context deadline exceeded | Cloudflare API unreachable | Network issue; wait, retry, or use different tunnel provider |
+
+### ERR_NGROK_6024 Diagnosis
+```bash
+# Quick check: does the HTML contain ngrok assets?
+curl -s "https://<url>" -H "User-Agent: Mozilla/5.0" | grep -c "assets.ngrok.com"
+# >0 → interstitial active (browser UAs blocked)
+# =0 → clean pass through
+
+# API clients (no browser UA) bypass the interstitial automatically
+```
 
 ## Network Patience
 On this Mac (poor connectivity): ngrok may take **20-60 seconds** to establish a tunnel. The process will run with zero log output during this time. Check `http://127.0.0.1:4040/api/tunnels` to confirm. If still empty after 60s, kill and retry.
@@ -108,3 +119,38 @@ On this Mac (poor connectivity): ngrok may take **20-60 seconds** to establish a
 - [ ] `curl -s -o /dev/null -w '%{http_code}' https://<url>/` returns 200
 - [ ] Feishu developer console accepts the callback URL
 - [ ] After reboot: proxy + ngrok must be restarted (URL will change)
+
+## Free Alternatives Without Interstitial
+
+ngrok free tier injects a browser interstitial that cannot be bypassed server-side. When you need
+a clean tunnel with zero warning pages for human browser access, use one of these alternatives:
+
+### localhost.run (SSH tunnel)
+```bash
+# Start (background mode, persists until killed or SSH drops)
+ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 \
+    -R 80:localhost:8080 nokey@localhost.run 2>&1
+# Output: https://<random-chars>.lhr.life
+```
+- ✅ No interstitial, no account needed, zero config
+- ❌ URL changes each restart; free tier has rate limits (429s on rapid API calls)
+- Persistence: register free account at localhost.run → permanent subdomain
+
+### cloudflared TryCloudflare
+```bash
+cloudflared tunnel --url http://localhost:8080
+```
+- ✅ No interstitial, already installed (`/opt/homebrew/bin/cloudflared`)
+- ❌ TryCloudflare API occasionally returns 500; needs `brew install cloudflare/cloudflare/cloudflared`
+- Persistence: create a named tunnel with Cloudflare account for fixed domain
+
+## Hermes Web UI Access Token
+
+When accessing the Hermes dashboard through a tunnel, the login page requires an access token:
+- Located at `~/.hermes-web-ui/.token` (auto-generated on first launch, 64-char hex)
+- Override with `AUTH_TOKEN` env var or disable with `AUTH_DISABLED=1`
+- The Web UI server is a Node.js process at `~/.npm-global/lib/node_modules/hermes-web-ui/dist/server/index.js`
+
+ngrok free tier shows a "Visit Site" interstitial on browser visits — it detects browser User-Agent.
+`curl` without a browser UA bypasses it; browsers always hit it unless cookie is set from prior click.
+For full troubleshooting see `references/ngrok-free-tier-issues.md`.

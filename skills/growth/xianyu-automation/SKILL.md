@@ -834,6 +834,59 @@ Additional state files:
 - `cookies.json` — 闲鱼登录 Cookie
 - `config.json` — 监听器配置
 
+## 6. CRON HEALTH CHECK — 定时巡检
+
+Cron jobs should verify the listener is alive before assuming message processing is operational. Follow this checklist:
+
+### Health Check Sequence
+
+1. **API Token:** Run `python /Users/moye/.hermes/scripts/xianyu_check.py` → verify `token_ok: true`
+2. **Process alive:** Check PID from `~/.hermes/xianyu_bot/state.json` → `kill -0 <pid>` to verify
+3. **Recent activity:** Check `~/.hermes/xianyu_bot/ws.log` — last entry must be < 5 minutes old
+4. **If dead:** Restart from correct directory (see Pitfalls below)
+5. **Update state:** Write new PID and timestamp to `state.json` after restart
+
+### Restart Command
+
+```
+cd /Users/moye/Molin-OS/molib/xianyu && nohup python /Users/moye/.hermes/xianyu_bot/ws_listener.py >> /Users/moye/.hermes/xianyu_bot/ws.log 2>&1 &
+```
+
+Then update `state.json` with new PID.
+
+For a real-world recovery case, see [`references/2026-05-11-listener-death-recovery.md`](references/2026-05-11-listener-death-recovery.md).
+
+---
+
+## Pitfalls
+
+### 1. Working Directory Dependency (ws_listener.py)
+
+**Symptom:** `FileNotFoundError: [Errno 2] No such file or directory: 'static/goofish_js_version_2.js'`
+
+**Cause:** `ws_listener.py` imports `goofish_utils.py` which loads `static/goofish_js_version_2.js` with a **relative path**. If the CWD is `~/.hermes/xianyu_bot/`, the path resolves incorrectly.
+
+**Fix:** Always launch from `/Users/moye/Molin-OS/molib/xianyu/`:
+```
+cd /Users/moye/Molin-OS/molib/xianyu && python /Users/moye/.hermes/xianyu_bot/ws_listener.py
+```
+
+### 2. Silent Listener Death
+
+**Symptom:** `state.json` shows `ws_connected: true` and old PID, but `kill -0 <pid>` returns "No such process." No alert is generated when the listener dies.
+
+**Pattern:** WebSocket disconnects pile up (SSL EOF errors from goofish API), the listener eventually exits without restarting. The old PID in `state.json` becomes stale.
+
+**Detection:** Do NOT trust `state.json.ws_connected` alone. Always cross-check with `ps aux | grep ws_listener` and `ws.log` timestamp.
+
+### 3. SSL EOF from Xianyu API (h5api.m.goofish.com)
+
+**Symptom:** Frequent `[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol` errors in `ws.log`. Connection drops, then auto-reconnects after 5-15 seconds.
+
+**This is platform-side noise, not a local config issue.** The listener handles it automatically via reconnection logic. Only escalate if the listener fails to reconnect after 3+ consecutive attempts within 60 seconds.
+
+---
+
 ## Reference: Production Integration
 
 This skill is derived from `/integrations/xianyu/listener.py` in the Molin AI Intelligent System. In production:

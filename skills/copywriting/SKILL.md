@@ -266,6 +266,50 @@ For headlines and CTAs, provide 2-3 options:
 
 ---
 
+## Competitive Benchmark Copywriting (竞品对标文案)
+
+When the user asks for Tmall/电商/e-commerce product copy with competitor justification — especially for Chinese education/K12 brands like 火花思维/豌豆思维/斑马思维 — use this methodology.
+
+### Core Principle
+Every headline must have an explicit competitor benchmark. Format:
+```
+头图 N · 对标[竞品名]"[竞品策略原文]"的[策略类型]策略
+• 主标题: ≤12字
+• 副标题: ≤20字
+• 视觉建议: 具体画面描述
+📌 对标依据: 竞品真实数据 + 我们的差异化锚点
+```
+
+### Competitor Data Collection Workflow
+When direct Tmall page scraping fails (captcha/login wall — see `references/ecommerce-scraping-workarounds.md`):
+1. Search for third-party comparison articles (Zhihu/人人都是产品经理/什么值得买)
+2. Extract competitor pricing, class sizes, curriculum levels, marketing slogans
+3. Identify each competitor's **致命弱点** (fatal weakness) that honest product differentiation can target
+4. Build copy angles that exploit competitor weaknesses WITHOUT attacking them directly
+
+### Angle Selection Framework
+| Competitor Weakness | Copy Angle | Example |
+|:--|:--|:--|
+| AI录播无互动 | "真人引导不可替代" | vs 斑马AI学 |
+| 大班型(8人) | "少2个孩子，多2倍关注" | vs 豌豆思维 |
+| 级别少(3级) | "一套课管六年" | vs 斑马S1-S3 |
+| 价格低但AI | "便宜≠效果好" | vs 斑马¥2800 |
+| 无自研教材 | "课+书闭环" | 火花独有 |
+
+### Benchmark Justification Rules
+- Cite REAL competitor data (price, class size, curriculum levels — not fabricated)
+- State the difference honestly: "他们做X，我们做Y"
+- Never disparage — frame as "different choices for different needs"
+- Counter with a specific, verifiable fact, not an opinion
+
+### Headline-only Output Mode
+When user says "只输出头图文案" or specifies character limits, deliver:
+- ≤12 char main title
+- ≤20 char subtitle
+- Core visual suggestion (1 sentence)
+- Benchmark justification (1 line with competitor name + strategy)
+- Skip full page copy, details page structures, video scripts unless asked
+
 ## Related Skills
 
 - **copy-editing**: For polishing existing copy (use after your draft)
