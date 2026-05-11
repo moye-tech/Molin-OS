@@ -37,7 +37,33 @@ class WorkerChain:
             ceo_intent=str(getattr(original_task, 'payload', original_task))
         )
 
-    async def execute(self):
+    async def execute(self, use_fault_tolerance: bool = True):
+        """
+        执行 WorkerChain。
+
+        Args:
+            use_fault_tolerance: 是否使用 Prefect 断点续跑（默认 True，自动降级）
+        """
+        # 尝试使用 Prefect 容错执行
+        if use_fault_tolerance:
+            try:
+                from molib.shared.fault_tolerance import FaultTolerantChain
+                ft_chain = FaultTolerantChain(
+                    worker_ids=self.worker_ids,
+                    original_task=self.original_task,
+                    context=self.bus.accumulated_outputs,
+                )
+                result = await ft_chain.execute()
+                if result.get("status") != "error":
+                    await self._crystallize_sop()
+                    return result
+            except ImportError:
+                pass
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).warning(f"FaultTolerantChain 失败，降级原生执行: {e}")
+
+        # 原生执行（降级模式）
         final_output = {}
 
         for i, wid in enumerate(self.worker_ids):
@@ -85,6 +111,7 @@ class WorkerChain:
             "status": "success",
             "output": {"final": final_output, "chain": self.bus.accumulated_outputs},
             "chain": self.bus.insights,
+            "mode": "native",
         }
 
     def _get_worker(self, worker_id: str):
