@@ -58,3 +58,7 @@ Step 5 · 协调汇总
 1. CEO 看到"帮我分析"直接用自己的训练知识回答 → 应先调墨研竞情做实时搜索
 2. CEO 只用一个 delegate_task 而不是按 WorkerChain 拆成多个子任务
 3. CEO 对子任务输出过度压缩/改写 → 汇编即可，不改内容
+
+## 参考案例
+
+- `references/spark-thinking-case.md` — 火花思维 6 线策略实战：三棒 WorkerChain (48+9+3 次搜索，785s)，含完整子任务 prompt 结构和关键教训
