@@ -1,421 +1,465 @@
-# 墨麟OS (Molin-OS) — AI 一人公司操作系统
+# 墨麟AI集团 · 系统全景文档
 
-> **版本** v2.2 | **部署** Mac M2 8GB | **代码** 411 文件 · 79,474 行  
-> **GitHub** [moye-tech/Molin-OS](https://github.com/moye-tech/Molin-OS)
-
----
-
-## 目录
-
-1. [系统概览](#1-系统概览)
-2. [执行模型](#2-执行模型)
-3. [企业架构与子公司](#3-企业架构与子公司)
-4. [CEO 智能调度](#4-ceo-智能调度)
-5. [核心模块清单](#5-核心模块清单)
-6. [CLI 命令全集](#6-cli-命令全集)
-7. [飞书集成](#7-飞书集成)
-8. [飞轮管线](#8-飞轮管线)
-9. [定时作业](#9-定时作业)
-10. [记忆与知识系统](#10-记忆与知识系统)
-11. [安全与治理](#11-安全与治理)
-12. [备份与同步](#12-备份与同步)
+> **版本**: v5.0.0 · **Git**: `960b2db` · **更新**: 2026-05-11
+>
+> 墨麟OS (Molin-OS) — 22 家 AI 子公司的全栈智能操作系统。
+> 由 Hermes Agent 驱动，通过 Feishu/CLI/API 三通道交互。
 
 ---
 
-## 1. 系统概览
-
-墨麟OS 是一个 AI 驱动的一人公司操作系统，由以下三层构成：
+## 一、架构总览
 
 ```
-┌─────────────────────────────────────────┐
-│  Hermes Agent（大脑）                    │
-│  推理 · 规划 · 调度 · 对话               │
-├─────────────────────────────────────────┤
-│  molib CLI（神经）                       │
-│  python -m molib <command>              │
-├─────────────────────────────────────────┤
-│  22 家子公司 Worker（肌肉）               │
-│  内容 · 设计 · 客服 · 交易 · 安全 · ...  │
-└─────────────────────────────────────────┘
+                        ┌──────────────────────────┐
+                        │      Hermes Agent         │
+                        │   (CEO · 大脑 · 决策)      │
+                        └──────────┬───────────────┘
+                                   │
+              ┌────────────────────┼────────────────────┐
+              ▼                    ▼                    ▼
+        ┌──────────┐        ┌──────────┐        ┌──────────┐
+        │  Feishu  │        │   CLI    │        │   API    │
+        │  飞书对话 │        │ python -m│        │  Server  │
+        │          │        │  molib   │        │  :8648   │
+        └────┬─────┘        └────┬─────┘        └────┬─────┘
+             │                   │                   │
+             └───────────────────┼───────────────────┘
+                                 ▼
+                    ┌───────────────────────┐
+                    │   SmartDispatcher     │
+                    │   (14条 Open Design路由│
+                    │   + 22条协作规则)       │
+                    └───────────┬───────────┘
+                                │
+         ┌──────────────────────┼──────────────────────┐
+         ▼                      ▼                      ▼
+   ┌──────────┐          ┌──────────┐          ┌──────────┐
+   │ WorkerChain│         │ Handoff  │          │SOP 金库  │
+   │  多Worker  │         │  自动路由 │          │  经验匹配 │
+   └──────────┘          └──────────┘          └──────────┘
+                                │
+                                ▼
+                    ┌───────────────────────┐
+                    │  22 家 AI 子公司 Worker │
+                    │  + 465 Hermes 技能     │
+                    └───────────────────────┘
 ```
 
-**三大设计原则**：
-1. **纯 stdlib，零外部依赖** — 所有 molib 核心模块仅使用 Python 标准库
-2. **Mac M2 本地优先** — 8GB 统一内存，Metal 加速，文件系统直通
-3. **CEO 不是执行者** — 调度子公司并行工作，不自己包办
+### 堆栈
+
+| 层 | 技术 |
+|:--|:--|
+| Agent 框架 | Hermes Agent (Python) |
+| 对话入口 | Feishu/Lark · CLI (prompt_toolkit) · TUI (Ink/React) · API Server |
+| 推理后端 | DeepSeek V4 (主) · DashScope (视觉/TTS) · OpenRouter (免费路由) |
+| 执行引擎 | `python -m molib` — 纯 Python stdlib 优先 |
+| 设计工程 | Open Design v0.6.0 (Node.js daemon :55888) — 149 设计系统 × 134 技能 |
+| 记忆系统 | Hermes Memory + ChromaDB 向量库 + SuperMemory 云端 |
+| 知识管理 | Obsidian (iCloud 同步) — 7 目录结构 |
+| 部署 | macOS M2 (8GB) · Python 3.11 · Node 24 · Git(Hub) |
 
 ---
 
-## 2. 执行模型
+## 二、22 家 AI 子公司
 
-```
-用户消息 → Hermes 推理（纯思考）
-         → 需要执行时：terminal 工具
-         → python -m molib <command>
-         → 子公司 Worker 并行执行
-         → 结果回传 → 飞书卡片输出
-```
+### VP 营销 (5 家)
 
-**关键规则**：
-- 纯思考/规划/决策 → 在对话中完成，不调 Python
-- 需要真实执行（发消息/调 API/读写文件）→ 调 molib CLI
-- 3+ 子公司任务 → 并行调度，中间协调
+| Worker | 公司名 | 核心能力 | CLI 命令 |
+|:--|:--|:--|:--|
+| `content_writer` | 墨笔文创 | 文案创作、公众号、小红书、多语言 | `molib content write` |
+| `ip_manager` | 墨韵IP | IP 衍生、商标、版权、品牌管理 | `molib handoff route --task "IP"` |
+| `designer` | 墨图设计 | **Open Design 全栈 (149DS×134技能) + FLUX.2 生图** | `molib design web/image` |
+| `short_video` | 墨播短视频 | 短视频脚本+生成 | `molib video script/generate` |
+| `voice_actor` | 墨声配音 | TTS 语音合成、播客、多语言配音 | `molib avatar` |
 
----
+### VP 运营 (4 家)
 
-## 3. 企业架构与子公司
+| Worker | 公司名 | 核心能力 | CLI 命令 |
+|:--|:--|:--|:--|
+| `crm` | 墨域私域 | CRM 管理、用户分层、社群运营 | `molib crm segment/push` |
+| `customer_service` | 墨声客服 | 自动化客服 (闲鱼/飞书) | `molib xianyu reply` |
+| `ecommerce` | 墨链电商 | 订单管理、电商平台 | `molib order list/status` |
+| `education` | 墨学教育 | 课程设计、学习路径、AI 辅导 | `molib handoff route --task "教育"` |
 
-### 5 VP + 20 家子公司
+### VP 技术 (4 家)
 
-| VP | 子公司 | Worker | 核心能力 |
-|----|--------|--------|---------|
-| **VP 营销** | 墨笔文创 | content_writer | 文案/公众号/博客 |
-| | 墨韵IP | ip_manager | IP/商标/品牌 |
-| | 墨图设计 | designer | 图片/UI/封面 |
-| | 墨播短视频 | short_video | 短视频脚本+生成 |
-| | 墨声配音 | voice_actor | TTS/播客 |
-| **VP 运营** | 墨域私域 | crm | CRM/用户分层 |
-| | 墨声客服 | customer_service | 闲鱼自动客服 |
-| | 墨链电商 | ecommerce | 订单/交易 |
-| | 墨学教育 | education | 课程/培训 |
-| **VP 技术** | 墨码开发 | developer | 软件开发 |
-| | 墨维运维 | ops | 部署/DevOps |
-| | 墨安安全 | security | 审计/红队 |
-| | 墨梦AutoDream | auto_dream | AI实验/记忆蒸馏 |
-| **VP 财务** | 墨算财务 | finance | 记账/预算 |
-| **VP 战略** | 墨商BD | bd | 商务拓展 |
-| | 墨海出海 | global_marketing | 出海/多语言 |
-| | 墨研竞情 | research | 竞品/趋势 |
-| **共同服务** | 墨律法务 | legal | 合同/合规 |
-| | 墨脑知识 | knowledge | RAG/长期记忆 |
-| | 墨测数据 | data_analyst | 数据分析 |
-| **专项预置** | 墨投交易 | trading | 量化交易 |
-| | Scrapling | scrapling_worker | 网页抓取 |
-| | 9Router | router9 | 网络路由 |
+| Worker | 公司名 | 核心能力 |
+|:--|:--|:--|
+| `developer` | 墨码开发 | 软件开发、代码生成、CLI 工具 |
+| `ops` | 墨维运维 | 服务器部署、DevOps、环境配置 |
+| `security` | 墨安安全 | 代码审计、安全评估、漏洞扫描 |
+| `auto_dream` | 墨梦AutoDream | AI 自动化实验、记忆蒸馏、自学习 |
 
----
+### VP 财务 (1 家)
 
-## 4. CEO 智能调度
+| Worker | 公司名 | 核心能力 | CLI 命令 |
+|:--|:--|:--|:--|
+| `finance` | 墨算财务 | 记账、预算、成本控制、报表 | `molib finance record/report` |
 
-### 四层路由架构
+### VP 战略 (3 家)
 
-```
-Layer 0 ─ 问候/闲聊拦截 → 零成本直接回复
-Layer 1 ─ 历史路由缓存 → Jaccard 相似度匹配
-Layer 2 ─ LLM 语义路由 → DeepSeek 推理子公司画像
-Layer 3 ─ 关键词兜底   → 完整关键词匹配表
-```
+| Worker | 公司名 | 核心能力 | CLI 命令 |
+|:--|:--|:--|:--|
+| `bd` | 墨商BD | 商务拓展、合作方案 | `molib handoff route --task "BD"` |
+| `global_marketing` | 墨海出海 | 多语言出海、全球化运营 | `molib handoff route --task "出海"` |
+| `research` | 墨研竞情 | 竞争分析、趋势研究、情报采集 | `molib intel trending/search` |
 
-### 三层需求拆解模型（v2.2 新增）
+### 共同服务 (3 家)
 
-CEO 调度前必须完成三层分析：
+| Worker | 公司名 | 核心能力 |
+|:--|:--|:--|
+| `legal` | 墨律法务 | 合同审查、合规风险评估 |
+| `knowledge` | 墨脑知识 | RAG 知识库、长期记忆、SOP 管理 |
+| `data_analyst` | 墨测数据 | 数据分析、BI 报表、质量追踪 |
 
-| 层级 | 含义 | 示例（"闲鱼接单变现"） | 子公司 |
-|------|------|----------------------|--------|
-| **L1** 字面需求 | 用户说了什么 | 闲鱼能接哪些单 | research |
-| **L2** 真实目标 | 真正想要的结果 | 快速变现，获取现金流 | shop + ip + data |
-| **L3** 隐含约束 | 没说但必须满足 | 能力匹配 + 平台合规 | legal + knowledge |
+### 专项 (2 家)
 
-**调度规则**：
-- L1/L2 命中的子公司：必选
-- L3 命中的：按风险决定
-- 与三层均不相关：不选
-- 涉及金钱/发布/外发：必选 legal
-- 禁止行为：单子公司处理复杂任务、因关键词误触发、遗漏合规审查
+| Worker | 公司名 | 核心能力 | CLI 命令 |
+|:--|:--|:--|:--|
+| `trading` | 墨投交易 | 量化交易策略、信号、回测 | `molib trading signal/analyze` |
+| `scrapling` | 墨研Scrapling | 网页抓取、浏览器指纹模拟 | `molib scrap fetch` |
 
 ---
 
-## 5. 核心模块清单
+## 三、墨图设计 v2.2 — Open Design 集成
 
-### infra/ — 基础设施层
+> ⭐ 34K · Apache 2.0 · 149 设计系统 × 134 技能
 
-| 模块 | 文件 | 功能 |
-|------|------|------|
-| **BudgetGuard** | `budget_guard.py` | API 成本跟踪，¥100/日熔断 |
-| **CocoIndex** | `coco_index.py` | 本地文件监听 SQLite 管道 |
-| **DigitalHuman** | `digital_human.py` | M2 本地数字人 (Tier 1: ffmpeg+say) |
-| **EventBus** | `event_bus.py` | 跨子公司事件发布/订阅 |
-| **FeishuBitable** | `feishu_bitable.py` | 飞书多维表格自动写入 |
-| **FeishuCardBuilder** | `gateway/feishu_card_builder.py` | 飞书互动卡片（11组件+6模板） |
-| **FeishuNoiseFilter** | `feishu_noise_filter.py` | 8条正则可配置过滤 |
-| **FeishuReplyPipeline** | `gateway/feishu_reply_pipeline.py` | 3消息有序发送 |
-| **MemoryDistiller** | `memory/distiller.py` | 两层记忆蒸馏（工作→语义） |
-| **FeishuGateway** | `gateway/platforms/feishu.py` | 飞书长连接+Webhook |
+### 架构
 
-### agencies/ — 执行层
+```
+python -m molib design web --prompt="..." --action=landing_page --ds=apple
+    │
+    ▼
+Designer._web_design()
+    ├── GET /api/skills/saas-landing      → 技能规范
+    ├── GET /api/design-systems/apple     → Apple 设计系统 (17,764 chars)
+    ├── LLM (DeepSeek V4)                 → 生成 HTML/CSS
+    ├── POST /api/artifacts/save          → daemon 预览
+    └── 💾 ~/Molin-OS/output/designs/     → 本地 HTML
+```
 
-| 模块 | 文件 | 功能 |
-|------|------|------|
-| **SwarmBridge** | `swarm_bridge.py` | 跨子公司 Handoff 编排 |
-| **TradingAgentsCN** | `trading_agents.py` | 多智能体交易分析 |
-| **Handoff** | `handoff.py` | 16 领域自动路由 |
-| **Planning** | `planning.py` | 结构化任务分解 |
-| **Workers** | `workers/` (49文件) | 22 家子公司实现 |
+### 14 个快捷动作
 
-### ceo/ — 决策层
+| action | 映射 skill | 说明 |
+|:--|:--|:--|
+| `landing_page` | `saas-landing` | SaaS 落地页 |
+| `dashboard` | `dashboard` | 数据分析仪表盘 |
+| `pitch_deck` | `html-ppt-pitch-deck` | 投资人 PPT |
+| `blog_post` | `blog-post` | 博客文章 |
+| `pricing_page` | `pricing-page` | 定价方案页 |
+| `mobile_app` | `mobile-app` | 移动端原型 |
+| `web_prototype` | `web-prototype` | 通用网页原型 |
+| `docs_page` | `docs-page` | 文档/知识库页 |
+| `waitlist` | `waitlist-page` | 预发布等待页 |
+| `login_flow` | `login-flow` | 登录认证流程 |
+| `weekly_report` | `weekly-update` | 周报 |
+| `finance_report` | `finance-report` | 财务报表 |
+| `kami_landing` | `kami-landing` | 日式简约落地页 |
+| `ppt` | `html-ppt-pitch-deck` | PPT (同 pitch_deck) |
 
-| 模块 | 功能 |
-|------|------|
-| `intent_router.py` | 四层路由（739行） |
-| `ceo_orchestrator.py` | CEO 编排器（658行） |
-| `risk_engine.py` | 风险评估 |
-| `dag_engine.py` | DAG 任务分解 |
-| `sop_store.py` | SOP 记忆存储 |
+### Top 10 设计系统
+
+| ID | 风格 | 适用场景 |
+|:--|:--|:--|
+| `apple` | 极简白 + SF Pro | 科技/SaaS |
+| `stripe` | 深蓝 + 渐变 | 金融/支付 |
+| `airbnb` | 暖色 + Cereal | 社区/平台 |
+| `ant` | 蓝白企业级 | 后台/中台 |
+| `arc` | 暗色霓虹 | 开发者工具 |
+| `bento` | 网格卡片 | 产品展示 |
+| `agentic` | AI 原生 | AI Agent |
+| `notion` | 极简黑白 | 文档/知识库 |
+| `linear` | 暗色 + 紫 | 项目工具 |
+| `vercel` | 黑 + 几何 | 开发者平台 |
 
 ---
 
-## 6. CLI 命令全集
+## 四、CLI 命令手册
+
+### 核心命令
 
 ```bash
-# ═══ 系统 ═══
-python -m molib health                    # 系统健康检查
-python -m molib help                       # 命令列表
+python -m molib health                              # 系统健康检查
+python -m molib help                                 # 命令列表
+```
 
-# ═══ 内容创作 ═══
-python -m molib content write --topic T --platform xhs
-python -m molib content publish --platform xhs --draft-id ID
+### 内容创作 (墨笔文创)
+
+```bash
+python -m molib content write --topic "主题" --platform xhs
+python -m molib content publish --platform xhs --draft-id xxx
+```
+
+### 设计 (墨图设计 v2.2)
+
+```bash
+# AI 生图
 python -m molib design image --prompt "描述" --style 写实
-python -m molib video script --topic T --duration 60s
-python -m molib avatar create --text "你好" --image pic.jpg --voice Tingting
+
+# Open Design 全栈网页
+python -m molib design web --prompt "墨麟官网" --action landing_page --ds apple
+python -m molib design web --prompt "销售看板" --action dashboard --ds stripe
+python -m molib design web --prompt "融资计划" --action pitch_deck --ds airbnb
+python -m molib design web --prompt "定价方案" --action pricing_page --ds vercel
+```
+
+### 视频 (墨播短视频)
+
+```bash
+python -m molib video script --topic "主题" --duration 60s
+python -m molib video generate --topic "主题" --engine mpt|pixelle
+```
+
+### 情报 (墨研竞情)
+
+```bash
+python -m molib intel trending
+python -m molib intel firecrawl scrape --url URL
+python -m molib intel firecrawl search --query Q
+python -m molib intel save --topic "主题" --summary "..."
+```
+
+### 财务 (墨算财务)
+
+```bash
+python -m molib finance record --type expense --amount 100 --note "说明"
+python -m molib finance report
+```
+
+### 电商 (墨链电商)
+
+```bash
+python -m molib order list --status pending
+python -m molib order status --order-id xxx
+```
+
+### 交易 (墨投交易)
+
+```bash
+python -m molib trading signal --symbol BTC/USDT
+python -m molib trading analyze --market-type crypto --symbol BTC/USDT
+```
+
+### 同步 & 知识
+
+```bash
+python -m molib sync            # CocoIndex 增量同步
+python -m molib query "SQL"     # MQL 知识查询
+python -m molib handoff route --task "内容创作"  # Handoff 自动路由
+python -m molib plan create --title "..." --description "..."
+```
+
+### 数字人 (墨声配音)
+
+```bash
+python -m molib avatar create --text "你好" --image pic.jpg
 python -m molib avatar list-voices
 python -m molib avatar check
-
-# ═══ 运营 ═══
-python -m molib xianyu reply --msg-id ID --content "回复"
-python -m molib crm segment --by 活跃度
-python -m molib order list --status pending
-
-# ═══ 情报 ═══
-python -m molib intel trending
-python -m molib intel save --topic "AI Agent" --summary "..."
-python -m molib intel firecrawl search --query Q
-python -m molib intel firecrawl research --topic T
-
-# ═══ 交易 ═══
-python -m molib trading signal --symbol 000001 --market a-share
-python -m molib trading analyze --symbol BTC/USDT --market crypto
-python -m molib trading research --ticker TSLA
-
-# ═══ 基础设施 ═══
-python -m molib cost report               # API 成本报告
-python -m molib cost check                # 预算检查
-python -m molib index watch --dir PATH    # 文件监听索引
-python -m molib index query --term "关键词"
-python -m molib index sync
-python -m molib memory distill            # 记忆蒸馏
-python -m molib memory stats              # 记忆统计
-python -m molib bitable schema            # 多维表格结构
-python -m molib swarm list                # Swarm 通路
-python -m molib swarm visualize           # ASCII 流程图
-
-# ═══ 财务 ═══
-python -m molib finance record --type expense --amount 100 --note "API"
-python -m molib finance report
-
-# ═══ 规划 ═══
-python -m molib plan create --title "..." --description "..."
-python -m molib plan decompose --plan-id xxx
-
-# ═══ 知识 ═══
-python -m molib query "FROM skills WHERE ..."
-python -m molib manifest validate
 ```
 
 ---
 
-## 7. 飞书集成
+## 五、SmartDispatcher 路由表
 
-### 三层架构
+> 用户说一句话 → 自动匹配 WorkerChain → 并行/串行执行 → 返回结果
 
-```
-┌─────────────────────────────────────┐
-│ FeishuGateway (长连接 + Webhook)     │
-│ feishu.py · 消息接收 · Token 管理    │
-├─────────────────────────────────────┤
-│ FeishuReplyPipeline (3消息流水线)     │
-│ ① 思维链卡片 → ② 主回复 → ③ 详情     │
-├─────────────────────────────────────┤
-│ FeishuCardBuilder (JSON 组件引擎)     │
-│ header · section · table · actions   │
-└─────────────────────────────────────┘
-```
-
-### 3 消息回复结构（v2.2）
-
-```
-消息① · 思维链卡片
-  🧠 CEO 推理过程
-  ├ L1 字面需求
-  ├ L2 真实目标
-  ├ L3 隐含约束
-  ├ 调度决策: research · shop · ip · data · legal
-  └ ⏱ 87s · ¥0.016 · 5子公司 · 信心度 94%
-
-消息② · 主回复卡片
-  ✅ 任务完成
-  ├ 🎯 核心结论
-  ├ 💰 数据排名（表格）
-  ├ ⚠️ 合规红线
-  └ [查看全文] [导出报告] [继续提问]
-
-消息③ · 子公司详情（每子公司一张）
-  📊 research 完整报告
-  📊 shop 完整报告
-  📊 legal 完整报告
-```
-
-### 噪声过滤
-
-8 条正则规则自动过滤飞书群消息：
-- R0: 空消息 · R1: 纯表情 · R2: 系统消息（入群/退群）
-- R4: 超短无意义 · R5: @机器人无内容 · R6: 纯数字日期
-- R7: URL only · R8: 飞书富文本碎片
+| 触发词 | Worker 链 |
+|:--|:--|
+| 落地页 / landing | `[designer]` |
+| 仪表盘 / dashboard | `[designer, data_analyst]` |
+| PPT / pitch | `[designer, content_writer]` |
+| 网页设计 / 设计网页 | `[designer]` |
+| UI设计 / 原型 | `[designer]` |
+| 品牌视觉 | `[designer, ip_manager]` |
+| 定价页 | `[designer, bd]` |
+| 文档页 | `[designer, knowledge]` |
+| 博客 | `[content_writer, designer]` |
+| 营销文案 / 小红书 | `[research, content_writer, designer]` |
+| 短视频 | `[research, content_writer, short_video, voice_actor]` |
+| 产品上架 | `[content_writer, designer, ecommerce]` |
+| 竞品报告 | `[research, data_analyst, content_writer]` |
+| 安全审计 | `[security, developer, ops]` |
+| 部署上线 | `[developer, ops, security]` |
+| 交易策略 | `[trading, research, data_analyst]` |
+| 出海 / 全球化 | `[research, global_marketing, legal]` |
 
 ---
 
-## 8. 飞轮管线
+## 六、飞轮管线
 
-全自动内容生产链，通过 `relay/` 目录接力：
+> 每日 08:00-10:00 全自动运行
 
 ```
-🕐 08:00  第一棒 · 情报采集（墨研竞情）
-  daily_hot_report.py → relay/intelligence_morning.json
-
-🕐 09:00  第二棒 · 内容生成（墨笔文创）
-  flywheel_content.py ← intelligence_morning.json
-  → relay/content_flywheel.json
-
-🕐 09:30  第三棒 · 分发策略（墨测数据）
-  flywheel_distribute.py ← content_flywheel.json
-  → relay/distribution_plan.json
-
-🕐 10:00  简报推送（墨研竞情）
-  daily_briefing.py → relay/briefing_daily.md
+08:00  墨研竞情 → relay/intelligence_morning.json     (情报采集)
+09:00  墨笔文创 → relay/content_flywheel.json          (内容生成)
+09:30  墨测数据 → relay/distribution_plan.json         (分发策略)
+10:00  墨研竞情 → relay/briefing_daily.md              (简报推送)
 ```
-
-**接力规则**：
-1. 每棒先检查 relay/ 中上游文件
-2. 无上游数据 → 跳过或降级
-3. 格式严格对齐，纯 stdlib
-4. 日志备份至 `~/.hermes/daily_reports/`
 
 ---
 
-## 9. 定时作业
+## 七、技能系统
 
-共计 **18 个 Cron 作业**，全部投递到飞书自动化控制群：
+### 技能生态
 
-| 时间 | 作业 | 说明 |
-|------|------|------|
-| 03:00 | 系统备份 | 双轨备份 (GitHub + 本地 HDD) |
-| 06:00 | 记忆蒸馏 (周一) | 周度经验提取 |
-| 07:00 | 夸克云盘备份 | 增量云端备份 |
-| 07:30 | API 成本预警 | 超 ¥80 阈值告警 |
-| 08:00 | 墨思情报扫描 | 博客/论文/热点采集 |
-| 09:00 | CEO 每日简报 | 昨日产出+今日待办 |
-| 09:00 | 墨迹内容工厂 | 飞轮第二棒 |
-| 09:15–21:45 | 闲鱼消息检测 | 每 30 分钟检查新消息 |
-| 10:00 | 治理合规审计 | L1/L2 操作审计 |
-| 10:00 | 墨增增长引擎 | 飞轮第三棒 |
-| 10:00 | 技能库审计 (15日) | 30天未用技能归档 |
-| 11:00 | 内容效果回收 | 阅读/点赞/收藏分析 |
-| 12:00 | 系统健康快照 | 20 家子公司产出汇总 |
-| 14:00 | 竞品监控 | 价格 + 内容对比 |
-| 17:00 | CEO 下班简报 | 今日全量汇总 |
-| 每2小时 | GitHub 双向同步 | pull --rebase → push |
-| 周五 10:00 | 自学习进化 | 周度反思协议 |
-| 每月1日 | 月度财务对账 | 收入/支出/利润 |
+| 层级 | 数量 | 位置 |
+|:--|:--|:--|
+| Hermes 内置技能 | 465 | `~/.hermes/skills/` |
+| Molin-OS 技能 | 30 | `~/Molin-OS/skills/` |
+| Open Design 技能 | 134 | daemon `:55888` |
+| Open Design 设计系统 | 149 | daemon `:55888` |
 
----
+### 核心技能分类
 
-## 10. 记忆与知识系统
-
-### 两层蒸馏架构（v2.1，Mac 8GB 适配）
-
-```
-┌──────────────────┐
-│ 工作记忆 (Working) │  ← 最近 50 条对话摘要（SQLite）
-│ 自动触发蒸馏 ↑     │
-├──────────────────┤
-│ 语义记忆 (Semantic)│  ← SOP 模式 · 经验法则 · 关键词标签
-└──────────────────┘
-```
-
-**存储位置**：
-```
-~/.hermes/memory/distillation.db    # 蒸馏SQLite
-~/.hermes/memory/chroma_db/         # 向量存储
-~/.hermes/memory/long_term/         # 长期记忆
-~/.hermes/coco_index.db             # 文件索引
-```
-
-**CocoIndex** — 本地文件知识管道：
-- 监控 `~/Molin-OS/molib/` 和 `~/.hermes/relay/`
-- SHA256 增量索引，SQLite 存证
-- 支持关键词搜索 + 文件类型统计
+| 类别 | 数量 | 代表 |
+|:--|:--|:--|
+| Agent Engineering | 15+ | backend-architect, code-reviewer, frontend |
+| Marketing | 20+ | content-creator, SEO, social-media |
+| Product | 15+ | product-manager, PRD, user-stories |
+| Creative | 30+ | ascii-art, architecture-diagram, p5js |
+| Data Science | 10+ | jupyter, data-analysis, visualization |
+| ML Ops | 20+ | unsloth, vllm, llama-cpp, huggingface |
+| DevOps | 10+ | kanban, webhook, cron |
+| GitHub | 8 | auth, code-review, pr-workflow, issues |
+| Molin-OS | 20+ | 全部 22 家 Worker 对应技能 |
+| Design | 5+ | molin-open-design, excalidraw, pixel-art |
 
 ---
 
-## 11. 安全与治理
+## 八、记忆 & 知识管理
 
-### 五级治理模型
+### 三层记忆
 
-| 级别 | 名称 | 行为 | 示例 |
-|------|------|------|------|
-| L0 | 自动执行 | 直接做 | 自动回复、内容生成 |
-| L1 | 通知 | 做完发飞书 | 系统备份、日报 |
-| L2 | 审批 | 等创始人确认 | 报价 >¥100、对外发布 |
-| L3 | 董事会审批 | 全面评估 | 重大决策 |
-| L4 | 绝对禁止 | 直接拒绝 | 涉及真实现金/转账 |
+```
+L1: Hermes Memory (SQLite FTS5)
+    └── 16 条持久化记忆 · 跨会话 · ~93% 容量
 
-### BudgetGuard 成本盾
+L2: ChromaDB 向量库
+    └── ~/.hermes/memory/chroma_db/ · 语义检索
 
-- 每日预算 ¥100，实时追踪 DeepSeek/Claude/Qwen 消耗
-- 80% → warning，100% → blocked
-- 持久化 JSON 日志，`molib cost report` 查看
+L3: SuperMemory 云端
+    └── app.supermemory.ai · GitHub 雷达日报同步
+```
 
----
+### Obsidian 知识库
 
-## 12. 备份与同步
+```
+Vault: ~/Library/Mobile Documents/iCloud~md~obsidian/Documents/
+同步: iCloud (免费 · 多设备 · 同 Apple ID)
 
-| 目标 | 方式 | 频率 | 内容 |
-|------|------|------|------|
-| **GitHub** | `git push` | 每 2h | 源码 + 配置（不含密钥） |
-| **本地 HDD** | `rsync` | 每日 03:00 | 全量镜像（含密钥） |
-| **夸克云盘** | `molin_backup.sh` | 每日 07:00 | 增量云端 |
+目录:
+  00-Inbox/      — 临时收集
+  10-Daily/      — 日报/GitHub雷达 (自动)
+  20-Reports/    — 周报/月报/专项
+  30-Knowledge/  — 知识卡片
+  40-Projects/   — 项目追踪
+  50-Archive/    — 归档
+  99-Templates/  — 模板
+```
 
-恢复流程：
+### 同步管道
+
 ```bash
-git clone https://github.com/moye-tech/Molin-OS.git ~/Molin-OS
-rsync -av /Volumes/MolinOS/hermes/ ~/
-# 一键恢复完毕
+# 报告 → Obsidian
+python3 ~/Molin-OS/scripts/obsidian_sync.py
+
+# 报告 → SuperMemory
+python3 ~/.hermes/scripts/supermemory_sync.py
 ```
 
 ---
 
-## 附录 A：系统环境
+## 九、部署 & 环境
+
+### 硬件
 
 | 项目 | 值 |
-|------|-----|
-| 芯片 | Apple M2 |
-| 内存 | 8 GB 统一内存 |
-| Python | 3.11.15 |
-| 系统 | macOS 26.4.1 |
-| ffmpeg | 8.1.1 |
-| 磁盘可用 | 169 GB |
-| Hermes Agent | 部署于 `~/.hermes/hermes-agent/` |
+|:--|:--|
+| 设备 | MacBook (Apple Silicon M2) |
+| 内存 | 8 GB unified |
+| 磁盘 | 169 GB 可用 |
+| OS | macOS 26.4.1 |
 
-## 附录 B：关键架构决策
+### 运行时
 
-| 决策 | 原因 |
-|------|------|
-| 纯 stdlib | Mac M2 离线可用，零 pip install |
-| 不自己管理飞书 Token | Hermes Agent 内置 feishu 平台接管 |
-| 两层记忆蒸馏 | 8GB 内存不支持三层，跳过情节记忆层 |
-| 跳过 HeyGen/D-ID | 云端 ¥50+/月，Tier 1 ffmpeg+say 0 成本替代 |
-| 跳过 DSPy | 每次 10K+ token，现有提示词已够好 |
-| 跳过夸克/猪八戒 | 已有双轨备份 + 无 API |
+| 组件 | 版本 | 端口 |
+|:--|:--|:--|
+| Hermes Agent | latest | — |
+| Molin-OS | v5.0.0 | Web UI :8648 |
+| Open Design Daemon | v0.6.0 | `:55888` |
+| Python | 3.11.15 | — |
+| Node.js | v24.14.0 | — |
+| pnpm | 11.0.9 / 10.33.2 (Corepack) | — |
+| ngrok | v3.39.1 | 反向代理 :8080 |
+
+### 连接平台
+
+| 平台 | 状态 |
+|:--|:--|
+| Feishu (飞书) | ✅ Connected |
+| API Server (:8648) | ✅ Connected |
+| Local (文件系统) | ✅ |
+
+### 关键约束
+
+| 约束 | 说明 |
+|:--|:--|
+| 无 Docker | 用户明确拒绝 · 所有方案纯 Python/macOS 原生 |
+| 无本地 LLM | 不跑 Ollama · 用云端 API (DeepSeek/DashScope) |
+| 网络限制 | GitHub >10MB 超时 · 需走 Clash 代理 (HK 出口) |
+| stdlib 优先 | 新模块零外部依赖 · FastAPI/requests 除外 |
+| M2 8GB | ComfyUI 不可用 · 用 diffusers MPS 方案2 |
 
 ---
 
-*墨麟OS v2.2 — 2026-05-10 · 墨烨（尹建业）*
+## 十、治理 & 安全
+
+### 四级治理
+
+| 级别 | 名称 | 说明 |
+|:--|:--|:--|
+| L0 | 自动执行 | 内容生成、数据采集、例行报告 — 无需确认 |
+| L1 | 通知 | 完成后飞书通知创始人 |
+| L2 | 审批 | 报价 >¥100、承诺交付、对外发布、修改配置 |
+| L3 | 董事会审批 | 重大决策需全面评估 |
+| L4 | 绝对禁止 | 涉及真实现金/转账/支付 — 绝不碰 |
+
+### CEO 委托协议 v2.0
+
+```
+核心原则: "问题问我，产出找他们"
+
+决策树:
+  Step 1: 分类 (是执行类还是问答类?)
+  Step 2: 查历史 (之前谁做过?)
+  Step 3: 规划 WorkerChain
+  Step 4: 委托执行
+  Step 5: 存档
+
+3秒自查:
+  ① 自己生成内容? → 委托
+  ② 只用了一个Worker? → 考虑WorkerChain
+  ③ 告诉创始人谁在做/多久/产出在哪?
+```
+
+---
+
+## 十一、版本历史
+
+| 版本 | 日期 | 关键变更 |
+|:--|:--|:--|
+| v5.0.0 | 2026-05-11 | 系统标准化审计 · Open Design 集成 · Obsidian 知识库 |
+| v2.5 | 2026-05-10 | 文档驱动开发 · OpenRouter 免费路由 · FeishuCardRouter |
+| v2.2 | 2026-05-09 | 墨图设计 Open Design 全栈 · 14 快捷动作 |
+| v2.1 | 2026-05-08 | FLUX.2 生图 · Firecrawl v2 · 12 外部桥 |
+| v2.0 | 2026-05-06 | SmartDispatcher · WorkerChain · Handoff 自动路由 |
+| v1.0 | 2026-04 | 22 家 Worker · CLI · 飞轮管线 · SOP 金库 |
+
+---
+
+> 📋 本文档由 Hermes Agent 自动生成 · 最后同步: `960b2db`
+> 
+> 🌐 GitHub: [moye-tech/Molin-OS](https://github.com/moye-tech/Molin-OS) (Private)
+> 
+> 🧠 Obsidian: `obsidian://open?vault=iCloud~md~obsidian`
