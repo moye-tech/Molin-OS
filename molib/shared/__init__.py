@@ -46,6 +46,11 @@ try:
 except ImportError:
     pass
 
+try:
+    from . import env_loader
+except ImportError:
+    pass
+
 __all__ = [
     "agent", "ai", "analysis", "content", "finance", "gate",
     "gui_eval", "knowledge", "llm", "network", "publish", "storage", "tts",

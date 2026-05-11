@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-墨麟视频生成器 — 多后端自动降级
+墨麟视频生成器 v2.5 — 多后端自动降级
 支持:
   1. DashScope HappyHorse-1.0-T2V (百炼文生视频，异步任务模式)
-  2. MoneyPrinterTurbo (本地部署，MPT fork)
+  2. moviepy+ffmpeg 本地幻灯片视频 (轻量级，无额外依赖)
+  3. MoneyPrinterTurbo (本地部署，需启动服务)
 
 用法:
   python video_generator.py "话题" [时长]
@@ -19,6 +20,13 @@ from pathlib import Path
 from datetime import datetime
 from typing import Optional
 
+# ── v2.5: 自动加载 .env ──
+try:
+    from molib.shared.env_loader import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 # ── 配置 ──────────────────────────────────────────────────────────
 
 BASE_DIR = Path.home() / "hermes-os"
@@ -27,19 +35,11 @@ MPT_DIR = FORK_REPOS_DIR / "MoneyPrinterTurbo"
 
 MPT_API_BASE = os.environ.get("MPT_API_BASE", "http://localhost:8899")
 
-# DashScope/百炼配置（读 .env）
-DASHSCOPE_API_KEY = ""
-env_path = Path.home() / ".hermes" / ".env"
-if env_path.exists():
-    for line in env_path.read_text().splitlines():
-        if line.startswith("DASHSCOPE_API_KEY"):
-            DASHSCOPE_API_KEY = line.split("=", 1)[1].strip().strip('"').strip("'")
-            break
-
+DASHSCOPE_API_KEY = os.environ.get("DASHSCOPE_API_KEY", "")
 DASHSCOPE_BASE = "https://dashscope.aliyuncs.com"
 
-# 后端顺序（用于自动降级）
-BACKENDS = ["happyhorse", "mpt"]
+# v2.5: 后端顺序（HappyHorse云 → moviepy本地 → MPT本地）
+BACKENDS = ["happyhorse", "moviepy_slideshow", "mpt"]
 
 OUTPUT_DIR = "/tmp/hermes-videos"
 Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
@@ -157,7 +157,135 @@ def _call_happyhorse(prompt: str, duration: int = 5,
     return None
 
 
-# ── 后端 2: MoneyPrinterTurbo ────────────────────────────────────
+# ── 后端 2: moviepy+ffmpeg 本地幻灯片 ─────────────────────────────
+
+def _check_moviepy_slideshow() -> bool:
+    """检查 moviepy 和 ffmpeg 是否可用"""
+    try:
+        from moviepy import VideoFileClip  # noqa: F401
+        r = subprocess.run(["ffmpeg", "-version"], capture_output=True, timeout=5)
+        return r.returncode == 0
+    except Exception:
+        return False
+
+
+def _call_moviepy_slideshow(
+    prompt: str, duration: int = 5,
+    size: str = "1280*720",
+) -> Optional[str]:
+    """
+    本地幻灯片视频生成（无云端依赖）。
+
+    流程: 纯色背景 + 文字标题 → mp4 视频。
+    适合: 快速生成简单视频（标题卡/宣传片/课程封面）。
+    """
+    try:
+        from moviepy import (
+            ColorClip, TextClip, CompositeVideoClip,
+        )
+    except ImportError:
+        print("  [moviepy] ⚠️ moviepy 未安装 (pip install moviepy)")
+        return None
+
+    try:
+        w, h = (int(x) for x in size.split("*"))
+    except (ValueError, AttributeError):
+        w, h = 1280, 720
+
+    output_path = f"{OUTPUT_DIR}/slideshow_{int(time.time())}.mp4"
+
+    print(f"  [moviepy] 🎨 生成幻灯片视频: {prompt[:50]}...")
+
+    try:
+        # 背景色
+        bg = ColorClip(size=(w, h), color=(15, 25, 50), duration=duration)
+
+        # 标题文字
+        title_text = prompt[:80]
+        title = (
+            TextClip(
+                text=title_text,
+                font_size=min(60, int(w / 18)),
+                color="white",
+                font="PingFang-SC-Regular",
+                size=(int(w * 0.85), None),
+                method="caption",
+            )
+            .with_position("center")
+            .with_duration(duration)
+        )
+
+        # 副标题
+        subtitle = (
+            TextClip(
+                text="墨麟OS · AI 自动生成",
+                font_size=24,
+                color="rgba(200,168,75,0.8)",
+                font="PingFang-SC-Regular",
+            )
+            .with_position(("center", h - 60))
+            .with_duration(duration)
+        )
+
+        video = CompositeVideoClip([bg, title, subtitle])
+        video.write_videofile(
+            output_path, fps=24, codec="libx264",
+            audio_codec="aac", logger=None,
+        )
+        video.close()
+
+        if Path(output_path).exists():
+            print(f"  [moviepy] ✅ 幻灯片视频完成: {output_path}")
+            return output_path
+
+    except Exception as e:
+        # 降级到 ffmpeg
+        print(f"  [moviepy] ⚠️ MoviePy失败 ({e})，降级 ffmpeg...")
+        return _call_ffmpeg_slideshow(prompt, duration, size, output_path)
+
+    return None
+
+
+def _call_ffmpeg_slideshow(
+    prompt: str, duration: int, size: str, output_path: str
+) -> Optional[str]:
+    """ffmpeg 纯命令行版本（moviepy 降级方案）"""
+    try:
+        w, h = (int(x) for x in size.split("*"))
+    except (ValueError, AttributeError):
+        w, h = 1280, 720
+
+    safe_title = prompt[:60].replace("'", "'\\\\''")
+
+    cmd = [
+        "ffmpeg", "-y",
+        "-f", "lavfi",
+        "-i", f"color=c=0x0F1932:s={w}x{h}:d={duration},"
+              f"drawtext=text='{safe_title}':"
+              f"fontsize={min(48, int(w/20))}:"
+              f"fontcolor=white:"
+              f"x=(w-text_w)/2:y=(h-text_h)/2-40,"
+              f"drawtext=text='墨麟OS · AI生成':"
+              f"fontsize=20:fontcolor=#c8a84b:"
+              f"x=(w-text_w)/2:y=h-th-50",
+        "-c:v", "libx264",
+        "-pix_fmt", "yuv420p",
+        "-an",
+        output_path,
+    ]
+
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+        if Path(output_path).exists() and Path(output_path).stat().st_size > 1024:
+            print(f"  [ffmpeg] ✅ 幻灯片视频完成: {output_path}")
+            return output_path
+    except Exception as e:
+        print(f"  [ffmpeg] ❌ {e}")
+
+    return None
+
+
+# ── 后端 3: MoneyPrinterTurbo ────────────────────────────────────
 
 
 def _check_mpt() -> bool:
@@ -268,9 +396,14 @@ def generate_video(topic: str, duration: str = "60s") -> dict:
                 print(f"   [happyhorse] ⚠️  DASHSCOPE_API_KEY 未配置")
                 continue
             video_path = _call_happyhorse(topic, duration=dur_seconds)
+        elif backend == "moviepy_slideshow":
+            if not _check_moviepy_slideshow():
+                print(f"   [moviepy] ⚠️  moviepy/ffmpeg 不可用")
+                continue
+            video_path = _call_moviepy_slideshow(topic, duration=dur_seconds)
         elif backend == "mpt":
             if not _check_mpt():
-                print(f"   [mpt] ⚠️  MPT 未部署或未运行 (cd {MPT_DIR} && python app.py)")
+                print(f"   [mpt] ⚠️  MPT 未部署或未运行")
                 continue
             video_path = _call_mpt(topic, duration=duration)
 
@@ -288,11 +421,11 @@ def generate_video(topic: str, duration: str = "60s") -> dict:
     msg = "所有后端均不可用:\n"
     if not _check_happyhorse():
         msg += "  - HappyHorse: DASHSCOPE_API_KEY 未配置\n"
-        msg += "    (百炼API Key，配置在 ~/.hermes/.env)\n"
+    if not _check_moviepy_slideshow():
+        msg += "  - moviepy: pip install moviepy && brew install ffmpeg\n"
     if not _check_mpt():
-        msg += f"  - MPT: 未部署或未运行\n"
-        msg += f"    (cd {MPT_DIR} && python app.py)\n"
-    msg += "\n参考: 百炼视频端点可能需更新，见 bailian_config.md"
+        msg += "  - MPT: 本地服务未运行\n"
+    msg += "\n💡 推荐: HappyHorse(云端) > moviepy(本地轻量) > MPT(本地重服务)"
 
     print(f"\n❌ {msg}")
     return {"success": False, "video_path": None, "backend": "none", "message": msg}
@@ -305,13 +438,18 @@ def check_status() -> dict:
     for backend in BACKENDS:
         if backend == "happyhorse":
             ok = _check_happyhorse()
-            print(f"  HappyHorse (百炼): {'✅' if ok else '❌'} Key={DASHSCOPE_API_KEY[:8]}...")
+            print(f"  HappyHorse (百炼云): {'✅' if ok else '❌'} Key={DASHSCOPE_API_KEY[:8]}...")
+        elif backend == "moviepy_slideshow":
+            ok = _check_moviepy_slideshow()
+            print(f"  moviepy幻灯片 (本地): {'✅' if ok else '❌'} 零依赖本地生成")
         elif backend == "mpt":
             ok = _check_mpt()
-            print(f"  MPT (本地): {'✅' if ok else '❌'} {MPT_API_BASE}")
-            if not ok:
-                print(f"    部署: git clone MPT fork → cd {MPT_DIR} && pip install -r requirements.txt && python app.py")
-    return {"happyhorse": _check_happyhorse(), "mpt": _check_mpt()}
+            print(f"  MPT (本地服务): {'✅' if ok else '❌'} {MPT_API_BASE}")
+    return {
+        "happyhorse": _check_happyhorse(),
+        "moviepy_slideshow": _check_moviepy_slideshow(),
+        "mpt": _check_mpt(),
+    }
 
 
 def main():
