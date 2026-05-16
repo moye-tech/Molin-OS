@@ -1228,7 +1228,6 @@ async def run(command: str, args: list[str]) -> dict:
         "avatar": cmd_avatar,
         "db": cmd_db,
         "mail": cmd_mail,
-        "order": cmd_order,
         "analytics": cmd_analytics,
         "comfy": cmd_comfy,
         "flow": cmd_flow,

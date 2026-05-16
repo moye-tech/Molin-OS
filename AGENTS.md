@@ -265,6 +265,83 @@ python -m molib plan decompose --plan-id xxx
 ~/hermes-os/docs/                         # 27个系统文档
 ```
 
+## Agent SOP 体系（v1.4 — 2026-05-17 — 全量覆盖 + 模板细化）
+
+**状态：20 家子公司中 19 家已完成 SOP 全覆盖。关键 SOP 已配备参考模板。**
+
+**状态：20 家子公司中 19 家已完成 SOP 全覆盖。**
+
+缺失：墨域私域（需 LINE/Bottender 基础设施）
+
+每个 Agent 统一采用四层架构：
+
+```
+Agent
+ ├── SOP Layer    —— 标准作业程序（skill 文件）
+ ├── Cron Layer   —— 自动循环周期（cronjob 工具）
+ ├── KPI Layer    —— 结果监控指标
+ └── Feedback Layer —— 反思优化闭环
+```
+
+### 子公司 SOP 覆盖矩阵
+
+| VP | 子公司 | SOP 技能 | 状态 |
+|----|--------|----------|------|
+| 营销 | 墨笔文创 | content-sop-pack/lead/growth/crisis | ✅ 六件套齐全 |
+| 营销 | 墨韵IP | ip-sop-pack | ✅ |
+| 营销 | 墨图设计 | design-sop-pack | ✅ |
+| 营销 | 墨播短视频 | video-sop-pack | ✅ |
+| 营销 | 墨声配音 | voice-sop-pack | ✅ |
+| 运营 | 墨域私域 | — | ❌ 待 LINE 基建 |
+| 运营 | 墨声客服 | service-sop-pack | ✅ |
+| 运营 | 墨链电商 | ecommerce-sop-pack | ✅ |
+| 运营 | 墨学教育 | education-sop-pack | ✅ |
+| 技术 | 墨码开发 | developer-sop-pack | ✅ |
+| 技术 | 墨维运维 | ops-sop-pack | ✅ |
+| 技术 | 墨安安全 | security-sop-pack | ✅ |
+| 技术 | 墨梦AutoDream | autodream-sop-pack | ✅ |
+| 财务 | 墨算财务 | finance-sop-pack | ✅ |
+| 战略 | 墨商BD | bd-sop-pack | ✅ |
+| 战略 | 墨海出海 | global-marketing-sop-pack | ✅ |
+| 战略 | 墨研竞情 | research-sop-pack | ✅ |
+| 共同服务 | 墨律法务 | legal-sop-pack | ✅ |
+| 共同服务 | 墨脑知识 | ⏳ 由 memory/kpi-tracker 覆盖 | ✅ |
+| 共同服务 | 墨测数据 | data-sop-pack | ✅ |
+
+### 共享 SOP 技能
+| 技能 | 作用 | 引用方 |
+|------|------|--------|
+| gatekeeper-sop | 全流量合规门禁 + QA 终检 | 所有对外输出 Agent |
+| kpi-tracker | 效能/质量/成本 KPI 追踪 | 所有 Agent + 22:00复盘 |
+
+### 经营节奏 Cron
+
+| 时间 | Agent | Cron 任务 | 加载技能 |
+|------|-------|-----------|----------|
+| 06:30-08:00 | 墨研竞情/墨笔文创 | 情报采集 + Lead 选题池 | research-sop, content-sop-lead |
+| 08:00-10:30 | 墨笔文创/墨图设计 | 内容生产 + 配图 | content-sop-pack, design-sop |
+| 15/45分 | 墨声客服 | 闲鱼消息检测回复 | service-sop-pack |
+| **22:00 每日** | **Content+Design+Video** | **复盘 + KPI 采集** | pack+gatekeeper+kpi-tracker |
+| **23:00 每日** | **墨算财务** | **财务日报** | finance-sop-pack+kpi-tracker |
+| **周日 21:00** | **Content+Growth** | **增长复盘 + 实验** | kpi-tracker+growth+pack |
+
+### 飞轮管线
+
+```
+06:30 情报采集     → research-sop-pack
+08:00 选题池       → content-sop-lead
+08:30 内容生产     → content-sop-pack
+09:00 短视频脚本   → video-sop-pack + voice-sop-pack
+09:30 配图/封面    → design-sop-pack
+10:00 本地化出海   → global-marketing-sop-pack
+15分钟 闲鱼客服    → service-sop-pack
+22:00 复盘+KPI     → kpi-tracker + gatekeeper-sop
+23:00 财务日报     → finance-sop-pack + data-sop-pack
+周日 增长实验      → content-sop-growth + autodream-sop-pack
+```
+
+创建新 Agent 时：`skill_view('agent-sop-template')` 获取模板，再按需创建 SOP 技能。
+
 ## 预算参考
 
 - 每月 API 预算：¥1,360
@@ -287,6 +364,9 @@ python -m molib plan decompose --plan-id xxx
 | 10:00 | 每日治理合规 | 审计+合规检查 |
 | 12:00 | 系统状态快照 | 汇总产出+运营快照 |
 | 15/45分 | 闲鱼消息检测 | 新消息AI自动回复 |
+| **22:00** | **内容 Agent 复盘 + KPI** 🆕 | **SOP 复盘层：QA趋势+KPI采集+优化建议** |
+| **23:00** | **财务日报** 🆕 | **SOP 财务层：成本分析+预算预警** |
+| **周日 21:00** | **增长复盘 + 实验** 🆕 | **SOP 增长层：周报+AB实验+SOP固化** |
 | 周五10:00 | 自学习进化 | GitHub扫描+技能更新 |
 
 <!-- gitnexus:start -->

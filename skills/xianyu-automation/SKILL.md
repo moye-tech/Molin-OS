@@ -32,12 +32,18 @@ description: "Manage Xianyu seller conversations with an automated message pipel
 
 此 skill 是 **side Agent** (SOUL_SIDE.md) 的执行层。每次处理消息时必须参考以下锚点：
 
-**定价体系**（报价时自动参考）:
+**定价体系**（报价时自动参考，共12条服务线）:
   - AI Agent定制: 500-2000, 3-7天
   - Prompt工程优化: 200-800, 1-3天
   - RAG知识库搭建: 800-3000, 5-14天
   - 自动化流程设计: 300-1500, 2-7天
   - 数据爬取清洗: 200-600, 1-3天
+  - 学习路线定制: 200-800, 1-3天（2026-05-16新增）
+  - AI工具教学/培训: 300-1200, 1-5天（2026-05-16新增）
+  - 私有知识库部署（AppFlowy）: 3000-12000, 2-5天（2026-05-16新增）
+  - 在线预约系统（Cal.com）: 4000-10000, 1-3天（2026-05-16新增）
+  - 智能客服系统（Chatwoot）: 3000-12000, 2-5天（2026-05-16新增）
+  - AI求职系统（career-ops）: 800-8000, 1-14天（2026-05-16新增）
 
 **消息分级 & 通知规则**:
   - L0 (普通询价) → 自动回复（3分钟内）
@@ -141,7 +147,7 @@ When injecting conversation context (e.g., for follow-up reply generation), retr
 
 Scan every buyer message for purchase-intent and refund-intent keywords. Refund signals are checked **first** (higher priority) because an escalating issue takes precedence over a purchase.
 
-### BUY SIGNALS — 成交关键词 (30+ keywords)
+### BUY SIGNALS — 成交关键词 (40+ keywords)
 
 ```
 成交, 好的, 怎么交易, 怎么付款, 我要了,
@@ -149,6 +155,12 @@ Scan every buyer message for purchase-intent and refund-intent keywords. Refund 
 发链接, 拍下, 下单, 链接给我,
 ok, OK, 好, 行, 可以,
 how much, buy, purchase
+
+# 学习/教学类关键词（2026-05-16新增）
+教我, 教学, 学习, 培训, 课程,
+辅导, 教一下, 带带, 怎么学, 入门,
+从零开始, 学习路线, 从哪里入手,
+教程, 科普, 讲解, Lesson, tutorial
 ```
 
 **Match:** Case-insensitive substring match. `"ok"` matches `"OK"`, `"好的"`, `"好的呢～"`, etc.
