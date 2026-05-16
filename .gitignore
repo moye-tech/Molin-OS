@@ -1,8 +1,9 @@
-# ═════════════════════════════════════════
-# 墨麟OS — .gitignore
-# ═════════════════════════════════════════
+# ══════════════════════════════════════════
+# 墨麟OS (Molin-OS) — .gitignore
+# 标准化版本 v2.0 (2026-05-16)
+# ══════════════════════════════════════════
 
-# Secrets & Credentials — NEVER COMMIT
+# ─── Secrets & Credentials — NEVER COMMIT ───
 .env
 **/.env
 *.key
@@ -15,11 +16,11 @@
 credentials*
 **/auth.json
 **/auth.env
-**/.env.*
 !**/.env.example
 !**/.env.dev.example
+*.token
 
-# Python artifacts
+# ─── Python Artifacts ───
 __pycache__/
 *.py[cod]
 *.pyo
@@ -30,12 +31,13 @@ build/
 *.egg
 .eggs/
 *.egg-info
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
 
-# Runtime output — not committed
-output/
-relay/
-
-# Virtual Environment
+# ─── Virtual Environments ───
 venv/
 .venv/
 env/
@@ -43,84 +45,63 @@ env/
 *.venv
 .venv
 
-# IDE
+# ─── IDE / Editor ───
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 *.iml
+.claude/
+CLAUDE.md
 
-# OS
+# ─── OS ───
 .DS_Store
 Thumbs.db
 Desktop.ini
 
-# Archives (retired/archived skills)
-_archived/
-
-# Logs & Cache
-*.log
-.coverage
-.molin/
+# Generated Runtime Data
+relay/
+**/relay/*.json
+data/relay/
+output/
+data/relay/
 logs/
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
+*.log
+.firecrawl/
 
-# Hermes Agent system files
-.molin/
-
-# Large reference docs (>500KB)
-skills/mlops/training/unsloth/references/llms-full.md
-skills/mlops/training/unsloth/references/llms-txt.md
-
-# Old duplicate code directories (moved to molib/)
-molin/agents_old/
-molin/core_old/
-
-# Local config overrides
-config/local.*
-
-# ═════════════════════════════════════════
-# Assets that should be gitignored
-# ═════════════════════════════════════════
-
-# 闲鱼逆向JS (4.2MB — large binary, download not commit)
-molib/xianyu/static/goofish_js_origin_version_2.js
-molin/xianyu/static/goofish_js_origin_version_2.js
-
-# Large JS assets (313KB)
-molib/xianyu/utils/et_f.js
-
-# Relay data (generated on-demand)
-molin/relay/*.json
-
-# Temporary docs / auto-generated reports
-docs/absorption-report-*.md
-docs/system-status-*.md
-
-# Fork repos (downloaded on-demand)
-fork_repos/
-
-# Claude Code auto-generated
-.claude/
-CLAUDE.md
-
-# Compressed archives
+# ─── Archives ───
+_archived/
 *.tar.gz
 *.zip
 !backup_*.tar.gz
-
-# Backup directories
 *_backup_*/
-.gitnexus
-
-# Cron database (contains delivery tokens)
-backup/cron.db
-
-# Restore logs
 restore_*.log
 
-# Hermes internal (never commit live config)
+# ─── Hermes System Files ───
 .molin/
+.cron.db
+
+# ─── Node.js (not a JS project) ───
+node_modules/
+package-lock.json
+package.json
+
+# ─── Large Runtime Binaries ───
+molib/xianyu/static/goofish_js_origin_version_2.js
+molin/xianyu/static/goofish_js_origin_version_2.js
+molib/xianyu/utils/et_f.js
+
+# ─── Temporary / Auto-generated ───
+skills/mlops/training/unsloth/references/llms-full.md
+skills/mlops/training/unsloth/references/llms-txt.md
+docs/absorption-report-*.md
+docs/system-status-*.md
+fork_repos/
+
+# ─── Old Code (moved to molib/) ───
+molin/agents_old/
+molin/core_old/
+
+# ─── Submodule Externals (managed via .gitmodules) ───
+# MiroFish and last30days-skill are git submodules

@@ -28,6 +28,34 @@ description: "Manage Xianyu seller conversations with an automated message pipel
 
 ## Xianyu Automation — 闲鱼接单自动化
 
+### 🔗 SOUL_SIDE.md 身份对齐
+
+此 skill 是 **side Agent** (SOUL_SIDE.md) 的执行层。每次处理消息时必须参考以下锚点：
+
+**定价体系**（报价时自动参考）:
+  - AI Agent定制: 500-2000, 3-7天
+  - Prompt工程优化: 200-800, 1-3天
+  - RAG知识库搭建: 800-3000, 5-14天
+  - 自动化流程设计: 300-1500, 2-7天
+  - 数据爬取清洗: 200-600, 1-3天
+
+**消息分级 & 通知规则**:
+  - L0 (普通询价) → 自动回复（3分钟内）
+  - L1 (有成交意向, purchase_intent detected) → 飞书通知墨烨
+  - L2 (报价 > 1000) → T2审批卡, 确认后发报价
+  - 退款/纠纷 (refund_request) → 立刻上报, 不自动处理
+
+**订单管理**: 使用 order_manager.py 记录每笔成交/线索
+  cd scripts/
+  python3 order_manager.py add <平台> <产品类型> <价格> [状态]
+  python3 order_manager.py stats
+  python3 order_manager.py lead <平台> <用户> <内容> [意向等级]
+  python3 order_manager.py list [状态]
+
+**记忆同步**: 每次处理完消息后自动执行
+  python3 scripts/memory_sync.py --store "lead/用户"="内容" "order/状态"="xxx"
+  双通道: SupeMemory (容器: hermes-side) + Obsidian (agent-outputs/side/)
+
 ### Overview
 
 This skill encodes the Molin XianyuListener v6.6 architecture as an agent-executable workflow. You act as the Xianyu message-processing pipeline: poll for incoming messages, maintain per-conversation memory, detect buy/refund signals in buyer messages, and route each message through the appropriate response pipeline.
@@ -211,17 +239,26 @@ INCOMING MESSAGE
 ```
 Use the first-reply template from Section 4. Add the reply to conversation memory with `role: "system"`.
 
-#### Step 3: Deal Signal — Quote/Close
+#### Step 3: Deal Signal — Quote/Close (L1/L2 分级)
+
 ```json
 {
   "action": "quote_or_close",
   "conversation_id": "...",
   "deal_signal": "purchase_intent",
   "confidence": 0.75,
-  "needs_bd_quote": true
+  "needs_bd_quote": true,
+  "level": "L1"  // 或 "L2" 按报价金额
 }
 ```
-This signals that a business-development (BD) quote or deal-closing flow should be triggered. The agent should prepare pricing info, shipping details, and payment instructions for this conversation.
+
+**处理流程:**
+1. 识别产品类型 (从对话上下文推断 → AI Agent定制/Prompt优化/RAG知识库/自动化流程/数据爬取)
+2. 对照定价表给出报价范围
+3. 若报价 > ¥1000 → 标记为 L2，生成审批卡等待确认
+4. 若报价 ≤ ¥1000 → 标记为 L1，通知墨烨有成交意向
+5. **自动记录线索**: `python3 order_manager.py lead <平台> <用户> <内容> <意向等级>`
+6. 报价确认后 → `python3 order_manager.py add <平台> <产品> <价格> pending`
 
 #### Step 4: Normal Follow-Up
 ```json
@@ -282,13 +319,12 @@ WHILE running:
 }
 ```
 
-### Notification Triggers
+### Notification Triggers (对齐 SOUL_SIDE.md L0/L1/L2 分级)
 
-| Condition | Channel | Priority |
-|-----------|---------|----------|
-| `needs_approval == true` (refund) | Feishu @boss | HIGH — immediate |
-| `needs_bd_quote == true` (deal signal) | Feishu @bd_team | MEDIUM |
-| First contact | Log only | LOW |
+  - 退款 (needs_approval) →  紧急, Feishu 通知墨烨, 优先级 HIGH
+  - L2 (deal_signal + 报价>1000) →  生成审批卡等待确认, 优先级 MEDIUM
+  - L1 (deal_signal + 报价<=1000) →  Feishu 通知墨烨有成交意向, 优先级 MEDIUM
+  - L0 (first contact) →  自动回复模板，仅日志, 优先级 LOW
 
 ### State Persistence
 

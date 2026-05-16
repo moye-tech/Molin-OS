@@ -406,7 +406,7 @@ def write_to_obsidian(agent_id: str, category: str, topic: str,
     source = entry_data.get("source", "实时同步")
     filename = f"{topic}.md"
 
-    target_dir = VAULT / "Agents" / agent_id / category
+    target_dir = VAULT / category
     target_dir.mkdir(parents=True, exist_ok=True)
     filepath = target_dir / filename
 

@@ -14,7 +14,8 @@ import argparse
 import requests
 from datetime import datetime
 
-API_KEY = "sk-2d3ce929a91f433cac2d7acffc7b9707"
+# API Key: 优先从环境变量读取，其次使用默认值
+API_KEY = os.environ.get("DASHSCOPE_API_KEY", "sk-2d3ce929a91f433cac2d7acffc7b9707")
 MAX_RETRIES = 5
 RETRY_DELAY = 20
 OUTPUT_DIR = os.path.expanduser("~/goofish_listing_outputs")

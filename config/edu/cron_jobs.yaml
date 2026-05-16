@@ -1,0 +1,25 @@
+# 墨麟·教育 · 定时任务配置
+jobs:
+  - id: edu_daily_brief
+    name: "教育每日简报"
+    schedule: "30 8 * * 1-5"
+    prompt: |
+      [教育行业] 生成今日业务简报：
+      1. 检查昨日招生/转化/完课数据
+      2. 分析待跟进学员列表
+      3. 输出 relay/edu/daily_brief.json
+    skills: [crm-automation, agent-edu-course-designer]
+    delivery: feishu
+    timeout_minutes: 10
+
+  - id: edu_followup
+    name: "学员跟进提醒"
+    schedule: "0 14 * * 1-5"
+    prompt: |
+      [教育行业] 学员跟进检查：
+      1. 检查未跟进试听学员
+      2. 检查M0→M1转化状态
+      3. 自动发送跟进提醒
+    skills: [crm-automation, agent-sales-deal-strategist, agent-marketing-growth-hacker]
+    delivery: feishu
+    timeout_minutes: 10

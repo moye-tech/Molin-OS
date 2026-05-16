@@ -1,0 +1,37 @@
+# 墨麟·共享 · 定时任务配置
+jobs:
+  - id: shared_intel
+    name: "情报日报"
+    schedule: "0 7 * * 1-5"
+    prompt: |
+      [共享服务层] 执行情报日报：
+      1. 扫描AI行业今日热点
+      2. 跟踪竞品动态
+      3. 输出 relay/shared/daily_intel.json
+    skills: [competitor-analysis, karpathy-autoresearch, world-monitor, blogwatcher]
+    delivery: feishu
+    timeout_minutes: 15
+
+  - id: shared_finance
+    name: "财务日核"
+    schedule: "30 18 * * 1-5"
+    prompt: |
+      [共享服务层] 执行财务日核：
+      1. 记录今日收支
+      2. 计算API成本
+      3. 输出 relay/shared/finance_daily.json
+    skills: [finance-report, data-analysis]
+    delivery: feishu
+    timeout_minutes: 10
+
+  - id: shared_legal_check
+    name: "法务周检"
+    schedule: "0 9 * * 1"
+    prompt: |
+      [共享服务层] 法务周检：
+      1. 检查合同到期提醒
+      2. 检查广告法合规风险
+      3. 输出报告
+    skills: [legal-review]
+    delivery: feishu
+    timeout_minutes: 10

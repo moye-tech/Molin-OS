@@ -1,0 +1,13 @@
+# 墨麟·出海 · 定时任务配置
+jobs:
+  - id: global_daily
+    name: "出海每日简报"
+    schedule: "0 9 * * 1-5"
+    prompt: |
+      [出海专线] 生成每日简报：
+      1. 检查台湾/东南亚市场动态
+      2. 繁体内容本地化准备
+      3. 输出 relay/global/daily_brief.json
+    skills: [localize-to-traditional, taiwan-market-skill]
+    delivery: feishu
+    timeout_minutes: 10

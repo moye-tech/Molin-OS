@@ -1,0 +1,25 @@
+# 墨麟·副业 · 定时任务配置
+jobs:
+  - id: side_daily_check
+    name: "副业每日检查"
+    schedule: "0 9 * * 1-5"
+    prompt: |
+      [副业专线] 执行每日检查：
+      1. 检查闲鱼新消息
+      2. 检查未回复询价
+      3. 输出 relay/side/daily_status.json
+    skills: [xianyu-automation, dev-skill-pack]
+    delivery: feishu
+    timeout_minutes: 10
+
+  - id: side_price_review
+    name: "价格策略周检"
+    schedule: "0 10 * * 1"
+    prompt: |
+      [副业专线] 价格策略周检：
+      1. 分析上周成交数据
+      2. 评估各服务线定价合理性
+      3. 输出 relay/side/price_strategy.json
+    skills: [data-analysis, dev-skill-pack]
+    delivery: feishu
+    timeout_minutes: 10

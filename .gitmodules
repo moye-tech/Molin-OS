@@ -1,0 +1,6 @@
+[submodule "MiroFish"]
+	path = MiroFish
+	url = https://github.com/666ghj/MiroFish.git
+[submodule "last30days-skill"]
+	path = last30days-skill
+	url = https://github.com/mvanhorn/last30days-skill.git

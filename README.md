@@ -2,8 +2,8 @@
   <img src="https://img.shields.io/badge/python-3.11+-00b894?style=flat-square&logo=python" alt="Python 3.11+">
   <img src="https://img.shields.io/badge/license-MIT-00b894?style=flat-square" alt="License MIT">
   <img src="https://img.shields.io/badge/brain-Hermes_Agent-8e44ad?style=flat-square" alt="Hermes Agent">
-  <img src="https://img.shields.io/badge/skills-559-success?style=flat-square" alt="500+ Skills">
-  <img src="https://img.shields.io/badge/cron_jobs-21-blue?style=flat-square" alt="21 Cron Jobs">
+  <img src="https://img.shields.io/badge/skills-362-success?style=flat-square" alt="362 Skills">
+  <img src="https://img.shields.io/badge/cron_jobs-7-blue?style=flat-square" alt="7 Cron Jobs">
   <img src="https://img.shields.io/badge/lines-44K_Python-ff6b6b?style=flat-square" alt="44K Lines">
   <img src="https://img.shields.io/badge/revenue-¥52K/month-ff6b6b?style=flat-square" alt="Revenue">
   <img src="https://img.shields.io/badge/version-v5.0-blueviolet?style=flat-square" alt="v5.0">
@@ -56,8 +56,9 @@ One person, one MacBook, one AI conglomerate.
 三行命令完成部署。
 
 ```bash
-git clone git@github.com:moye-tech/Molin-OS.git
+git clone https://github.com/moye-tech/Molin-OS.git
 cd Molin-OS
+git submodule update --init --recursive  # 克隆外部依赖
 bash setup.sh
 ```
 
@@ -91,7 +92,7 @@ molin '帮我写一篇小红书文案'
 - 5 级治理体系 —— L0 自动执行到 L4 绝对禁止，预算上限 + 审批门禁 + 审计追踪
 - 统一 CLI 入口 —— `python -m molib <command>` 调度所有子系统，50+ 命令
 - 多通道接入 —— 飞书对话、CLI 终端、REST API 三种交互方式
-- 559 项技能 —— 从 SEO 优化到量化交易，从像素艺术到红队安全测试
+- 362 项技能 —— 从 SEO 优化到量化交易，从像素艺术到红队安全测试
 - 单机运行 —— M2 MacBook 8GB 即可驱动整个集团
 - 月收入目标 ¥52,000 —— 真实运营中的商业系统
 
@@ -374,7 +375,8 @@ Molin-OS/
 │   └── backup.sh
 ├── docs/                       # 文档
 ├── backup/                     # 备份区（含闲鱼 Bot）
-└── fork_repos/                 # Fork 的外部项目
+├── MiroFish/                    # Git submodule: 预测引擎
+├── last30days-skill/            # Git submodule: 情报扫描
 ```
 
 ---

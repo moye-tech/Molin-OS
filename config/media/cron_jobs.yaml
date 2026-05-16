@@ -1,0 +1,37 @@
+# 墨麟·全媒体 · 定时任务配置
+jobs:
+  - id: media_intelligence
+    name: "情报银行"
+    schedule: "0 8 * * 1-5"
+    prompt: |
+      [全媒体运营] 执行情报银行任务：
+      1. 扫描各平台今日热点（blogwatcher + firecrawl）
+      2. 整理AI一人公司创业赛道竞品动态
+      3. 输出 relay/media/intelligence.json
+    skills: [feishu-message-formatter, blogwatcher, github-trending-scanner, world-monitor]
+    delivery: feishu
+    timeout_minutes: 10
+
+  - id: media_content_factory
+    name: "内容工厂"
+    schedule: "20 9 * * 1-5"
+    prompt: |
+      [全媒体运营] 执行内容工厂任务：
+      1. 读取 relay/media/intelligence.json
+      2. 生成各平台内容（优先小红书）
+      3. 保存草稿到 relay/media/
+    skills: [xiaohongshu-content-engine, seo-machine, content-strategy]
+    delivery: feishu
+    timeout_minutes: 15
+
+  - id: media_growth_engine
+    name: "增长引擎"
+    schedule: "45 10 * * 1-5"
+    prompt: |
+      [全媒体运营] 执行增长引擎任务：
+      1. SEO优化已发布内容
+      2. 追踪内容表现数据
+      3. 输出增长建议
+    skills: [analytics-tracking, seo-machine, agent-marketing-content-creator]
+    delivery: feishu
+    timeout_minutes: 10
