@@ -23,6 +23,13 @@ NC='\033[0m'
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
+# ── 初始化 Git 子模块 ──
+echo -e "${CYAN}⟳ 初始化 Git 子模块...${NC}"
+if [ -f ".gitmodules" ]; then
+    git submodule update --init --recursive 2>/dev/null || \
+        echo -e "${YELLOW}  ⚠️ 子模块初始化跳过（网络问题或非 git 仓库），可稍后手动执行: git submodule update --init --recursive${NC}"
+fi
+
 echo -e "${BLUE}"
 echo "╔══════════════════════════════════════════════╗"
 echo "║                                              ║"
