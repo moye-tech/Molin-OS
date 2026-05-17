@@ -1,0 +1,440 @@
+# 墨麟 Hermes OS — 进化&规划层 Cron 扩展配置
+# ─────────────────────────────────────────────────────────
+# 文件说明：
+#   本文件是对 backup/jobs.yaml（原有7个Cron）的增量补充。
+#   部署时合并到主 jobs.yaml，或单独通过 `molin cron init --file` 加载。
+#
+# 新增7个Cron覆盖三条新轴：
+#   轴A — 学习飞轮：垂直扫描 → 精读内化 → 质量门控
+#   轴B — 规划输出：每日复盘 → 周计划 → 月度规划
+#   轴C — 进化审计：记忆蒸馏 → 季度能力检测
+#
+# 前置条件：
+#   1. .env 中设置 SOP_AUTOMATION_ENABLED=true
+#   2. GITHUB_TOKEN 已配置（避免API限速）
+#   3. OBSIDIAN_VAULT_PATH 已配置（指向本地vault路径）
+#   4. DEEPSEEK_API_KEY 已配置
+# ─────────────────────────────────────────────────────────
+
+timezone: Asia/Shanghai
+
+jobs:
+
+  # ════════════════════════════════════════════════════════
+  # 轴A — 学习飞轮
+  # ════════════════════════════════════════════════════════
+
+  # ── 周一 06:00 — 垂直学习扫描（轴A第一棒）──
+  - name: "五大Agent垂直GitHub扫描"
+    id: "learn_a1_github_vertical_scan"
+    schedule: "0 6 * * 1"            # 每周一 06:00
+    skills:
+      - github-trending-scanner       # 基础扫描能力
+      - github-auth                   # Token认证（避免限速）
+      - self-learning-loop            # 接管扫描结果路由
+    prompt: |
+      [学习飞轮-第一棒] 执行五大业务Agent垂直领域GitHub扫描。
+
+      加载并执行 scripts/github_vertical_scan.py，
+      按 config/learning/agent_learning_subscriptions.yaml 中的关键词表，
+      分别为以下5个Agent扫描过去7天 stars≥50 的新项目：
+        - mobi_content（墨笔文创·全媒体）
+        - mobi_edu（墨学教育）
+        - mobi_research（墨研竞情）
+        - mobi_dev（墨码开发）
+        - mobi_autodream（墨梦AutoDream）
+
+      输出标准：
+      - 每Agent生成 relay/learning/{agent_id}_scan_{YYYYMMDD}.json
+      - 格式包含：agent_id, scan_date, projects列表（name/url/stars/description/topics）
+      - 同时更新 relay/learning/latest_scan_manifest.json（记录本次扫描时间戳）
+
+      约束：
+      - 每Agent最多取Top 8个候选项目（精读时再筛选Top 5）
+      - 已在 Obsidian 学习档案/ 中有记录的项目跳过  # v3.0 flat
+      - 网络失败时降级为 github.com/trending 页面爬取（bin/cloakserve）
+      - 扫描完成后推飞书通知：「📡 本周学习扫描完成，待精读项目数：{N}」
+    deliver: origin
+    repeat: forever
+    sop: auto_dream                   # 关联SOP
+    relay_out: "relay/learning/"
+    timeout_minutes: 25
+    on_failure: notify_feishu_and_continue
+    description: "垂直领域学习飞轮第一棒：5个Agent分别按关键词扫描GitHub，产出scan.json"
+    next_run: "2026-05-18T06:00:00+08:00"
+
+  # ── 周一 07:00 — 精读内化（轴A第二棒）──
+  - name: "AutoDream精读内化与SKILL更新提案"
+    id: "learn_a2_autodream_absorb"
+    schedule: "0 7 * * 1"            # 每周一 07:00（扫描完成1小时后）
+    skills:
+      - self-learning-loop            # 精读编排
+      - obsidian                      # 深度笔记写入
+      - supermemory                   # L2记忆同步
+      - github                        # 项目详情抓取
+      - memory-bridge                 # 统一记忆写入接口
+    prompt: |
+      [学习飞轮-第二棒] AutoDream精读内化，将扫描结果转化为深度知识。
+
+      步骤：
+      1. 读取 relay/learning/*_scan_{today}.json 或 latest_scan_manifest.json 指向的文件
+      2. 对每个Agent，按(stars × 近期活跃度 × 与现有SKILL差异度)排序，取Top 5精读
+         - 已精读过的项目（Obsidian中有记录）自动跳过
+      3. 对每个项目，抓取 README.md + CHANGELOG.md（限1500 tokens），精读生成结构化卡片：
+         ┌─────────────────────────────────────────┐
+         │ 核心问题：这个项目解决了什么本质问题？       │
+         │ 关键方法论：可迁移的思想（非功能描述）        │
+         │ 与当前能力对比：我们现在怎么做？差距在哪？    │
+         │ 立刻可借鉴的3个具体点（有操作步骤）          │
+         │ 完全吸收后的质变预期（Agent会有什么不同）     │
+         └─────────────────────────────────────────┘
+         字符数 < 800 → 重新生成（不接受简报）
+
+      4. 将精读卡片写入 Obsidian：
+         路径：学习档案/{{业务线}}｜{repo_name}·{YYYYMMDD}.md  # v3.0 flat
+         frontmatter 包含：type, agent, repo, stars, date, tags
+
+      5. 综合本Agent所有精读结果，生成 SKILL更新提案：
+         路径：relay/evolution/{agent_id}_skill_proposal_{date}.md
+         内容：新增能力段落 + 新Prompt模板 + 废弃过时方法 + 能力提升预估
+
+      6. 将提案摘要推飞书审批卡片（L2，等待创始人确认后合并SKILL）
+
+      本周精读完成后发送汇总通知：
+      「📚 本周精读完成 | 共精读{N}个项目 | 生成{M}份SKILL提案 | 待你审批合并」
+    deliver: origin
+    repeat: forever
+    sop: auto_dream
+    relay_in: "relay/learning/"
+    relay_out: "relay/evolution/"
+    depends_on: "learn_a1_github_vertical_scan"
+    timeout_minutes: 90
+    on_failure: notify_feishu_and_continue
+    description: "学习飞轮第二棒：精读GitHub项目→Obsidian深度笔记→SKILL更新提案→飞书审批"
+    next_run: "2026-05-18T07:00:00+08:00"
+
+  # ── 周日 21:00 — 记忆蒸馏与质量门控（轴A第三棒）──
+  - name: "记忆蒸馏与进化质量门控"
+    id: "learn_a3_memory_distill_quality"
+    schedule: "0 21 * * 0"           # 每周日 21:00
+    skills:
+      - supermemory                   # L2记忆查询
+      - memory-bridge                 # 蒸馏写入
+      - obsidian                      # L3语义记忆写入
+      - self-learning-loop            # EvolutionEngine评分
+    prompt: |
+      [学习飞轮-第三棒] 本周记忆蒸馏 + 新SKILL质量门控。
+
+      任务A — 记忆蒸馏（L2→L3）：
+      1. 查询 Supermemory 中所有超过30天未被检索的 L2 条目
+      2. 对待蒸馏条目按语义相似度聚类，相似条目合并
+      3. 提炼更高抽象层次的方法论洞察（字符数 ≥ 300）
+      4. 写入 Obsidian：知识/{{业务线}}｜方法论·{topic}·{date}.md  # v3.0 flat
+      5. 在 Supermemory 中将原始 L2 条目标记为 archived
+
+      任务B — 质量门控：
+      1. 检查 relay/evolution/ 中本周合并的 SKILL 文件
+      2. 对每个新SKILL触发测试任务（使用 agent_capability_test_{agent_id} 模板）
+      3. EvolutionEngine 打分：
+         - 分数 ≥ 7.5 → 正式计入Agent能力版本号，更新 流程/{{业务线}}｜能力版本.md  # v3.0 flat
+         - 分数 < 7.5 → 标记「待验证」，纳入下周重点复测
+      4. 生成本周进化小结推飞书：
+         「⚡ 本周进化报告 | 蒸馏{N}条记忆 | 评分{M}个SKILL | 达标{K}个 | 待验证{J}个」
+    deliver: origin
+    repeat: forever
+    sop: auto_dream
+    relay_in: "relay/evolution/"
+    timeout_minutes: 60
+    description: "学习飞轮第三棒：Supermemory L2→L3蒸馏 + 新SKILL质量门控评分"
+    next_run: "2026-05-24T21:00:00+08:00"
+
+  # ════════════════════════════════════════════════════════
+  # 轴B — 规划输出
+  # ════════════════════════════════════════════════════════
+
+  # ── 每日 22:00 — KPI采集（供22:30复盘使用）──
+  - name: "每日KPI采集（供复盘Cron）"
+    id: "plan_b0_daily_kpi"
+    schedule: "0 22 * * *"           # 每日 22:00
+    skills:
+      - data-analysis                 # 数据分析
+      - kpi-dashboard-design          # KPI指标定义
+      - analytics-tracking            # 平台数据接入
+    prompt: |
+      [每日KPI采集] 采集当日所有业务线核心指标，为22:30复盘Cron准备数据。
+
+      按 config/kpi_definitions.yaml 定义，采集以下数据并标注日环比：
+      【教育线】
+      - 新增线索数（今日）/ 环比昨日
+      - 试听预约数 / 转化率
+      - M0→M1转化率（本周累计）
+      - 完课率
+
+      【电商线（闲鱼/猪八戒）】
+      - 新增订单数 / GMV
+      - 消息回复率
+      - 好评数
+
+      【内容线】
+      - 新发布内容数
+      - 累计阅读量（今日增量）
+      - 各平台涨粉数
+
+      【财务线】
+      - 今日收入（元）
+      - API成本消耗（元）
+      - 毛利率
+
+      异常检测：超出30日均值±2σ的指标标记 ⚠️ WARNING 或 🚨 CRITICAL。
+      CRITICAL异常立即推飞书，不等22:30复盘。
+
+      输出：relay/data/daily_summary_{YYYYMMDD}.json（含kpi_values + anomalies）
+    deliver: origin
+    repeat: forever
+    sop: data_analyst_full
+    relay_out: "relay/data/"
+    timeout_minutes: 20
+    on_failure: use_cached_kpi_with_flag
+    description: "每日22:00采集全业务线KPI，异常立即告警，为复盘Cron准备结构化数据"
+    next_run: "2026-05-17T22:00:00+08:00"
+
+  # ── 每日 22:30 — 每日复盘与明日规划（轴B核心）──
+  - name: "每日复盘与明日规划"
+    id: "plan_b1_daily_review_plan"
+    schedule: "30 22 * * *"          # 每日 22:30
+    skills:
+      - molin-ceo-persona             # CEO视角综合判断
+      - molin-goals                   # 目标体系对齐
+      - obsidian                      # 写入Obsidian复盘文档
+      - cron-output-formatter         # 格式化输出
+    prompt: |
+      [每日复盘与明日规划] 综合当日所有产出，生成结构化复盘文档并规划明日。
+
+      步骤1 — 收集当日产出：
+      读取以下relay文件（存在则读，不存在则标注「未产出」）：
+      - relay/data/daily_summary_{today}.json        ← KPI采集结果
+      - relay/intelligence_{today}.json              ← 情报银行产出
+      - relay/content_{today}.json                  ← 内容工厂产出
+      - relay/sales/xianyu_{today}.json             ← 闲鱼销售日报
+      - relay/edu/daily_brief_{today}.json          ← 教育线日报
+
+      步骤2 — 生成复盘文档（写入Obsidian，字符数 ≥ 600）：
+      路径：报告/系统｜日报·{YYYYMMDD}.md  # v3.0 flat
+
+      文档结构：
+      ## {日期} 每日复盘
+
+      ### 今日KPI
+      | 指标 | 今日值 | 目标 | 完成度 | 环比 |
+      （表格形式，有异常的行标注⚠️）
+
+      ### 今日完成事项（按子公司）
+      （实际产出，非计划，有数据支撑）
+
+      ### 今日卡点与问题
+      （实际遇到的问题，分析原因，不超过3条，有则记，无则写「无」）
+
+      ### 明日重点（3条）
+      1. [最重要的一件事] — 基于今日数据驱动，非主观臆想
+      2. [第二重要] — 同上
+      3. [第三重要]
+
+      ### 系统健康状态
+      （所有Cron是否正常执行，有无失败告警）
+
+      步骤3 — 推飞书简版卡片（非完整文档，仅关键数字+明日3件事）
+    deliver: origin
+    repeat: forever
+    sop: data_analyst_full
+    relay_in: "relay/"
+    relay_out: "relay/planning/"
+    depends_on: "plan_b0_daily_kpi"
+    timeout_minutes: 20
+    description: "每日22:30：读取当日所有relay产出→生成深度复盘文档→写Obsidian→推飞书明日3件事"
+    next_run: "2026-05-17T22:30:00+08:00"
+
+  # ── 每周一 09:30 — 周计划生成（轴B第二棒）──
+  - name: "周计划生成与推送"
+    id: "plan_b2_weekly_plan"
+    schedule: "30 9 * * 1"           # 每周一 09:30
+    skills:
+      - molin-ceo-persona             # CEO视角
+      - molin-goals                   # 目标体系
+      - plan                          # 计划生成
+      - obsidian                      # 写入wiki
+      - kpi-dashboard-design          # KPI目标设定
+    prompt: |
+      [周计划生成] 综合上周数据与本周目标，生成结构化周计划。
+
+      步骤1 — 读取上周汇总数据：
+      - relay/data/weekly_summary_{last_week}.json（若存在）
+      - Obsidian/报告/ 中上周的 系统｜日报·*.md 文件集合  # v3.0 flat
+      - relay/learning/latest_scan_manifest.json（学习飞轮状态）
+      - relay/evolution/ 中上周的SKILL提案状态
+
+      步骤2 — 生成本周计划文档（写入Obsidian，字符数 ≥ 800）：
+      路径：报告/系统｜周计划·{YYYYMMDD}.md  # v3.0 flat
+
+      文档结构：
+      ## Week {W} 周计划 ({月}/{日} — {月}/{日})
+
+      ### 上周复盘摘要（数据驱动，3-5条关键发现）
+
+      ### 本周OKR对齐
+      | 目标 | 关键结果 | 本周行动 | 负责Agent |
+
+      ### 本周各线重点（按优先级）
+      - 🔴 必须完成（影响收入/用户）
+      - 🟡 重要推进（影响增长）
+      - 🟢 机会项（有余力则做）
+
+      ### 本周学习重点
+      （基于周一06:00扫描结果，列出本周精读的核心项目和学习目标）
+
+      ### 本周关注指标
+      （每天收盘时重点看哪3个数字）
+
+      步骤3 — 推飞书卡片（周计划摘要版，可折叠展开各线重点）
+
+      注意：周计划基于数据，不是主观愿望清单。
+      每条重点事项必须有上周数据或情报作为驱动依据。
+    deliver: origin
+    repeat: forever
+    sop: auto_dream
+    relay_in: "relay/"
+    relay_out: "relay/planning/"
+    timeout_minutes: 20
+    description: "每周一09:30：综合上周数据+本周目标→生成结构化周计划→写Obsidian→推飞书"
+    next_run: "2026-05-18T09:30:00+08:00"
+
+  # ── 每月1日 09:00 — 月度规划（轴B第三棒）──
+  - name: "月度规划与OKR草稿"
+    id: "plan_b3_monthly_plan"
+    schedule: "0 9 1 * *"            # 每月1日 09:00
+    skills:
+      - molin-ceo-persona
+      - molin-goals
+      - plan
+      - finance-report                # 财务汇总
+      - obsidian
+      - kpi-dashboard-design
+    prompt: |
+      [月度规划] 上月完整复盘 + 本月OKR草稿，这是最重要的月度文档，要求深度。
+
+      步骤1 — 上月数据汇总（从relay和Obsidian读取）：
+      - relay/data/monthly_summary_{last_YYYY}{last_MM}.json
+      - Obsidian/报告/ 下所有 系统｜日报·*.md 文件  # v3.0 flat
+
+      步骤2 — 生成月度复盘+规划文档（写入Obsidian）：
+      路径：报告/系统｜月度复盘·{YYYY}-{MM:02d}.md  # v3.0 flat
+      字符数 ≥ 1500（这是深度文档，不是简报）
+
+      文档结构：
+      ## {YYYY}年{MM}月 月度复盘与规划
+
+      ### Part 1 — 上月数据复盘
+
+      #### 1.1 KPI达成情况
+      | 指标 | 目标值 | 实际值 | 完成率 | 趋势 |
+      （全业务线完整表格，用数字说话）
+
+      #### 1.2 三大亮点（有数据支撑）
+      每条亮点：现象→数据→原因分析→可复制的经验
+
+      #### 1.3 三大问题（有根因分析）
+      每条问题：现象→数据→根因→改进方案→负责Agent→完成时限
+
+      #### 1.4 学习进化情况
+      - 本月精读项目数 / SKILL更新数 / 能力评分变化
+      - 最有价值的一个学习洞察（详细展开）
+
+      ### Part 2 — 本月OKR草稿
+
+      #### 2.1 本月战略重点（1-2个）
+      （基于上月数据推导，有理由，不是拍脑袋）
+
+      #### 2.2 OKR矩阵
+      | Objective | Key Result 1 | Key Result 2 | Key Result 3 |
+
+      #### 2.3 各线行动计划
+      | 子公司 | 本月重点任务 | 衡量标准 | 依赖条件 |
+
+      #### 2.4 风险识别
+      本月最大的2个风险及应对预案
+
+      步骤3 — 推飞书（月度简报卡片 + 「需你确认OKR」操作按钮）
+
+      这份文档是系统进化和业务决策的核心依据，请确保深度和数据质量。
+    deliver: origin
+    repeat: forever
+    sop: data_analyst_full
+    relay_in: "relay/data/"
+    relay_out: "relay/planning/"
+    timeout_minutes: 30
+    description: "每月1日09:00：上月完整复盘（数据+根因+经验）+ 本月OKR草稿，深度文档≥1500字"
+    next_run: "2026-06-01T09:00:00+08:00"
+
+  # ════════════════════════════════════════════════════════
+  # 轴C — 进化审计（低频，高价值）
+  # ════════════════════════════════════════════════════════
+
+  # ── 季度首日 10:00 — 能力退化检测（轴C）──
+  - name: "季度能力退化检测与成长报告"
+    id: "audit_c1_quarterly_capability"
+    schedule: "0 10 1 1,4,7,10 *"   # 每季度首月1日 10:00（1/4/7/10月）
+    skills:
+      - self-learning-loop            # EvolutionEngine基准测试
+      - agent-testing-reality-checker # 真实场景测试
+      - obsidian                      # 报告写入
+      - data-analysis                 # 趋势分析
+    prompt: |
+      [季度能力审计] 对所有Agent做基准测试，与上季度对比，生成能力成长报告。
+
+      步骤1 — 执行基准测试：
+      对每家子公司Worker，运行3个标准测试任务（使用固定benchmark prompt集v2026）：
+      - Task A：核心业务场景任务（该Agent最典型的工作）
+      - Task B：跨域协作任务（需调用其他Agency）
+      - Task C：异常处理任务（输入残缺或矛盾时的鲁棒性）
+      
+      EvolutionEngine对每个输出打分（0-10），记录到：
+      relay/evolution/quarterly_benchmark_{YYYYMM}.json
+
+      步骤2 — 与上季度基线对比：
+      读取 relay/evolution/quarterly_benchmark_last.json，对比每个Agent分数变化：
+      - 进步 ≥ +10%  → 🏆 显著进步，记录成就
+      - 进步 0~+10%  → ✅ 正常进化
+      - 退化 0~-15%  → ⚠️ 轻微退化，纳入下周学习计划
+      - 退化 > -15%  → 🚨 严重退化，立即推飞书CRITICAL告警
+
+      步骤3 — 生成季度能力成长报告（写入Obsidian，字符数 ≥ 1500）：
+      路径：报告/系统｜季度能力报告·{YYYY}Q{N}.md  # v3.0 flat
+
+      文档结构：
+      ## {YYYY}Q{N} 能力成长报告
+
+      ### 全Agent评分总览（雷达图数据）
+
+      ### Top 3 进步最大的Agent（详细分析进步原因）
+
+      ### Top 3 退化风险Agent（根因分析 + 下季度修复计划）
+
+      ### 进化效率分析
+      - 本季度精读项目数 / SKILL合并数 / 达标SKILL占比
+      - 学习ROI：每精读一个项目平均带来的能力提升分值
+
+      ### 下季度学习重点建议
+      （基于退化分析和行业趋势，给每个Agent定制化建议）
+
+      步骤4 — 将本季度数据另存为基线：
+      cp relay/evolution/quarterly_benchmark_{YYYYMM}.json \
+         relay/evolution/quarterly_benchmark_last.json
+
+      步骤5 — 推飞书季度能力报告卡片
+    deliver: origin
+    repeat: forever
+    sop: auto_dream
+    relay_in: "relay/evolution/"
+    relay_out: "relay/evolution/"
+    timeout_minutes: 120
+    description: "季度首日：全Agent基准测试→与上季对比→退化预警→能力成长报告→更新基线"
+    next_run: "2026-07-01T10:00:00+08:00"

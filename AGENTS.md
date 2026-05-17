@@ -13,6 +13,20 @@
 
 # 墨麟 AI 集团 · 项目上下文
 
+## 核心文档体系
+
+系统从多文件分散模式升级为 **3 个核心文件**：
+
+| 文件 | 用途 | 地位 |
+|------|------|------|
+| `SYSTEM.md` | 主脑文档 — 所有 Agent SOP 合并为模块块 | 单一真相源 |
+| `AGENT_REGISTRY.md` | Agent 轻量索引 | 快速导航 |
+| `scheduler.yaml` | 统一调度配置 | 唯一调度源 |
+| `molib/memory/retriever.py` | 记忆检索入口 | 知识决策核心 |
+
+**重要**: Agent SOP 不再放在独立 skill 文件中。所有 SOP 定义见 `SYSTEM.md`。
+skill 文件继续存在（作为专业知识库），但执行流程以 `SYSTEM.md` 为准。
+
 ## 执行模型
 
 ```
@@ -231,6 +245,27 @@ python -m molib plan decompose --plan-id xxx
 4. 所有Cron任务prompt禁止直接调用FeishuCardSender → 统一通过Enforcer
 5. Cron输出格式: cron-output-formatter卡片规范（加粗标题+hr分割+note脚注）
 
+## 记忆系统
+
+统一通过 `molib/memory/retriever.py` 检索。
+双源检索：Obsidian（结构化知识 `产出/`）+ Supermemory（语义块）。
+
+四层架构：
+```
+🔴 L1 工作记忆     → 飞书对话上下文（24h清理）
+🟡 L2 情节记忆     → Supermemory（30天未调用→蒸馏）
+🟢 L3 语义记忆     → Obsidian `产出/`（永久）
+🔵 L4 程序记忆     → SKILL.md 技能文件（版本化管理）
+```
+
+Agent 接入：
+```python
+from molib.memory.retriever import retrieve_context
+context = retrieve_context(query="转化率提升", agent_name="edu")
+```
+
+Agent 输出通过 `molib/memory/output_writer.py` 强制结构化模板写入。
+
 ## 记忆系统文件位置
 
 ```
@@ -265,11 +300,23 @@ python -m molib plan decompose --plan-id xxx
 ~/hermes-os/docs/                         # 27个系统文档
 ```
 
-## Agent SOP 体系（v1.4 — 2026-05-17 — 全量覆盖 + 模板细化）
+## Agent SOP 体系（v2.0 — 2026-05-17 — 主脑文档模式）
 
-**状态：20 家子公司中 19 家已完成 SOP 全覆盖。关键 SOP 已配备参考模板。**
+**架构升级**: 从多文件 SOP → 单一主脑文档 `SYSTEM.md`。
 
-**状态：20 家子公司中 19 家已完成 SOP 全覆盖。**
+所有 Agent SOP 定义在 `SYSTEM.md` 中作为模块块存在。
+`AGENT_REGISTRY.md` 提供轻量索引。
+`scheduler.yaml` 是唯一调度源。
+
+每个 Agent 统一采用四层架构：
+
+```
+Agent
+ ├── SOP Block  —— 在 SYSTEM.md 中定义
+ ├── Cron        —— 在 scheduler.yaml 中定义
+ ├── KPI         —— 由 kpi-tracker 采集
+ └── Memory      —— 由 retriever.py 检索 + output_writer.py 写入
+```
 
 缺失：墨域私域（需 LINE/Bottender 基础设施）
 
@@ -283,30 +330,25 @@ Agent
  └── Feedback Layer —— 反思优化闭环
 ```
 
-### 子公司 SOP 覆盖矩阵
+### 覆盖状态
 
-| VP | 子公司 | SOP 技能 | 状态 |
-|----|--------|----------|------|
-| 营销 | 墨笔文创 | content-sop-pack/lead/growth/crisis | ✅ 六件套齐全 |
-| 营销 | 墨韵IP | ip-sop-pack | ✅ |
-| 营销 | 墨图设计 | design-sop-pack | ✅ |
-| 营销 | 墨播短视频 | video-sop-pack | ✅ |
-| 营销 | 墨声配音 | voice-sop-pack | ✅ |
-| 运营 | 墨域私域 | — | ❌ 待 LINE 基建 |
-| 运营 | 墨声客服 | service-sop-pack | ✅ |
-| 运营 | 墨链电商 | ecommerce-sop-pack | ✅ |
-| 运营 | 墨学教育 | education-sop-pack | ✅ |
-| 技术 | 墨码开发 | developer-sop-pack | ✅ |
-| 技术 | 墨维运维 | ops-sop-pack | ✅ |
-| 技术 | 墨安安全 | security-sop-pack | ✅ |
-| 技术 | 墨梦AutoDream | autodream-sop-pack | ✅ |
-| 财务 | 墨算财务 | finance-sop-pack | ✅ |
-| 战略 | 墨商BD | bd-sop-pack | ✅ |
-| 战略 | 墨海出海 | global-marketing-sop-pack | ✅ |
-| 战略 | 墨研竞情 | research-sop-pack | ✅ |
-| 共同服务 | 墨律法务 | legal-sop-pack | ✅ |
-| 共同服务 | 墨脑知识 | ⏳ 由 memory/kpi-tracker 覆盖 | ✅ |
-| 共同服务 | 墨测数据 | data-sop-pack | ✅ |
+| VP | 子公司 | 状态 |
+|----|--------|------|
+| 营销 | 墨笔文创 / 墨韵IP / 墨图设计 / 墨播短视频 / 墨声配音 | ✅ SYSTEM.md 已定义 |
+| 运营 | 墨域私域 | ❌ 待 LINE 基建 |
+| 运营 | 墨声客服 / 墨链电商 / 墨学教育 | ✅ SYSTEM.md 已定义 |
+| 技术 | 墨码开发 / 墨维运维 / 墨安安全 / 墨梦AutoDream | ✅ SYSTEM.md 已定义 |
+| 财务 | 墨算财务 | ✅ SYSTEM.md 已定义 |
+| 战略 | 墨商BD / 墨海出海 / 墨研竞情 | ✅ SYSTEM.md 已定义 |
+| 共同服务 | 墨律法务 / 墨脑知识 / 墨测数据 | ✅ SYSTEM.md 已定义 |
+
+### 共享层
+| 组件 | 作用 |
+|------|------|
+| gatekeeper-sop | 全流量合规门禁 + QA 终检 |
+| kpi-tracker | 效能/质量/成本 KPI 追踪 |
+| memory/retriever.py | 统一记忆检索 |
+| memory/output_writer.py | 结构化输出 + 双写 |
 
 ### 共享 SOP 技能
 | 技能 | 作用 | 引用方 |
@@ -314,16 +356,25 @@ Agent
 | gatekeeper-sop | 全流量合规门禁 + QA 终检 | 所有对外输出 Agent |
 | kpi-tracker | 效能/质量/成本 KPI 追踪 | 所有 Agent + 22:00复盘 |
 
-### 经营节奏 Cron
+### 经营节奏
 
-| 时间 | Agent | Cron 任务 | 加载技能 |
-|------|-------|-----------|----------|
-| 06:30-08:00 | 墨研竞情/墨笔文创 | 情报采集 + Lead 选题池 | research-sop, content-sop-lead |
-| 08:00-10:30 | 墨笔文创/墨图设计 | 内容生产 + 配图 | content-sop-pack, design-sop |
-| 15/45分 | 墨声客服 | 闲鱼消息检测回复 | service-sop-pack |
-| **22:00 每日** | **Content+Design+Video** | **复盘 + KPI 采集** | pack+gatekeeper+kpi-tracker |
-| **23:00 每日** | **墨算财务** | **财务日报** | finance-sop-pack+kpi-tracker |
-| **周日 21:00** | **Content+Growth** | **增长复盘 + 实验** | kpi-tracker+growth+pack |
+调度配置见 `scheduler.yaml`（唯一真相源）。
+
+| 时间 | Agent | 任务 | 加载技能 |
+|------|-------|------|----------|
+| 06:00 周一 | autodream | 垂直学习扫描 | vertical-learning-sop |
+| 06:00 每日 | research | 情报采集 | — |
+| 03:00 周一 | security | 安全审计 | security-sop-pack |
+| 08:00 | bd | 商机扫描 | — |
+| 08:30 工作日 | content | 内容生产 | content-sop-pack |
+| 10:00 周一 | ip | IP矩阵规划 | — |
+| */15分 | service | 闲鱼客服 | service-sop-pack |
+| 21:00 每日 | ecommerce | 日对账 | — |
+| 22:00 每日 | data/kpi | KPI采集+复盘 | pack+gatekeeper+kpi-tracker |
+| 22:10 每日 | kpi-tracker | KPI看板 | script |
+| 21:00 周日 | content | 增长复盘 | kpi-tracker+growth+pack |
+| 23:00 每日 | finance | 财务日报 | finance-sop-pack+kpi-tracker |
+| 09:00 1号 | kpi-tracker | 月度规划 | kpi-tracker+finance |
 
 ### 飞轮管线
 
@@ -340,7 +391,7 @@ Agent
 周日 增长实验      → content-sop-growth + autodream-sop-pack
 ```
 
-创建新 Agent 时：`skill_view('agent-sop-template')` 获取模板，再按需创建 SOP 技能。
+创建新 Agent 时参考 `SYSTEM.md` 的 SOP 模块块格式，在 SYSTEM.md 中追加 Agent 模块即可。
 
 ## 预算参考
 
@@ -353,21 +404,24 @@ Agent
 
 ## Cron 作业清单
 
-默认全部暂停（零空转）：
+调度以 `scheduler.yaml` 为准。Hermes 当前 14 个活跃 Cron job：
 
 | 时间 | 作业 | 功能 |
 |:---:|:-----|:-----|
-| 08:00 | 墨思情报银行 | 扫描博客/arXiv/MiroFish → 情报日报 |
-| 09:00 | 墨迹内容工厂 | 情报→AI生成3篇内容 |
-| 09:00 | CEO每日简报 | 汇总状态推送到你 |
-| 10:00 | 墨增增长引擎 | SEO优化·增长分析 |
-| 10:00 | 每日治理合规 | 审计+合规检查 |
-| 12:00 | 系统状态快照 | 汇总产出+运营快照 |
-| 15/45分 | 闲鱼消息检测 | 新消息AI自动回复 |
-| **22:00** | **内容 Agent 复盘 + KPI** 🆕 | **SOP 复盘层：QA趋势+KPI采集+优化建议** |
-| **23:00** | **财务日报** 🆕 | **SOP 财务层：成本分析+预算预警** |
-| **周日 21:00** | **增长复盘 + 实验** 🆕 | **SOP 增长层：周报+AB实验+SOP固化** |
-| 周五10:00 | 自学习进化 | GitHub扫描+技能更新 |
+| 每小时 | 记忆同步 | script |
+| 每15分 | 跨线请求轮询 | script |
+| 每30分 | 系统健康检查 | ops-sop-pack |
+| 02:00 | Git备份 | script |
+| 03:00 周一 | 安全审计 | security-sop-pack |
+| 06:00 周一 | 垂直学习扫描 | vertical-learning-sop |
+| 07:00 | arXiv论文 | script |
+| 08:00 | BD商机扫描 | — |
+| 08:30 工作日 | 内容生产 | content-sop-pack |
+| 22:00 | KPI采集+复盘 | pack+gatekeeper+kpi-tracker |
+| 22:10 | KPI看板 | script |
+| 23:00 | 财务日报 | finance-sop-pack |
+| 21:00 周日 | 增长复盘 | kpi-tracker+growth+pack |
+| 09:00 1号 | 月度规划 | kpi-tracker+finance |
 
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence

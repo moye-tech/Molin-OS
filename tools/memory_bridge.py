@@ -17,7 +17,10 @@ SUPERMEMORY_API_KEY = os.getenv("SUPERMEMORY_API_KEY", "")
 OBSIDIAN_API_KEY    = os.getenv("OBSIDIAN_API_KEY", "")
 OBSIDIAN_PORT       = 27123
 OBSIDIAN_BASE       = f"http://localhost:{OBSIDIAN_PORT}"
-MOLIN_OS_WIKI       = Path.home() / "MolinOS-Wiki"
+# v3.0 flat vault — MolinOS-Wiki deprecated, use iCloud vault directly
+MOLIN_OS_WIKI       = Path(os.path.expanduser(
+    "~/Library/Mobile Documents/iCloud~md~obsidian/Documents"
+))
 
 
 # ── Supermemory 操作 ──────────────────────────────────────
@@ -161,7 +164,7 @@ def save_task_experience(
     sm_add(sm_content, tags=[profile, task_type, "experience"], profile=profile)
 
     # 写Obsidian（结构化存档）
-    obs_path = f"agent-outputs/{profile}/experiences/{task_type}_{datetime.now().strftime('%Y%m%d')}.md"
+    obs_path = f"产出/{profile}/experiences/{task_type}_{datetime.now().strftime('%Y%m%d')}.md"
     obs_content = f"""# [{profile.upper()}] {task_type} 经验记录
 时间: {date_str}
 质量评分: {quality_score}/100

@@ -20,7 +20,7 @@ RELAY_DIR = os.path.expanduser("~/Molin-OS/relay/kpi")
 OBSIDIAN_DIR = os.path.expanduser(
     "~/Library/Mobile Documents/iCloud~md~obsidian/Documents"
 )
-OUTPUT_DIR = os.path.join(OBSIDIAN_DIR, "Agents/KPI看板")
+OUTPUT_DIR = os.path.join(OBSIDIAN_DIR, "报告/KPI看板")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 

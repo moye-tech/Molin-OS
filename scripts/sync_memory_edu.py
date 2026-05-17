@@ -3,7 +3,7 @@
 元瑶 · 教育Agent记忆双通道同步脚本
 - 从 MEMORY.md / USER.md 读取最新记忆
 - 同步到 Supermemory（API）
-- 同步到 Obsidian 知识库（MolinOS-Wiki）
+- 同步到 Obsidian 知识库（v3.0 flat vault: 产出/元瑶｜*.md）
 - container_tag=edu 实现Agent隔离
 """
 
@@ -22,8 +22,8 @@ MEMORY_FILE = MEMORIES_DIR / "MEMORY.md"
 USER_FILE = MEMORIES_DIR / "USER.md"
 SYNC_STATE_FILE = EDU_HOME / "sync_state.json"
 
-OBSIDIAN_VAULT = Path(_ACTUAL_HOME) / "MolinOS-Wiki"
-OBSIDIAN_MEMORY_DIR = OBSIDIAN_VAULT / "agent-outputs" / "edu" / "memory"
+OBSIDIAN_VAULT = Path(_ACTUAL_HOME) / "Library" / "Mobile Documents" / "iCloud~md~obsidian" / "Documents"
+OBSIDIAN_MEMORY_DIR = OBSIDIAN_VAULT / "产出" / "edu"
 
 CONTAINER_TAG = "edu"
 

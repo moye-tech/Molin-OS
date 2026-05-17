@@ -60,7 +60,7 @@ description: "Manage Xianyu seller conversations with an automated message pipel
 
 **记忆同步**: 每次处理完消息后自动执行
   python3 scripts/memory_sync.py --store "lead/用户"="内容" "order/状态"="xxx"
-  双通道: SupeMemory (容器: hermes-side) + Obsidian (agent-outputs/side/)
+  双通道: SupeMemory (容器: hermes-side) + Obsidian (产出/side/)
 
 ### Overview
 

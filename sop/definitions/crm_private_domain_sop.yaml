@@ -1,0 +1,292 @@
+# 墨域私域 · CRM私域运营SOP
+# 状态：需飞书群机器人基建完成后全量激活
+# 当前可执行：数据层（RFM分层、流失预警）+ 内容规划
+# 待激活：自动触达（依赖LINE/飞书群Bot）
+
+id: crm_private_domain
+name: 墨域私域CRM运营SOP
+description: |
+  基于RFM用户分层的私域精细化运营流程。
+  覆盖：用户分层更新→流失预警→内容触达规划→转化漏斗追踪→月度复盘。
+  分两阶段：
+  Phase 1（现在可用）：数据分析 + 内容规划
+  Phase 2（待基建）：飞书群/LINE自动触达
+category: crm
+version: "1.0"
+enabled: true
+owner: crm_agency
+estimated_time_minutes: 60
+governance_level: L1  # 自动触达内容需L2确认
+
+triggers:
+  - type: scheduled
+    cron: "0 9 * * 3"           # 每周三 09:00 RFM分层更新
+    label: weekly_rfm_update
+  - type: scheduled
+    cron: "0 10 * * 5"          # 每周五 10:00 触达内容规划
+    label: weekly_reach_planning
+  - type: scheduled
+    cron: "0 8 1 * *"           # 每月1日 08:30 月度私域复盘
+    label: monthly_crm_review
+  - type: keyword
+    keywords: ["私域", "CRM", "用户分层", "RFM", "流失预警", "社群", "触达", "老学员"]
+
+variables:
+  rfm_segments:
+    champions: {R: "<=7d", F: ">=3", M: ">=500"}       # 高价值活跃用户
+    loyal: {R: "<=30d", F: ">=2", M: ">=200"}           # 忠实用户
+    at_risk: {R: "31-90d", F: ">=2", M: ">=100"}        # 流失风险
+    lost: {R: ">90d", F: ">=1", M: "any"}               # 已流失
+    new: {R: "<=14d", F: "1", M: "any"}                 # 新用户
+  churn_warning_days: 30          # 超过N天未互动→流失预警
+  followup_sla_hours: 24          # 流失预警后跟进SLA
+  obsidian_crm_path: "/Users/laomo/Library/Mobile Documents/iCloud~md~obsidian/Documents/业务数据/私域运营"
+
+# ─────────────────────────────────────────────
+# 流程一：每周RFM分层更新（周三 09:00）
+# ─────────────────────────────────────────────
+rfm_update_steps:
+
+  - name: 拉取用户行为数据
+    id: step_fetch_user_data
+    type: automated
+    description: |
+      从数据源汇总用户行为数据：
+      - 购课记录（最近购买时间R、购课频次F、累计消费M）
+      - 内容互动（点赞、评论、分享、收藏）
+      - 飞书消息记录（最近沟通时间）
+      - 试听完成率、课程完课率
+    action: fetch_user_behavior
+    parameters:
+      data_sources:
+        - sqlite_orders              # 订单数据
+        - feishu_messages            # 飞书沟通记录
+        - content_engagement         # 内容互动
+      time_range_days: 90
+      output_path: "relay/crm/user_data_{date}.json"
+    critical: true
+    timeout: 300
+
+  - name: RFM重新分层计算
+    id: step_rfm_calc
+    type: automated
+    description: |
+      基于最新数据重新计算每个用户的RFM评分，
+      与上周分层结果对比，识别「段位晋升」和「段位下降」用户。
+      - 晋升（如at_risk→loyal）→ 记录成功触达案例
+      - 下降（如loyal→at_risk）→ 立即加入流失预警队列
+    action: calculate_rfm_segments
+    parameters:
+      segments: "{{ variables.rfm_segments }}"
+      output_path: "relay/crm/rfm_segments_{date}.json"
+      compare_with_last: true
+    depends_on: [step_fetch_user_data]
+    timeout: 120
+
+  - name: 流失预警队列更新
+    id: step_churn_warning
+    type: automated
+    description: |
+      生成本周流失预警用户名单：
+      - at_risk段 + 距上次互动超过 churn_warning_days 天
+      - 历史高价值（累计消费≥500元）优先处理
+      输出到 relay/crm/churn_warning_{date}.json，
+      供周五触达规划Cron消费。
+    action: generate_churn_warning_list
+    parameters:
+      churn_threshold_days: "{{ variables.churn_warning_days }}"
+      prioritize_high_value: true
+      output_path: "relay/crm/churn_warning_{date}.json"
+    depends_on: [step_rfm_calc]
+    timeout: 60
+
+  - name: 流失预警立即通知
+    id: step_churn_notify
+    type: notification
+    description: |
+      如流失预警名单中有高价值用户（累计消费≥1000元），
+      立即推飞书通知，不等周五规划。
+      包含：用户昵称（脱敏）、历史消费、上次互动时间、建议触达方式。
+    action: feishu_churn_alert
+    parameters:
+      high_value_threshold: 1000
+      template: "high_value_churn_alert_card"
+      condition: "{{ len(high_value_at_risk) > 0 }}"
+    depends_on: [step_churn_warning]
+    timeout: 30
+
+# ─────────────────────────────────────────────
+# 流程二：每周触达内容规划（周五 10:00）
+# ─────────────────────────────────────────────
+reach_planning_steps:
+
+  - name: 读取本周分层和预警结果
+    id: step_read_segments
+    type: automated
+    description: 读取本周RFM分层结果和流失预警名单
+    action: read_relay_files
+    parameters:
+      files:
+        - "relay/crm/rfm_segments_latest.json"
+        - "relay/crm/churn_warning_latest.json"
+    timeout: 30
+
+  - name: 生成分层触达计划
+    id: step_reach_plan
+    type: automated
+    description: |
+      为每个用户段生成个性化触达方案（Phase 1：内容规划，Phase 2：自动发送）：
+      
+      Champions段：
+      - 感谢卡 + 新课程/服务早鸟权益
+      - 邀请参与测试体验
+      
+      Loyal段：
+      - 进度关怀 + 学习成就认可
+      - 相关进阶课程推荐
+      
+      At Risk段（流失预警）：
+      - 个性化召回话术（基于该用户历史兴趣点）
+      - 限时权益（7天有效期，制造紧迫感）
+      
+      New段：
+      - 欢迎序列（第1/3/7天三次触达）
+      - 学习路径引导
+      
+      输出：relay/crm/reach_plan_{date}.json
+    action: call_ai
+    parameters:
+      model: "deepseek-v3"
+      prompt_template: "crm_personalized_reach_plan"
+      context: "{{ rfm_segments }} + {{ churn_warning_list }}"
+      output_path: "relay/crm/reach_plan_{date}.json"
+    depends_on: [step_read_segments]
+    timeout: 300
+
+  - name: L2审批触达内容
+    id: step_approve_reach
+    type: approval
+    description: |
+      触达内容推飞书卡片审批，创始人可：
+      ① 逐条确认（单条批准）
+      ② 全部批准
+      ③ 修改后执行
+      Phase 2自动发送前必须经此审批。
+      Phase 1（手动发送）此步骤作为参考，不强制。
+    approvers: ["founder"]
+    approval_channel: feishu
+    timeout_hours: 24
+    governance: L2
+    note: "Phase 1可选，Phase 2必须"
+    depends_on: [step_reach_plan]
+
+  - name: 记录触达计划到Obsidian
+    id: step_log_plan
+    type: automated
+    description: |
+      将本周触达计划存入 Obsidian，供后续复盘使用：
+      报告/私域｜触达计划·{YYYY}-W{week}.md
+      包含：各段用户数、触达文案、预期转化目标。
+    action: obs_write
+    parameters:
+      path: "报告/私域｜触达计划·{year}-W{week}.md"
+    depends_on: [step_reach_plan]
+    timeout: 60
+
+# ─────────────────────────────────────────────
+# 流程三：月度私域复盘（每月1日 08:30）
+# ─────────────────────────────────────────────
+monthly_review_steps:
+
+  - name: 汇总月度触达效果
+    id: step_monthly_reach_result
+    type: automated
+    description: |
+      汇总上月触达执行情况：
+      - 触达用户数（各段分别统计）
+      - 回复率（有回复/触达总数）
+      - 转化率（触达→下单/复购）
+      - 流失挽回率（at_risk→重新激活比例）
+      - RFM段位变化净值（晋升数-降级数）
+    action: aggregate_monthly_crm_metrics
+    parameters:
+      output_path: "relay/crm/monthly_result_{year}{month}.json"
+    timeout: 180
+
+  - name: 生成月度私域复盘报告
+    id: step_monthly_report
+    type: automated
+    description: |
+      生成月度私域运营复盘报告，字符数 >= 800，
+      写入 Obsidian：报告/私域｜月度复盘·{YYYY}-{MM}.md
+      包含：数据亮点、挑战、改进建议、下月重点、Phase 2启动条件评估。
+    action: call_ai
+    parameters:
+      model: "deepseek-v3"
+      prompt_template: "crm_monthly_review_report"
+      min_output_chars: 800
+      obsidian_path: "报告/私域｜月度复盘·{year}-{month:02d}.md"
+      deliver_to_feishu: true
+    depends_on: [step_monthly_reach_result]
+    timeout: 300
+
+# Phase 2 启动条件（自动触达基建）
+phase2_activation_criteria:
+  required:
+    - name: "飞书群机器人配置完成"
+      check: "config/channels.yaml 中 feishu_group_bot.enabled == true"
+    - name: "LINE Bot Token配置"
+      check: "FEISHU_GROUP_BOT_TOKEN 或 LINE_BOT_TOKEN 已配置"
+    - name: "用户授权同意书"
+      check: "法律合规：收集用户同意自动触达的授权记录"
+  note: |
+    三个条件均满足后，将此SOP中 step_approve_reach 的 governance 改为 L1，
+    并在 step_reach_plan 后增加 auto_send_messages 步骤。
+
+success_criteria:
+  weekly:
+    - metric: "rfm_update_coverage"
+      target: 100
+      operator: ">="
+      note: "所有用户都应有最新分层"
+    - metric: "churn_warning_list_generated"
+      target: true
+  monthly:
+    - metric: "win_back_rate"
+      target: 10
+      operator: ">="
+      note: "流失预警用户10%被重新激活"
+    - metric: "monthly_report_chars"
+      target: 800
+      operator: ">="
+
+failure_handling:
+  retry_policy:
+    max_retries: 2
+    retry_delay: 300
+  fallback_actions:
+    - action: notify_feishu
+      template: "crm_sop_failure"
+
+notifications:
+  on_high_value_churn:
+    channels: ["feishu"]
+    urgency: high
+    template: "high_value_churn_alert_card"
+  on_weekly_plan_ready:
+    channels: ["feishu"]
+    template: "reach_plan_approval_card"
+  on_monthly_review_ready:
+    channels: ["feishu"]
+    template: "crm_monthly_summary"
+
+data_collection:
+  enabled: true
+  metrics:
+    - "rfm_segment_distribution"
+    - "churn_rate_by_segment"
+    - "win_back_rate"
+    - "reach_conversion_rate"
+    - "ltv_trend"
+  storage: "sqlite"
+  retention_days: 365

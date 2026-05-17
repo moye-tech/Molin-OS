@@ -1,0 +1,398 @@
+# 墨麟OS — Agent垂直学习订阅配置
+# ─────────────────────────────────────────────────────────
+# 文件用途：
+#   被 scripts/github_vertical_scan.py 和 Cron learn_a1_github_vertical_scan 读取，
+#   定义每个Agent的精准学习订阅方向，防止泛化扫描导致知识稀释。
+#
+# 设计原则：
+#   1. 关键词按「核心→延伸→工具」三层设计，搜索时优先核心
+#   2. exclude_topics 防止无关项目混入（如教育Agent不看基础设施项目）
+#   3. min_stars 门槛过滤低质量项目，保证精读价值
+#   4. preferred_languages 减少无法适配的语言栈
+#   5. 情报源 intel_feeds 补充GitHub之外的行业动态
+# ─────────────────────────────────────────────────────────
+
+version: "1.0"
+last_updated: "2026-05-17"
+scan_frequency: weekly              # 与 Cron learn_a1 的周期一致
+global_settings:
+  min_stars: 50                     # 全局最低stars门槛
+  max_projects_per_agent: 8         # 扫描阶段候选项目上限（精读阶段再取Top5）
+  lookback_days: 7                  # 扫描过去N天的新项目
+  skip_if_already_read: true        # 跳过Obsidian中已有精读记录的项目
+  github_search_api: "https://api.github.com/search/repositories"
+  github_token_env: "GITHUB_TOKEN"
+
+agents:
+
+  # ─────────────────────────────────────────────
+  # 墨笔文创 · 全媒体内容Agent
+  # ─────────────────────────────────────────────
+  mobi_content:
+    display_name: "墨笔文创"
+    owner_subsidiary: "content_agency"
+    obsidian_path: "学习档案/"  # v3.0 flat: 学习档案/银月｜{项目}·{date}.md
+
+    github_topics:
+      core:                         # 核心业务关键词（优先搜索）
+        - "content-marketing"
+        - "copywriting"
+        - "seo-tool"
+        - "ai-writing"
+        - "content-generation"
+      extended:                     # 延伸方向
+        - "xiaohongshu"
+        - "douyin-automation"
+        - "social-media-automation"
+        - "content-calendar"
+        - "markdown-editor"
+        - "newsletter"
+      tools:                        # 工具类
+        - "text-generation"
+        - "nlp-chinese"
+        - "llm-application"
+
+    github_keywords:                # GitHub Search q= 参数关键词
+      - "content marketing ai"
+      - "copywriting tool python"
+      - "seo automation"
+      - "xiaohongshu bot"
+      - "social media scheduler"
+      - "content strategy ai"
+
+    preferred_languages: ["Python", "TypeScript", "JavaScript"]
+    min_stars: 100                  # 内容工具成熟度要求更高
+    exclude_topics:
+      - "infrastructure"
+      - "kubernetes"
+      - "database"
+      - "hardware"
+      - "game"
+
+    intel_feeds:                    # GitHub之外的情报源
+      - name: "新榜 · 内容行业周报"
+        url: "https://www.newrank.cn/public/info/list.html"
+        type: "web_scrape"
+        frequency: weekly
+      - name: "运营研究社"
+        url: "https://www.u1sai.com/"
+        type: "web_scrape"
+        frequency: weekly
+      - name: "ProductHunt · Writing"
+        url: "https://www.producthunt.com/topics/writing-tools"
+        type: "web_scrape"
+        frequency: weekly
+      - name: "HN · Content AI"
+        query: "site:news.ycombinator.com content AI writing"
+        type: "search"
+        frequency: weekly
+
+    learning_focus_this_quarter:
+      - "AI辅助长内容生产效率提升"
+      - "多平台内容自动适配工具链"
+      - "中文SEO关键词研究自动化"
+
+  # ─────────────────────────────────────────────
+  # 墨学教育 · 逻辑思维教育Agent
+  # ─────────────────────────────────────────────
+  mobi_edu:
+    display_name: "墨学教育"
+    owner_subsidiary: "edu_agency"
+    obsidian_path: "学习档案/"  # v3.0 flat: 学习档案/元瑶｜{项目}·{date}.md
+
+    github_topics:
+      core:
+        - "lms"
+        - "e-learning"
+        - "tutoring"
+        - "course-management"
+        - "education-technology"
+      extended:
+        - "spaced-repetition"
+        - "ai-tutor"
+        - "quiz-generator"
+        - "learning-analytics"
+        - "student-engagement"
+        - "gamification"
+      tools:
+        - "flashcard"
+        - "knowledge-graph"
+        - "assessment"
+
+    github_keywords:
+      - "AI tutor python"
+      - "learning management system"
+      - "spaced repetition algorithm"
+      - "educational AI"
+      - "course generator"
+      - "student progress tracking"
+
+    preferred_languages: ["Python", "TypeScript", "JavaScript"]
+    min_stars: 50
+    exclude_topics:
+      - "university-research"
+      - "hardware"
+      - "robotics"
+      - "computer-vision"
+
+    intel_feeds:
+      - name: "多知网 · 教育行业"
+        url: "https://www.duozhi.com/"
+        type: "web_scrape"
+        frequency: weekly
+      - name: "教育部政策公告RSS"
+        url: "http://www.moe.gov.cn/jyb_xwfb/"
+        type: "rss_scrape"
+        frequency: weekly
+      - name: "ProductHunt · Education"
+        url: "https://www.producthunt.com/topics/education"
+        type: "web_scrape"
+        frequency: weekly
+      - name: "EdTech Review"
+        url: "https://edtechreview.in/"
+        type: "web_scrape"
+        frequency: biweekly
+
+    learning_focus_this_quarter:
+      - "AI个性化学习路径推荐算法"
+      - "在线试听到付费转化的漏斗优化工具"
+      - "学员完课率提升的游戏化机制"
+
+  # ─────────────────────────────────────────────
+  # 墨研竞情 · 竞争情报&市场研究Agent
+  # ─────────────────────────────────────────────
+  mobi_research:
+    display_name: "墨研竞情"
+    owner_subsidiary: "research_agency"
+    obsidian_path: "学习档案/"  # v3.0 flat: 学习档案/玄骨｜{项目}·{date}.md
+
+    github_topics:
+      core:
+        - "web-scraping"
+        - "competitive-intelligence"
+        - "market-research"
+        - "data-collection"
+        - "research-automation"
+      extended:
+        - "gpt-researcher"
+        - "information-retrieval"
+        - "news-aggregator"
+        - "price-tracking"
+        - "sentiment-analysis"
+        - "trend-analysis"
+      tools:
+        - "crawler"
+        - "browser-automation"
+        - "api-client"
+        - "rss-reader"
+
+    github_keywords:
+      - "autonomous research agent"
+      - "web scraping python 2025"
+      - "competitive analysis tool"
+      - "market intelligence automation"
+      - "gpt researcher"
+      - "news aggregator ai"
+
+    preferred_languages: ["Python", "TypeScript"]
+    min_stars: 50
+    exclude_topics:
+      - "game"
+      - "frontend-only"
+      - "mobile"
+
+    intel_feeds:
+      - name: "Hacker News · Top"
+        url: "https://news.ycombinator.com/best"
+        type: "web_scrape"
+        frequency: daily
+      - name: "arXiv · cs.IR (信息检索)"
+        url: "https://arxiv.org/list/cs.IR/recent"
+        type: "web_scrape"
+        frequency: weekly
+      - name: "36氪 · 快讯"
+        url: "https://36kr.com/newsflashes"
+        type: "web_scrape"
+        frequency: daily
+      - name: "MIT Technology Review"
+        url: "https://www.technologyreview.com/feed/"
+        type: "rss"
+        frequency: weekly
+
+    learning_focus_this_quarter:
+      - "多源异构数据融合与去重技术"
+      - "反爬绕过与合规抓取方案"
+      - "实体识别与知识图谱构建"
+
+  # ─────────────────────────────────────────────
+  # 墨码开发 · 全栈开发&MCP集成Agent
+  # ─────────────────────────────────────────────
+  mobi_dev:
+    display_name: "墨码开发"
+    owner_subsidiary: "dev_agency"
+    obsidian_path: "学习档案/"  # v3.0 flat: 学习档案/系统｜{项目}·{date}.md
+
+    github_topics:
+      core:
+        - "agent-framework"
+        - "mcp"                       # Model Context Protocol
+        - "code-generation"
+        - "llm-application"
+        - "devops-automation"
+      extended:
+        - "claude-api"
+        - "openai-api"
+        - "langchain"
+        - "docker-compose"
+        - "api-design"
+        - "testing-automation"
+        - "ci-cd"
+      tools:
+        - "code-review"
+        - "developer-tools"
+        - "sdk"
+
+    github_keywords:
+      - "MCP server python"
+      - "agent framework 2025"
+      - "claude code tool"
+      - "LLM coding assistant"
+      - "AI code review"
+      - "autonomous coding agent"
+      - "multi agent system"
+
+    preferred_languages: ["Python", "TypeScript", "Rust", "Go"]
+    min_stars: 100                  # 开发工具要求成熟度更高
+    exclude_topics:
+      - "academic-paper"
+      - "mobile-game"
+      - "hardware"
+
+    intel_feeds:
+      - name: "GitHub Trending Daily"
+        url: "https://github.com/trending?since=daily"
+        type: "web_scrape"
+        frequency: daily
+      - name: "Anthropic Engineering Blog"
+        url: "https://www.anthropic.com/research"
+        type: "web_scrape"
+        frequency: weekly
+      - name: "LangChain Blog"
+        url: "https://blog.langchain.dev/"
+        type: "rss"
+        frequency: weekly
+      - name: "arXiv · cs.AI"
+        url: "https://arxiv.org/list/cs.AI/recent"
+        type: "web_scrape"
+        frequency: weekly
+
+    learning_focus_this_quarter:
+      - "MCP Server开发标准化与发布流程"
+      - "多Agent编排框架性能对比（Hermes vs LangGraph vs AutoGen）"
+      - "代码生成质量评估与自动测试"
+
+  # ─────────────────────────────────────────────
+  # 墨梦AutoDream · 进化引擎&自学习Agent
+  # ─────────────────────────────────────────────
+  mobi_autodream:
+    display_name: "墨梦AutoDream"
+    owner_subsidiary: "auto_dream_agency"
+    obsidian_path: "学习档案/"  # v3.0 flat: 学习档案/系统｜进化·{项目}·{date}.md
+
+    github_topics:
+      core:
+        - "self-improving-ai"
+        - "agent-memory"
+        - "rag"
+        - "agent-evolution"
+        - "meta-learning"
+      extended:
+        - "memory-system"
+        - "knowledge-graph"
+        - "continual-learning"
+        - "prompt-optimization"
+        - "agent-evaluation"
+        - "benchmark"
+        - "reflection"
+      tools:
+        - "vector-database"
+        - "embedding"
+        - "fine-tuning"
+
+    github_keywords:
+      - "self improving agent"
+      - "agent memory system"
+      - "RAG optimization 2025"
+      - "agent evaluation framework"
+      - "continual learning LLM"
+      - "prompt evolution"
+      - "memory augmented agent"
+
+    preferred_languages: ["Python"]
+    min_stars: 30                   # 这个领域前沿项目起步Stars较低
+    exclude_topics:
+      - "game"
+      - "robotics"
+      - "hardware"
+      - "mobile"
+
+    intel_feeds:
+      - name: "arXiv · cs.MA (多Agent系统)"
+        url: "https://arxiv.org/list/cs.MA/recent"
+        type: "web_scrape"
+        frequency: weekly
+      - name: "arXiv · cs.LG (机器学习)"
+        url: "https://arxiv.org/list/cs.LG/recent"
+        type: "web_scrape"
+        frequency: weekly
+      - name: "Papers With Code · Agents"
+        url: "https://paperswithcode.com/task/autonomous-agents"
+        type: "web_scrape"
+        frequency: weekly
+      - name: "Lilian Weng Blog"
+        url: "https://lilianweng.github.io/"
+        type: "web_scrape"
+        frequency: biweekly
+
+    learning_focus_this_quarter:
+      - "长期记忆与上下文压缩：如何让Agent记住更多且高效检索"
+      - "Agent自我评估与反思机制（Reflexion/Self-RAG类方法）"
+      - "SKILL文件的自动版本化与回滚机制"
+
+# ─────────────────────────────────────────────
+# 全局排除规则（所有Agent共用）
+# ─────────────────────────────────────────────
+global_excludes:
+  topics:
+    - "awesome-list"              # awesome列表不是具体项目，不精读
+    - "tutorial"                  # 教程类不纳入SKILL更新
+    - "template"                  # 模板类低价值
+    - "fork"                      # 不扫描fork项目
+  repositories:
+    - "*/awesome-*"               # 排除所有awesome-开头的repo
+    - "*/cookiecutter-*"          # 排除项目模板
+  languages_exclude:
+    - "Jupyter Notebook"          # 排除notebook-only项目（难以工程化）
+    - "MATLAB"
+    - "R"                         # R语言栈与系统不兼容
+
+# ─────────────────────────────────────────────
+# 深度笔记模板约束
+# ─────────────────────────────────────────────
+deep_note_template:
+  required_sections:
+    - "核心问题"                   # 这个项目解决了什么本质问题？
+    - "关键方法论"                 # 可迁移的思想，非功能描述
+    - "与当前能力对比"             # 我们现在怎么做？差距在哪？
+    - "立刻可借鉴的3个具体点"      # 有操作步骤的建议
+    - "完全吸收后的质变预期"       # Agent会有什么不同？
+  min_chars_per_section: 100
+  min_total_chars: 800
+  reject_if_below_min: true       # 低于最低字符数拒绝写入，要求重新生成
+  frontmatter_required:
+    - "type: github_deep_read"
+    - "agent"
+    - "repo"
+    - "stars"
+    - "date"
+    - "tags"

@@ -1,0 +1,234 @@
+# 墨韵IP · IP孵化与管理SOP
+# 负责：个人IP策略、内容矩阵规划、版权管理、品牌资产
+# 当前状态：子公司存在但完全无SOP，补建
+
+id: ip_management
+name: 墨韵IP孵化与品牌资产管理SOP
+description: |
+  覆盖个人IP定位策略→内容矩阵规划→账号体系搭建→品牌资产管理→
+  版权登记与保护的完整IP孵化流程。
+  同时包含IP健康度定期巡检，防止账号权重衰减。
+category: ip_brand
+version: "1.0"
+enabled: true
+owner: ip_agency
+estimated_time_minutes: 90
+governance_level: L1  # IP方向变更需L2确认
+
+triggers:
+  - type: scheduled
+    cron: "0 10 * * 1"          # 每周一 10:00 IP内容矩阵规划
+    label: weekly_content_matrix
+  - type: scheduled
+    cron: "0 9 1 * *"           # 每月1日 09:00 IP月度健康巡检
+    label: monthly_ip_health
+  - type: keyword
+    keywords: ["IP", "品牌", "账号", "矩阵", "版权", "定位", "人设", "个人IP"]
+
+variables:
+  ip_profiles_path: "config/ip_profiles.yaml"   # 各平台账号配置
+  brand_assets_path: "/Users/laomo/Library/Mobile Documents/iCloud~md~obsidian/Documents/知识/  # v3.0 flat"
+  content_matrix_path: "relay/ip/content_matrix_{date}.json"
+  ip_health_threshold: 70         # IP健康度分数门槛，低于此触发告警
+  platforms: ["xiaohongshu", "douyin", "zhihu", "wechat_mp", "bilibili"]
+
+# ─────────────────────────────────────────────
+# 流程一：IP定位策略（新IP孵化时触发）
+# ─────────────────────────────────────────────
+ip_positioning_steps:
+
+  - name: 竞品IP分析
+    id: step_competitive_ip
+    type: automated
+    description: |
+      调用墨研竞情，分析目标赛道Top10个人IP：
+      - 定位差异化分析（找到空白赛道）
+      - 内容风格矩阵（专业型/故事型/干货型/娱乐型）
+      - 粉丝增长曲线（识别爆发节点）
+      - 变现路径拆解
+    action: call_agency
+    parameters:
+      agency: research_agency
+      task_type: ip_competitive_analysis
+      output_path: "relay/ip/competitive_analysis_{date}.json"
+    critical: true
+    timeout: 600
+
+  - name: IP定位策略生成
+    id: step_positioning
+    type: automated
+    description: |
+      基于竞品分析，生成IP定位策略文档（Obsidian深度文档，≥1200字）：
+      1. 核心人设（一句话定位 + 3个性格标签）
+      2. 目标受众画像（主/次受众，痛点清单）
+      3. 内容差异化定位（竞品有什么，我不做什么；竞品没有什么，我来做）
+      4. 价值主张陈述（用户为什么要关注我而不是别人）
+      5. 变现路径预设（0→1K粉做什么，1K→10K做什么）
+    action: call_ai
+    parameters:
+      model: "deepseek-v3-pro"
+      prompt_template: "ip_positioning_strategy"
+      min_output_chars: 1200
+      obsidian_path: "知识/IP｜定位策略·{ip_name}_{date}.md"
+    depends_on: [step_competitive_ip]
+    timeout: 300
+
+  - name: L2确认IP方向
+    id: step_confirm_direction
+    type: approval
+    description: |
+      IP定位策略需创始人确认，因为方向一旦确定会影响后续大量内容生产。
+      推送飞书卡片：定位摘要 + 差异化核心 + 预期路径。
+    approvers: ["founder"]
+    approval_channel: feishu
+    timeout_hours: 24
+    governance: L2
+    depends_on: [step_positioning]
+
+# ─────────────────────────────────────────────
+# 流程二：内容矩阵规划（每周一 10:00）
+# ─────────────────────────────────────────────
+content_matrix_steps:
+
+  - name: 获取上周内容数据
+    id: step_get_last_week
+    type: automated
+    description: |
+      从墨测数据获取上周各平台内容表现数据：
+      阅读量、点赞、评论、收藏、涨粉数。
+      识别Top3爆款内容的共同特征（标题结构、话题标签、发布时间）。
+    action: call_agency
+    parameters:
+      agency: data_analyst_agency
+      task_type: content_performance_weekly
+    timeout: 120
+
+  - name: 生成本周内容矩阵
+    id: step_matrix
+    type: automated
+    description: |
+      结合上周数据 + 当前情报（来自08:00情报银行relay） + IP定位策略，
+      规划本周内容矩阵，输出到 content_matrix_path：
+      - 本周主题（1个核心话题 + 2个关联话题）
+      - 各平台内容计划（平台/类型/选题/预期发布时间）
+      - 差异化分发建议（同一选题不同平台的适配方向）
+      - 复用机会（哪些内容可跨平台改编）
+    action: call_ai
+    parameters:
+      model: "deepseek-v3"
+      prompt_template: "weekly_content_matrix_planning"
+      context:
+        - "relay/intelligence.json"        # 情报银行输出
+        - "relay/ip/competitive_analysis_latest.json"
+      output_path: "{{ variables.content_matrix_path }}"
+    depends_on: [step_get_last_week]
+    timeout: 300
+
+  - name: 推送内容矩阵到飞书
+    id: step_push_matrix
+    type: notification
+    description: |
+      将内容矩阵推送飞书，格式化为可操作的checklist卡片，
+      创始人可直接在飞书标注「确认执行」或「调整」。
+    action: feishu_content_matrix_card
+    parameters:
+      template: "weekly_content_matrix_card"
+    depends_on: [step_matrix]
+    timeout: 30
+
+# ─────────────────────────────────────────────
+# 流程三：IP月度健康巡检（每月1日 09:00）
+# ─────────────────────────────────────────────
+health_check_steps:
+
+  - name: 各平台账号健康检测
+    id: step_platform_health
+    type: automated
+    description: |
+      检测各平台账号健康指标：
+      - 粉丝净增长（与30日均值对比）
+      - 内容曝光率（发布数×平均阅读量）
+      - 互动率（互动量/曝光量）
+      - 账号权重信号（平台推荐频次变化）
+      综合计算 IP健康度分（0-100），低于 ip_health_threshold 触发告警。
+    action: platform_health_check
+    parameters:
+      platforms: "{{ variables.platforms }}"
+      ip_profiles: "{{ variables.ip_profiles_path }}"
+      health_threshold: "{{ variables.ip_health_threshold }}"
+    timeout: 300
+
+  - name: 品牌资产盘点
+    id: step_asset_inventory
+    type: automated
+    description: |
+      盘点当前品牌资产清单：
+      - 已创作内容（各平台数量、累计播放/阅读）
+      - 可复用素材（图片、模板、Prompt）
+      - 版权保护状态（哪些内容已登记）
+      - 品牌关键词占据度（搜索结果第几位）
+    action: brand_asset_inventory
+    parameters:
+      asset_db_path: "{{ variables.brand_assets_path }}"
+    timeout: 180
+
+  - name: 生成IP月度健康报告
+    id: step_health_report
+    type: automated
+    description: |
+      综合健康检测 + 资产盘点，生成月度IP健康报告，
+      写入 Obsidian 报告/IP｜健康报告·{YYYY}-{MM}.md  # v3.0 flat，
+      字符数 >= 800，包含：健康度评分、主要问题、改进建议、下月重点。
+    action: generate_health_report
+    parameters:
+      obsidian_path: "报告/IP｜健康报告·{year}-{month:02d}.md  # v3.0 flat"
+      min_chars: 800
+      deliver_to_feishu: true
+    depends_on: [step_platform_health, step_asset_inventory]
+    timeout: 300
+
+success_criteria:
+  weekly:
+    - metric: "content_matrix_topics_count"
+      target: 3
+      operator: ">="
+    - metric: "matrix_coverage_platforms"
+      target: 3
+      operator: ">="
+  monthly:
+    - metric: "ip_health_score"
+      target: 70
+      operator: ">="
+    - metric: "health_report_chars"
+      target: 800
+      operator: ">="
+
+failure_handling:
+  retry_policy:
+    max_retries: 2
+    retry_delay: 300
+  fallback_actions:
+    - action: notify_feishu
+      template: "ip_sop_failure"
+
+notifications:
+  on_low_health_score:
+    channels: ["feishu"]
+    template: "ip_health_alert"
+    urgency: high
+  on_weekly_matrix_ready:
+    channels: ["feishu"]
+    template: "content_matrix_card"
+  on_monthly_report_ready:
+    channels: ["feishu"]
+    template: "ip_monthly_health_summary"
+
+data_collection:
+  enabled: true
+  metrics:
+    - "ip_health_scores_by_platform"
+    - "content_matrix_execution_rate"
+    - "follower_growth_trend"
+    - "brand_asset_count"
+  storage: "sqlite"
+  retention_days: 365

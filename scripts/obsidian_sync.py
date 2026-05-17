@@ -145,38 +145,15 @@ def _make_frontmatter(agent_id: str, category: str, date: str,
 
 
 def init_vault():
-    """创建 vault 目录结构（v4: 4 分类 + 聚合 Daily）"""
-    print(f"🔧 初始化 vault 结构 v4: {VAULT}\n")
+    """创建 vault 基础目录（仅 决策/知识/流程/成果/报告/配置）"""
+    print(f"🔧 初始化 vault 结构: {VAULT}\n")
 
-    agents_dir = VAULT / "Agents"
-    for agent_id, agent_info in AGENTS.items():
-        agent_dir = agents_dir / agent_id
-        agent_dir.mkdir(parents=True, exist_ok=True)
-        for cat in CATEGORIES:
-            (agent_dir / cat).mkdir(parents=True, exist_ok=True)
+    for cat in CATEGORIES:
+        (VAULT / cat).mkdir(parents=True, exist_ok=True)
+    for extra in ["报告", "配置"]:
+        (VAULT / extra).mkdir(parents=True, exist_ok=True)
 
-        readme = agent_dir / "README.md"
-        if not readme.exists():
-            cat_list = "\n".join(
-                f"- **{cat}/** — {CATEGORY_DESC.get(cat, cat)}"
-                for cat in CATEGORIES
-            )
-            readme.write_text(
-                f"# {agent_info['name']}\n\n"
-                f"_{agent_info['desc']}_\n\n"
-                f"## 分类\n\n{cat_list}\n"
-            )
-            print(f"  📄 {readme.relative_to(VAULT)}")
-
-    # 聚合 Daily — 单文件模式
-    daily_dir = VAULT / "Daily"
-    daily_dir.mkdir(parents=True, exist_ok=True)
-    # 旧 Daily/agent/ 目录不再创建
-
-    sys_dir = VAULT / "System"
-    sys_dir.mkdir(parents=True, exist_ok=True)
-
-    print(f"\n✅ Vault 结构 v4 初始化完成!")
+    print(f"\n✅ Vault 结构初始化完成！（{', '.join(CATEGORIES)} + 报告 + 配置）")
 
 
 def _make_daily_section(agent_id: str, content: str, date: str) -> str:

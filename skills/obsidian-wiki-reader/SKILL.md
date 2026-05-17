@@ -6,7 +6,7 @@
 read_note(path): 读取Obsidian笔记内容
 search(query): 全文搜索知识库
 ## 数据位置
-~/MolinOS-Wiki/agent-outputs/{profile}/
+~/MolinOS-Wiki/产出/{profile}/
 ~/MolinOS-Wiki/sop/{profile}/
 ## 调用
 python3.11 ~/Molin-OS/tools/memory_bridge.py → obs_read(path)

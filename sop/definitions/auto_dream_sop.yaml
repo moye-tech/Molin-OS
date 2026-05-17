@@ -1,0 +1,343 @@
+# 墨梦AutoDream · 进化引擎 SOP
+# 负责：Agent自学习、记忆蒸馏、SKILL更新提案、质量门控
+# 优先级：最高 —— 这是整个进化体系的标准操作流程
+
+id: auto_dream
+name: AutoDream进化引擎标准流程
+description: |
+  从GitHub扫描结果出发，完成精读内化→Obsidian深度笔记→SKILL更新提案→
+  质量门控的完整进化闭环。同时管理记忆蒸馏（L2→L3）与能力退化检测。
+category: evolution
+version: "1.0"
+enabled: true
+owner: auto_dream_agency
+estimated_time_minutes: 45
+governance_level: L1  # AI自审后执行，SKILL合并需L2人工确认
+
+triggers:
+  - type: scheduled
+    cron: "0 7 * * 1"        # 每周一 07:00 精读内化
+    label: weekly_absorption
+  - type: scheduled
+    cron: "0 21 * * 0"       # 每周日 21:00 记忆蒸馏
+    label: weekly_distillation
+  - type: scheduled
+    cron: "0 10 1 */3 *"     # 每季度首日 10:00 能力退化检测
+    label: quarterly_audit
+  - type: relay
+    relay_file: "relay/learning/{agent_id}_scan.json"  # 上游扫描触发
+  - type: keyword
+    keywords: ["进化", "自学习", "记忆蒸馏", "SKILL更新", "能力退化"]
+
+variables:
+  max_projects_per_agent: 5        # 每Agent每周精读上限，防知识稀释
+  min_stars_threshold: 50          # GitHub项目最低Stars门槛
+  readme_token_limit: 1500         # 精读时单项目token上限（README+核心文件）
+  min_evolution_score: 7.5         # EvolutionEngine打分门槛，低于此不计入版本
+  memory_decay_days: 30            # Supermemory L2条目超期天数→触发蒸馏
+  deep_note_min_chars: 800         # 深度笔记最低字符数（低于此视为简报，拒绝写入）
+  obsidian_base: "/Users/laomo/Library/Mobile Documents/iCloud~md~obsidian/Documents"  # v3.0 flat vault
+
+# ─────────────────────────────────────────────
+# 流程一：周度精读内化（每周一 07:00）
+# 触发条件：relay/learning/{agent_id}_scan.json 就绪
+# ─────────────────────────────────────────────
+absorption_steps:
+
+  - name: 读取扫描结果
+    id: step_read_scan
+    type: automated
+    description: 读取上游github_vertical_scan产出的各Agent scan.json
+    action: read_relay_files
+    parameters:
+      pattern: "relay/learning/*_scan.json"
+      validate_schema: true
+      required_fields: ["agent_id", "projects", "scan_date"]
+    critical: true
+    timeout: 60
+    on_failure: notify_feishu_and_skip  # 扫描文件缺失不应阻断其他流程
+
+  - name: 项目优先级排序
+    id: step_rank
+    type: automated
+    description: |
+      按(stars × 近期活跃度 × 领域相关度)排序，每Agent取Top-N个精读，
+      已精读过的项目（Obsidian中有记录）自动跳过。
+    action: call_ai
+    parameters:
+      model: "deepseek-v3"          # 低成本路由：排序不需要强模型
+      prompt_template: "rank_github_projects_for_agent"
+      context_fields: ["agent_id", "projects", "existing_skill_keywords"]
+    depends_on: [step_read_scan]
+    timeout: 120
+
+  - name: README精读提炼
+    id: step_deep_read
+    type: automated
+    description: |
+      对每个项目抓取 README + CHANGELOG + 最核心的1-2个源文件（限token），
+      用模型生成结构化精读卡片，包含五个必答问题：
+      1. 本质问题（不是功能描述）
+      2. 核心方法论（可迁移思想）
+      3. 与当前Agent能力的差距
+      4. 立刻可借鉴的3个具体点
+      5. 完全吸收后Agent的质变预期
+    action: call_ai
+    parameters:
+      model: "deepseek-v3-pro"      # 精读需要强模型
+      prompt_template: "deep_read_github_project"
+      token_budget_per_project: 1500
+      output_format: "structured_card"
+      min_output_chars: 800         # 低于此判定为简报，重试
+      max_retries: 2
+    depends_on: [step_rank]
+    timeout: 600
+    loop: true                      # 对每个Top-N项目循环执行
+
+  - name: 写入Obsidian深度笔记
+    id: step_write_obsidian
+    type: automated
+    description: |
+      将精读卡片写入 Obsidian，路径规范：
+      学习档案/  # v3.0 flat{agent_id}/{repo_name}_{YYYYMMDD}.md
+      强制包含：精读日期、Stars、项目链接、归属Agent、五问回答。
+      字符数低于 deep_note_min_chars 时拒绝写入，要求模型重新生成。
+    action: obs_write_with_validation
+    parameters:
+      path_template: "学习档案/{{业务线}}｜{repo_name}·{date}.md  # v3.0 flat"
+      template: "github_deep_read_template"
+      min_chars: "{{ variables.deep_note_min_chars }}"
+      frontmatter:
+        type: github_deep_read
+        agent: "{{ agent_id }}"
+        repo: "{{ repo_full_name }}"
+        stars: "{{ stars }}"
+        date: "{{ today }}"
+        tags: ["学习吸收", "{{ agent_id }}", "github"]
+    depends_on: [step_deep_read]
+    timeout: 120
+
+  - name: 生成SKILL更新提案
+    id: step_skill_proposal
+    type: automated
+    description: |
+      综合本周所有精读结果，为每个Agent生成 SKILL_UPDATE_PROPOSAL.md：
+      - 新增能力描述段落（直接可写入SKILL.md）
+      - 新增Prompt模板（带示例）
+      - 废弃过时方法（列出理由）
+      - 估算能力提升幅度（百分比）
+      输出到 relay/evolution/{agent_id}_skill_proposal_{date}.md
+    action: call_ai
+    parameters:
+      model: "deepseek-v3-pro"
+      prompt_template: "generate_skill_update_proposal"
+      input: "本周精读卡片汇总"
+      output_path: "relay/evolution/{agent_id}_skill_proposal_{date}.md"
+    depends_on: [step_write_obsidian]
+    timeout: 300
+
+  - name: L2审批 — SKILL合并确认
+    id: step_l2_approval
+    type: approval
+    description: |
+      SKILL更新提案需创始人（墨烨）人工审核后才能合并。
+      推送飞书卡片，包含：①修改内容摘要 ②受影响的Agent ③评估质量预期。
+      超时48小时未响应→自动标记为「待办」，不强制执行。
+    approvers: ["founder"]
+    approval_channel: feishu
+    timeout_hours: 48
+    auto_escalate: false
+    card_template: "skill_update_approval_card"
+    depends_on: [step_skill_proposal]
+    governance: L2
+
+  - name: 合并SKILL文件
+    id: step_merge_skill
+    type: automated
+    description: |
+      审批通过后，将提案内容合并到对应的SKILL.md文件，
+      同时更新 流程/{{业务线}}｜能力版本.md  # v3.0 flat 中的版本号记录。
+    action: merge_skill_proposal
+    parameters:
+      skill_dir: "molin-skills/"
+      version_log_path: "/Users/laomo/Library/Mobile Documents/iCloud~md~obsidian/Documents/流程/{{业务线}}｜能力版本.md  # v3.0 flat"
+      commit_message: "feat({agent_id}): absorb {repo_name} insights [AutoDream]"
+    depends_on: [step_l2_approval]
+    condition: "{{ steps.step_l2_approval.approved == true }}"
+    timeout: 60
+
+  - name: EvolutionEngine质量评分
+    id: step_quality_gate
+    type: automated
+    description: |
+      新SKILL合并后，立即触发一次领域测试任务，
+      EvolutionEngine对输出打分。
+      分数 >= min_evolution_score → 正式计入Agent能力版本号
+      分数 < min_evolution_score → 标记为「待验证」，下周复测
+    action: evolution_engine_evaluate
+    parameters:
+      test_prompt_template: "agent_capability_test_{agent_id}"
+      score_threshold: "{{ variables.min_evolution_score }}"
+      store_result: "relay/evolution/{agent_id}_quality_gate_{date}.json"
+    depends_on: [step_merge_skill]
+    timeout: 300
+
+# ─────────────────────────────────────────────
+# 流程二：记忆蒸馏（每周日 21:00）
+# ─────────────────────────────────────────────
+distillation_steps:
+
+  - name: 扫描待蒸馏记忆
+    id: step_scan_decay
+    type: automated
+    description: |
+      查询 Supermemory 中超过 memory_decay_days 天未被检索的 L2 条目，
+      按Agent profile分组，输出待蒸馏列表。
+    action: sm_query_decayed
+    parameters:
+      decay_days: "{{ variables.memory_decay_days }}"
+      group_by: "profile"
+    timeout: 60
+
+  - name: 知识压缩提炼
+    id: step_compress
+    type: automated
+    description: |
+      对待蒸馏条目进行语义聚类，相似条目合并，
+      提炼出更高抽象层次的方法论洞察（L3级别），
+      字符数要求 >= 300，低于此视为无价值条目，直接丢弃。
+    action: call_ai
+    parameters:
+      model: "deepseek-v3"
+      prompt_template: "compress_episodic_to_semantic"
+      min_output_chars: 300
+    depends_on: [step_scan_decay]
+    timeout: 300
+
+  - name: 写入Obsidian语义记忆
+    id: step_write_l3
+    type: automated
+    description: |
+      将压缩后的语义记忆写入 Obsidian：
+      知识/{{业务线}}｜方法论·{topic}·{date}.md  # v3.0 flat
+      同时在 Supermemory 中将原始 L2 条目标记为 archived。
+    action: obs_write_and_sm_archive
+    parameters:
+      obsidian_path: "知识/{{业务线}}｜方法论·{topic}·{date}.md  # v3.0 flat"
+      frontmatter:
+        type: semantic_memory
+        distilled_from: "{{ l2_entry_ids }}"
+        distillation_date: "{{ today }}"
+    depends_on: [step_compress]
+    timeout: 120
+
+# ─────────────────────────────────────────────
+# 流程三：季度能力退化检测
+# ─────────────────────────────────────────────
+audit_steps:
+
+  - name: 基准测试执行
+    id: step_benchmark
+    type: automated
+    description: |
+      对所有20家子公司Worker各运行3个标准测试任务，
+      使用固定的benchmark prompt集（版本化管理），
+      确保与上季度可比。
+    action: run_agent_benchmarks
+    parameters:
+      benchmark_version: "v2026q2"
+      agents: "all"
+      tasks_per_agent: 3
+      output_path: "relay/evolution/quarterly_benchmark_{date}.json"
+    timeout: 1800
+
+  - name: 与历史基准对比
+    id: step_compare
+    type: automated
+    description: |
+      与上季度基准分数对比，识别：
+      - 进步显著（+10%以上）→ 记录到Agent成就档案
+      - 轻微退化（-5%~-15%）→ 标记预警，纳入下周学习计划
+      - 严重退化（-15%以上）→ 触发紧急L2审批，暂停该Agent自动执行
+    action: compare_with_baseline
+    parameters:
+      baseline_path: "relay/evolution/quarterly_benchmark_last.json"
+    depends_on: [step_benchmark]
+    timeout: 120
+
+  - name: 生成能力成长报告
+    id: step_growth_report
+    type: automated
+    description: |
+      生成季度能力成长报告，写入 Obsidian：
+      报告/系统｜季度能力报告·{YYYY}Q{N}.md  # v3.0 flat
+      内容：各Agent评分变化趋势图数据、Top3进步点、Top3退化风险、
+      下季度学习重点建议。字符数 >= 1500。
+    action: generate_growth_report
+    parameters:
+      obsidian_path: "业务数据/季度复盘/能力成长_{year}Q{quarter}.md"
+      min_chars: 1500
+      deliver_to_feishu: true
+    depends_on: [step_compare]
+    timeout: 300
+
+success_criteria:
+  absorption:
+    - metric: "projects_absorbed"
+      target: 3
+      operator: ">="
+      timeframe: "per_agent_per_week"
+    - metric: "skill_update_proposals"
+      target: 1
+      operator: ">="
+      timeframe: "per_week"
+    - metric: "deep_note_avg_chars"
+      target: 1000
+      operator: ">="
+  distillation:
+    - metric: "l2_entries_processed"
+      target: 1
+      operator: ">="
+  audit:
+    - metric: "agents_benchmarked"
+      target: 20
+      operator: "=="
+
+failure_handling:
+  retry_policy:
+    max_retries: 2
+    retry_delay: 300
+    backoff_factor: 2
+  partial_failure_policy: continue_other_agents  # 单Agent失败不阻断其他Agent
+  fallback_actions:
+    - action: notify_feishu
+      template: "auto_dream_failure_alert"
+      recipients: ["founder"]
+
+notifications:
+  on_absorption_complete:
+    channels: ["feishu"]
+    template: "weekly_absorption_summary"
+    include: ["projects_absorbed_count", "skill_proposals_count", "top_insights"]
+  on_distillation_complete:
+    channels: ["feishu"]
+    template: "distillation_summary"
+  on_quality_gate_fail:
+    channels: ["feishu"]
+    template: "quality_gate_warning"
+    urgency: high
+  on_capability_regression:
+    channels: ["feishu"]
+    template: "capability_regression_alert"
+    urgency: critical
+
+data_collection:
+  enabled: true
+  metrics:
+    - "projects_absorbed_per_agent"
+    - "deep_note_avg_chars"
+    - "skill_quality_scores"
+    - "memory_l2_to_l3_ratio"
+    - "capability_score_trend"
+  storage: "sqlite"
+  retention_days: 365  # 进化数据长期保留

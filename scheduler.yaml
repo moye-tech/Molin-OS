@@ -1,0 +1,125 @@
+# Molin-OS 调度配置
+# 唯一调度源 — 与 Hermes cronjob 工具同步
+# 更新此文件后，需同步更新 Hermes cronjob
+
+version: "2.0"
+
+jobs:
+  - id: research_daily
+    agent: research
+    cron: "0 6 * * *"
+    description: 每日情报采集 + 竞品扫描
+    output: relay/intelligence_{date}.json
+
+  - id: content_production
+    agent: content
+    cron: "30 8 * * 1-5"
+    description: 工作日内容生产（选题→撰稿→自检→适配）
+    depends_on: [research_daily]
+    gatekeeper: true
+
+  - id: ip_weekly
+    agent: ip
+    cron: "0 10 * * 1"
+    description: IP内容矩阵规划 + 品牌健康巡检
+    gatekeeper: false
+
+  - id: crm_rfm_update
+    agent: crm
+    cron: "0 9 * * 3"
+    description: RFM分层更新 + 流失预警
+    gatekeeper: false
+
+  - id: service_polling
+    agent: service
+    cron: "*/15 * * * *"
+    description: 闲鱼消息检测回复
+    gatekeeper: true
+
+  - id: ecommerce_daily
+    agent: ecommerce
+    cron: "0 21 * * *"
+    description: 日对账 + 待处理订单
+    gatekeeper: false
+
+  - id: ops_health
+    agent: ops
+    cron: "*/30 * * * *"
+    description: 系统健康检查
+    gatekeeper: false
+
+  - id: security_weekly
+    agent: security
+    cron: "0 3 * * 1"
+    description: 主动安全审计
+    gatekeeper: false
+
+  - id: autodream_absorption
+    agent: autodream
+    cron: "0 7 * * 1"
+    description: 周度精读内化
+    depends_on: [vertical_learning_scan]
+
+  - id: autodream_distillation
+    agent: autodream
+    cron: "0 21 * * 0"
+    description: 周日记忆蒸馏 + L2→L3
+    gatekeeper: false
+
+  - id: finance_daily
+    agent: finance
+    cron: "0 23 * * *"
+    description: 财务日报（消费 relay/kpi/）
+    depends_on: [kpi_daily]
+    gatekeeper: false
+
+  - id: bd_daily
+    agent: bd
+    cron: "0 8 * * *"
+    description: 竞品动态 + 商机扫描
+    gatekeeper: false
+
+  - id: kpi_daily
+    agent: kpi-tracker
+    cron: "0 22 * * *"
+    description: KPI采集（复盘Cron中执行）
+    gatekeeper: false
+
+  - id: kpi_dashboard
+    agent: kpi-tracker
+    cron: "10 22 * * *"
+    description: KPI看板生成
+    gatekeeper: false
+
+  - id: data_daily
+    agent: data
+    cron: "0 22 * * *"
+    description: 每日KPI采集+分析
+    gatekeeper: false
+
+  - id: vertical_learning_scan
+    agent: autodream
+    cron: "0 6 * * 1"
+    description: 五大Agent垂直学习扫描
+    skills: [vertical-learning-sop]
+    gatekeeper: false
+
+  - id: growth_weekly
+    agent: content
+    cron: "0 21 * * 0"
+    description: 周日增长复盘 + AB实验
+    skills: [content-sop-growth]
+    gatekeeper: false
+
+  - id: monthly_planning
+    agent: kpi-tracker
+    cron: "0 9 1 * *"
+    description: 月度规划生成
+    skills: [kpi-tracker, finance-sop-pack]
+    gatekeeper: false
+
+  - id: vault_health
+    agent: ops
+    cron: "0 22 * * *"
+    description: vault 合规检查
+    gatekeeper: false

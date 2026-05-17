@@ -752,7 +752,7 @@ def process_agent(agent_id: str) -> int:
         # 写入 Obsidian
         filepath = write_to_obsidian(agent_id, category, topic, merged)
         rel = filepath.relative_to(VAULT)
-        already_exists = (VAULT / "Agents" / agent_id / category / f"{topic}.md").exists()
+        already_exists = filepath.exists()
         action = "追加" if (count > 0 or already_exists) else "新建"
         print(f"  ✅ {name} → {rel}（{action}）")
 

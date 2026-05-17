@@ -1,0 +1,272 @@
+# 墨测数据 · 数据分析师完整SOP
+# 负责：KPI采集、BI报表、A/B测试分析、异常预警
+# 补充：原有 data_analysis_sop.yaml 只有5步且偏向一次性分析
+# 本文件覆盖：日常KPI采集飞轮 + 深度分析 + 异常告警
+
+id: data_analyst_full
+name: 墨测数据完整运营分析SOP
+description: |
+  覆盖日常KPI采集（接飞轮22:30复盘Cron）、深度数据分析、
+  A/B测试评估、业务异常告警的全流程。
+  是所有子公司复盘Cron的数据供给方。
+category: data
+version: "1.0"
+enabled: true
+owner: data_analyst_agency
+estimated_time_minutes: 30
+governance_level: L0  # 数据采集自动执行，报告生成L1通知
+
+triggers:
+  - type: scheduled
+    cron: "0 22 * * *"          # 每日 22:00 KPI采集（22:30复盘Cron前跑完）
+    label: daily_kpi_collection
+  - type: scheduled
+    cron: "0 8 1 * *"           # 每月1日 08:00 月度数据汇总
+    label: monthly_summary
+  - type: relay
+    relay_file: "relay/data/kpi_request.json"  # 其他子公司请求数据时触发
+  - type: keyword
+    keywords: ["数据", "报表", "KPI", "转化率", "漏斗", "归因", "A/B测试", "异常"]
+
+variables:
+  kpi_definitions_path: "config/kpi_definitions.yaml"
+  anomaly_threshold_sigma: 2.0    # 超出均值2σ触发异常告警
+  ab_test_min_sample: 100         # A/B测试最小样本量
+  report_min_chars: 500           # 分析报告最低字符数
+  obsidian_data_path: "/Users/laomo/Library/Mobile Documents/iCloud~md~obsidian/Documents/业务数据"
+
+# ─────────────────────────────────────────────
+# 流程一：每日KPI采集（22:00触发，供22:30复盘Cron使用）
+# ─────────────────────────────────────────────
+daily_kpi_steps:
+
+  - name: 采集核心业务KPI
+    id: step_collect_kpi
+    type: automated
+    description: |
+      按 kpi_definitions.yaml 中定义的指标，逐一采集：
+      【教育线】新增线索数、试听预约、M0转化率、M1完课率、CAC
+      【电商线】闲鱼新增订单、GMV、平均单价、退款率
+      【内容线】新发内容数、总阅读量、小红书涨粉、抖音播放量
+      【财务线】当日收入、API成本、毛利率
+      数据来源：SQLite本地DB + 平台API（闲鱼/小红书/抖音）
+    action: collect_kpi_batch
+    parameters:
+      definitions: "{{ variables.kpi_definitions_path }}"
+      output_path: "relay/data/daily_kpi_{date}.json"
+      include_yesterday_diff: true   # 包含日环比
+      include_7d_avg: true           # 包含7日均值
+    critical: true
+    timeout: 300
+    on_failure: use_cached_kpi      # 采集失败时使用上次缓存，标注数据陈旧
+
+  - name: 异常检测
+    id: step_anomaly
+    type: automated
+    description: |
+      对每个KPI指标与30日历史均值对比，
+      超出 ±2σ 的指标触发异常标记。
+      异常分级：
+      - WARNING：偏差 2σ~3σ，纳入复盘提示
+      - CRITICAL：偏差 >3σ 或连续3日下滑，立即推飞书告警
+    action: anomaly_detection
+    parameters:
+      sigma_threshold: "{{ variables.anomaly_threshold_sigma }}"
+      history_window_days: 30
+      consecutive_decline_days: 3
+    depends_on: [step_collect_kpi]
+    timeout: 60
+
+  - name: 写入relay供复盘Cron消费
+    id: step_write_relay
+    type: automated
+    description: |
+      将KPI数据 + 异常标记写入标准化relay文件，
+      供22:30的每日复盘Cron直接读取，无需重复查询。
+      格式：relay/data/daily_summary_{date}.json
+    action: write_relay_file
+    parameters:
+      output_path: "relay/data/daily_summary_{date}.json"
+      schema_version: "v1.2"
+      include_fields:
+        - kpi_values
+        - day_over_day_diff
+        - week_avg
+        - anomalies
+        - data_quality_flag
+    depends_on: [step_anomaly]
+    timeout: 30
+
+  - name: CRITICAL异常立即告警
+    id: step_critical_alert
+    type: notification
+    description: |
+      CRITICAL级别异常立即推飞书，不等复盘Cron。
+      告警卡片包含：异常指标名称、当前值、历史均值、偏差倍数、
+      可能原因（基于过去类似异常的历史记录）。
+    action: feishu_alert_card
+    parameters:
+      template: "kpi_critical_alert_card"
+      urgency: critical
+      condition: "{{ len(anomalies.critical) > 0 }}"
+    depends_on: [step_anomaly]
+    timeout: 30
+
+# ─────────────────────────────────────────────
+# 流程二：深度数据分析（按需触发）
+# ─────────────────────────────────────────────
+deep_analysis_steps:
+
+  - name: 需求解析
+    id: step_parse_request
+    type: automated
+    description: 解析分析请求，确定分析类型、目标指标、时间范围
+    action: parse_analysis_request
+    parameters:
+      supported_types:
+        - cohort_analysis        # 用户队列分析
+        - funnel_analysis        # 漏斗转化分析
+        - ab_test_evaluation     # A/B测试评估
+        - revenue_attribution    # 收入归因
+        - content_performance    # 内容效果分析
+        - cac_ltv_analysis       # 获客成本与生命周期价值
+    critical: true
+    timeout: 60
+
+  - name: 数据拉取与清洗
+    id: step_fetch_clean
+    type: automated
+    description: |
+      按解析的分析范围拉取原始数据，执行清洗：
+      - 去除异常值（IQR方法）
+      - 补全缺失值（线性插值或标记缺失）
+      - 统一时区（Asia/Shanghai）
+      - 数据质量评分（0-100，低于70标注警告）
+    action: fetch_and_clean_data
+    parameters:
+      data_sources: ["sqlite_local", "feishu_bitable", "platform_api"]
+      quality_threshold: 70
+    depends_on: [step_parse_request]
+    timeout: 300
+
+  - name: 执行统计分析
+    id: step_analyze
+    type: automated
+    description: |
+      根据分析类型执行对应统计：
+      - 队列分析：留存率矩阵 + 生命周期曲线
+      - 漏斗分析：各步骤转化率 + 流失节点定位
+      - A/B测试：t检验 + 置信区间 + 最小样本量验证
+      - 归因分析：多触点归因模型（线性/位置衰减）
+    action: call_ai
+    parameters:
+      model: "deepseek-v3-pro"
+      prompt_template: "execute_statistical_analysis"
+      attach_data: true
+    depends_on: [step_fetch_clean]
+    timeout: 600
+
+  - name: 生成深度分析报告
+    id: step_report
+    type: automated
+    description: |
+      生成结构化分析报告，强制包含：
+      1. 核心结论（3条，每条有数据支撑）
+      2. 关键发现（图表数据的文字解读）
+      3. 可执行建议（3条，有优先级和预期效果）
+      4. 数据局限性说明
+      字符数 >= report_min_chars，写入 Obsidian 业务数据/
+    action: generate_analysis_report
+    parameters:
+      obsidian_path: "报告/数据｜{analysis_type}·{topic}_{date}.md"
+      min_chars: "{{ variables.report_min_chars }}"
+      frontmatter:
+        type: data_analysis
+        analysis_type: "{{ analysis_type }}"
+        date: "{{ today }}"
+      deliver_to_feishu: true
+    depends_on: [step_analyze]
+    timeout: 300
+
+# ─────────────────────────────────────────────
+# 流程三：月度数据汇总（每月1日 08:00）
+# ─────────────────────────────────────────────
+monthly_steps:
+
+  - name: 月度KPI汇总
+    id: step_monthly_kpi
+    type: automated
+    description: |
+      汇总上月所有每日KPI数据，计算：
+      月度总量、环比增长、季度趋势、目标完成率。
+      输出到 relay/data/monthly_summary_{YYYY}{MM}.json
+    action: aggregate_monthly_kpi
+    parameters:
+      output_path: "relay/data/monthly_summary_{year}{month}.json"
+    timeout: 300
+
+  - name: 写入Obsidian月度数据档案
+    id: step_monthly_obsidian
+    type: automated
+    description: |
+      将月度汇总写入 Obsidian 月度复盘目录（供月度规划Cron使用）：
+      报告/系统｜月度数据·{YYYY}-{MM}.md  # v3.0 flat
+      包含：各线KPI表格、环比图表数据、Top3亮点、Top3问题。
+      字符数 >= 1000。
+    action: write_monthly_archive
+    parameters:
+      obsidian_path: "报告/系统｜月度数据·{year}-{month:02d}.md  # v3.0 flat"
+      min_chars: 1000
+    depends_on: [step_monthly_kpi]
+    timeout: 120
+
+success_criteria:
+  daily:
+    - metric: "kpi_collection_success_rate"
+      target: 95
+      operator: ">="
+    - metric: "anomaly_detection_latency_minutes"
+      target: 5
+      operator: "<="
+  deep_analysis:
+    - metric: "report_chars"
+      target: 500
+      operator: ">="
+    - metric: "actionable_recommendations"
+      target: 3
+      operator: ">="
+
+failure_handling:
+  retry_policy:
+    max_retries: 3
+    retry_delay: 60
+    backoff_factor: 1.5
+  on_data_source_failure:
+    action: use_cached_with_flag   # 标注数据陈旧但不中断流程
+  fallback_actions:
+    - action: notify_feishu
+      template: "data_collection_failure"
+      recipients: ["founder"]
+
+notifications:
+  on_critical_anomaly:
+    channels: ["feishu"]
+    template: "kpi_critical_alert_card"
+    urgency: critical
+  on_daily_complete:
+    channels: ["feishu"]
+    template: "daily_kpi_ready"
+    suppress_if_no_anomaly: true   # 无异常时静默，减少通知噪音
+  on_monthly_complete:
+    channels: ["feishu"]
+    template: "monthly_data_archive_ready"
+
+data_collection:
+  enabled: true
+  metrics:
+    - "kpi_collection_latency"
+    - "anomaly_count_by_type"
+    - "data_quality_scores"
+    - "analysis_report_quality"
+  storage: "sqlite"
+  retention_days: 365

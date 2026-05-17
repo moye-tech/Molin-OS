@@ -163,20 +163,15 @@ def collect_system_info() -> dict:
 
 
 def collect_vault_state() -> dict:
-    """采集当前 vault 的结构状态"""
+    """采集当前 vault 的结构状态（扁平分类）"""
     vault_data = {}
     if VAULT.exists():
-        for agent_dir in sorted(VAULT.glob("Agents/*")):
-            if agent_dir.is_dir():
-                agent = agent_dir.name
-                files = list(agent_dir.rglob("*.md"))
-                cats = {}
-                for f in files:
-                    rel = f.relative_to(agent_dir)
-                    cat = rel.parent.name if rel.parent.name != "." else "root"
-                    cats.setdefault(cat, 0)
-                    cats[cat] += 1
-                vault_data[agent] = cats
+        for cat_dir in VAULT.glob('*'):
+            if cat_dir.is_dir() and cat_dir.name in ('决策','知识','流程','成果','报告','配置'):
+                cat = cat_dir.name
+                files = list(cat_dir.glob('*.md'))
+                vault_data[cat] = len(files)
+    return vault_data
     return vault_data
 
 

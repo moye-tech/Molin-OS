@@ -1,0 +1,264 @@
+# 墨安安全 · 主动安全审计SOP
+# 补充：现有 security_audit_sop.yaml 是被动响应流程
+# 本文件覆盖：主动周期性审计 + 代码安全扫描 + 供应链安全 + 密钥轮换
+# 两个文件共同构成完整安全体系
+
+id: security_proactive_audit
+name: 墨安主动安全审计SOP
+description: |
+  定期主动扫描代码、依赖、密钥、API权限，
+  在被动事件触发之前发现并修复安全隐患。
+  包含：代码审计、依赖漏洞扫描、密钥轮换提醒、权限最小化检查。
+category: security
+version: "1.0"
+enabled: true
+owner: secure_agency
+estimated_time_minutes: 60
+governance_level: L1  # 发现高危漏洞升级L2立即审批
+
+triggers:
+  - type: scheduled
+    cron: "0 3 * * 1"           # 每周一 03:00（系统备份后）主动审计
+    label: weekly_proactive_audit
+  - type: scheduled
+    cron: "0 3 1 * *"           # 每月1日 03:00 完整供应链审计
+    label: monthly_supply_chain
+  - type: scheduled
+    cron: "0 3 1 */3 *"         # 每季度 密钥强制轮换提醒
+    label: quarterly_key_rotation
+  - type: keyword
+    keywords: ["安全审计", "漏洞扫描", "密钥轮换", "权限检查", "代码审计", "供应链"]
+
+variables:
+  critical_fix_hours: 24          # CRITICAL级漏洞修复SLA
+  high_fix_days: 7                # HIGH级漏洞修复SLA
+  key_rotation_days: 90           # 密钥最长有效期
+  api_keys_config: "~/.molin/.env"
+  dependency_manifests:
+    - "requirements.txt"
+    - "setup.py"
+    - "package.json"
+
+# ─────────────────────────────────────────────
+# 流程一：每周主动审计（周一 03:00）
+# ─────────────────────────────────────────────
+weekly_audit_steps:
+
+  - name: 依赖漏洞扫描
+    id: step_dependency_scan
+    type: automated
+    description: |
+      扫描所有依赖清单（requirements.txt / package.json）中的已知CVE漏洞。
+      使用 pip-audit（Python）+ npm audit（Node.js）。
+      输出：CVE列表、严重等级（CRITICAL/HIGH/MEDIUM/LOW）、修复版本。
+    action: run_dependency_audit
+    parameters:
+      manifests: "{{ variables.dependency_manifests }}"
+      output_path: "relay/security/dep_audit_{date}.json"
+      tools:
+        python: "pip-audit"
+        node: "npm audit --json"
+    critical: true
+    timeout: 300
+
+  - name: API密钥有效期检查
+    id: step_key_expiry
+    type: automated
+    description: |
+      检查 .env 中所有API Key的使用状态：
+      - 超过 key_rotation_days 未轮换的 → 标记OVERDUE
+      - 距轮换期≤14天的 → 标记WARNING
+      - 从未使用的Key → 标记UNUSED（建议删除）
+      注意：只检查元数据，不读取Key明文，不写入日志。
+    action: check_key_metadata
+    parameters:
+      env_path: "{{ variables.api_keys_config }}"
+      rotation_days: "{{ variables.key_rotation_days }}"
+      check_last_used: true        # 检查最近使用时间（从审计日志推断）
+    timeout: 60
+
+  - name: 权限最小化检查
+    id: step_permission_check
+    type: automated
+    description: |
+      检查各子公司Worker的权限配置：
+      - 是否有Worker持有超出其工作范围的权限（如客服Worker有财务写权限）
+      - config/memory_acl.toml 中的Qdrant命名空间隔离是否仍有效
+      - governance.yaml 中L4绝对禁止规则是否未被绕过
+    action: permission_matrix_check
+    parameters:
+      config_paths:
+        - "config/memory_acl.toml"
+        - "config/governance.yaml"
+        - "config/company.toml"
+    timeout: 120
+
+  - name: 风险汇总与优先级排序
+    id: step_risk_summary
+    type: automated
+    description: |
+      汇总以上三类检查结果，按 风险等级×修复成本 排序，
+      生成本周安全风险清单（存入 relay/security/weekly_risk_{date}.json）。
+      CRITICAL → 立即触发告警
+      HIGH → 纳入本周待办
+      MEDIUM/LOW → 纳入月度安全报告
+    action: risk_prioritization
+    parameters:
+      output_path: "relay/security/weekly_risk_{date}.json"
+    depends_on:
+      - step_dependency_scan
+      - step_key_expiry
+      - step_permission_check
+    timeout: 60
+
+  - name: CRITICAL漏洞立即告警
+    id: step_critical_alert
+    type: notification
+    description: |
+      发现CRITICAL级漏洞时立即推飞书，不等周报。
+      告警内容：CVE编号、受影响组件、CVSS评分、修复命令、修复时限24h。
+      触发L2审批：修复方案需创始人确认（避免修复引入新问题）。
+    action: feishu_security_alert
+    parameters:
+      template: "critical_vulnerability_alert"
+      urgency: critical
+      condition: "{{ len(risks.critical) > 0 }}"
+      auto_create_fix_task: true
+    depends_on: [step_risk_summary]
+    governance: L2
+    timeout: 30
+
+  - name: 生成周度安全简报
+    id: step_weekly_report
+    type: automated
+    description: |
+      生成本周安全简报，写入 Obsidian：
+      知识/安全｜审计·{YYYY}-W{week}安全简报.md
+      包含：风险清单、上周漏洞修复进度、本周优先事项。
+      无CRITICAL/HIGH时简报静默（不推飞书），有时推送。
+    action: generate_security_brief
+    parameters:
+      obsidian_path: "知识/安全｜审计·{year}-W{week}安全简报.md"
+      suppress_notification_if_clean: true
+    depends_on: [step_risk_summary]
+    timeout: 120
+
+# ─────────────────────────────────────────────
+# 流程二：月度供应链安全审计（每月1日 03:00）
+# ─────────────────────────────────────────────
+monthly_supply_chain_steps:
+
+  - name: Git子模块完整性验证
+    id: step_submodule_check
+    type: automated
+    description: |
+      验证 .gitmodules 中所有子模块的commit hash是否与预期一致，
+      防止供应链投毒（submodule被恶意替换）。
+      对比：当前hash vs 上次审计记录的hash。
+    action: verify_submodule_integrity
+    parameters:
+      gitmodules_path: ".gitmodules"
+      baseline_path: "relay/security/submodule_baseline.json"
+    critical: true
+    timeout: 120
+
+  - name: 外部skill包哈希验证
+    id: step_skill_integrity
+    type: automated
+    description: |
+      对 skills/ 目录下所有外部引入的skill包计算SHA256哈希，
+      与上月基线对比，发现未经审批的文件变更。
+    action: hash_verify_skills
+    parameters:
+      skills_dirs:
+        - "skills/"
+        - "molin-skills/"
+      baseline_path: "relay/security/skill_hash_baseline.json"
+    timeout: 300
+
+  - name: 更新安全基线
+    id: step_update_baseline
+    type: automated
+    description: 审计通过后更新所有基线文件，作为下月对比基准。
+    action: update_security_baseline
+    depends_on:
+      - step_submodule_check
+      - step_skill_integrity
+    condition: "{{ no_critical_changes }}"
+    timeout: 60
+
+# ─────────────────────────────────────────────
+# 流程三：季度密钥强制轮换提醒
+# ─────────────────────────────────────────────
+key_rotation_steps:
+
+  - name: 生成密钥轮换清单
+    id: step_rotation_list
+    type: automated
+    description: |
+      生成需要轮换的密钥清单（只列名称和平台，不记录值）：
+      - DeepSeek API Key
+      - DashScope API Key
+      - Feishu Bot Token
+      - Supermemory API Key
+      - Obsidian API Key
+      - GitHub Token
+      推送飞书提醒，逐一确认轮换完成。
+    action: generate_rotation_checklist
+    parameters:
+      key_names:
+        - {name: "DeepSeek API Key", platform: "platform.deepseek.com"}
+        - {name: "DashScope API Key", platform: "dashscope.aliyuncs.com"}
+        - {name: "Feishu Bot Token", platform: "open.feishu.cn"}
+        - {name: "Supermemory API Key", platform: "app.supermemory.ai"}
+        - {name: "GitHub Token", platform: "github.com/settings/tokens"}
+      deliver_to_feishu: true
+      template: "key_rotation_checklist_card"
+    timeout: 30
+
+success_criteria:
+  weekly:
+    - metric: "critical_vulnerabilities_open"
+      target: 0
+      operator: "=="
+      note: "零CRITICAL未处理漏洞"
+    - metric: "high_vulnerabilities_open_over_7d"
+      target: 0
+      operator: "=="
+  monthly:
+    - metric: "submodule_integrity_pass"
+      target: true
+  quarterly:
+    - metric: "keys_rotated_percentage"
+      target: 100
+      operator: ">="
+
+failure_handling:
+  on_critical_vulnerability:
+    action: immediate_feishu_alert_and_l2_approval
+    sla_hours: "{{ variables.critical_fix_hours }}"
+  retry_policy:
+    max_retries: 2
+    retry_delay: 300
+
+notifications:
+  on_critical_found:
+    channels: ["feishu"]
+    urgency: critical
+    template: "critical_vulnerability_alert"
+  on_weekly_clean:
+    channels: []                   # 无问题时完全静默
+  on_key_rotation_due:
+    channels: ["feishu"]
+    urgency: high
+    template: "key_rotation_reminder"
+
+data_collection:
+  enabled: true
+  metrics:
+    - "vulnerabilities_by_severity"
+    - "mean_time_to_fix"
+    - "key_rotation_compliance_rate"
+    - "permission_violations_count"
+  storage: "sqlite"
+  retention_days: 730              # 安全日志保留2年
